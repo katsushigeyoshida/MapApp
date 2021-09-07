@@ -70,8 +70,8 @@ namespace MapApp
             mDataGridColumn[18] = DhData19;
             mDataGridColumn[19] = DhData20;
 
-            if (mWikiUrlList.loadUrlList(mUrlListPath))
-                setUrlList();
+            mWikiUrlList.loadUrlList(mUrlListPath);
+            setUrlList();
             CbSeachForm.ItemsSource = mWikiDataList.mSearchFormTitle;
             CbSeachForm.SelectedIndex = 0;
         }

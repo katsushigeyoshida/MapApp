@@ -3,4 +3,4 @@
 
 国土地理院のタイル画像を表示するために作成したアプリソフトです。
 
-![MainWindow画像](image/MainImage.png)
+![MainWindow画像](Image/MainImage.png)

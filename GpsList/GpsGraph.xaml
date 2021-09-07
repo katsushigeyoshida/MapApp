@@ -1,0 +1,21 @@
+﻿<Window x:Class="MapApp.GpsGraph"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:MapApp"
+        mc:Ignorable="d"
+        Title="GpsGraph" Height="450" Width="800" Loaded="Window_Loaded" Closing="Window_Closing" LayoutUpdated="Window_LayoutUpdated">
+    <DockPanel >
+        <StatusBar DockPanel.Dock="Top" Margin="0,0" >
+            <TextBlock Text="グラフの種類　縦軸" />
+            <ComboBox Name="CbGrphYType" SelectionChanged="CbGrphYType_SelectionChanged" />
+            <TextBlock Text="横軸" />
+            <ComboBox Name="CbGrphXType" SelectionChanged="CbGrphXType_SelectionChanged" />
+            <TextBlock Text="移動平均" />
+            <ComboBox Name="CbMoveAverage" SelectionChanged="CbMoveAverage_SelectionChanged" />
+        </StatusBar>
+        <Canvas x:Name="canvas" >
+        </Canvas>
+    </DockPanel>
+</Window>

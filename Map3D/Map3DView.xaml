@@ -1,0 +1,23 @@
+﻿<Window x:Class="MapApp.Map3DView"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:MapApp"
+        mc:Ignorable="d"
+        Title="３次元表示" Height="450" Width="800" Loaded="Window_Loaded" Closing="Window_Closing" LayoutUpdated="Window_LayoutUpdated">
+    <Grid>
+        <WindowsFormsHost Name="glMapView" Margin="10,51,10,10"/>
+        <Label Content="標高倍率"  Margin="10,7,0,0" Width="60" Height="25" HorizontalAlignment="Left" VerticalAlignment="Top"/>
+        <ComboBox Name="CbAspect" Margin="70,10,0,0" Width="60" HorizontalAlignment="Left" VerticalAlignment="Top" SelectionChanged="CbAspect_SelectionChanged" />
+        <Label Content="解像度"  Margin="140,7,0,0" Width="50" Height="25" HorizontalAlignment="Left" VerticalAlignment="Top"/>
+        <ComboBox Name="CbResolution" Margin="190,10,0,0" Width="60" HorizontalAlignment="Left" VerticalAlignment="Top" SelectionChanged="CbResolution_SelectionChanged" />
+        <Label Content="配色"  Margin="260,7,0,0" Width="40" Height="25" HorizontalAlignment="Left" VerticalAlignment="Top"/>
+        <ComboBox Name="CbColorPallete" Margin="300,10,0,0" Width="80" HorizontalAlignment="Left" VerticalAlignment="Top" SelectionChanged="CbColorPallete_SelectionChanged" />
+        <Label Content="背景色"  Margin="400,7,0,0" Width="50" Height="25" HorizontalAlignment="Left" VerticalAlignment="Top"/>
+        <ComboBox Name="CbBackColor" Margin="450,10,0,0" Width="80" HorizontalAlignment="Left" VerticalAlignment="Top" SelectionChanged="CbBackColor_SelectionChanged"  />
+        <CheckBox Name="CbFrame" Content="枠線表示" Margin="550,13,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" Checked="CbFrame_Checked" Unchecked="CbFrame_Unchecked"/>
+        <Button x:Name="BtReset" Content="リセット"  Width="75" Margin="0,10,10,0" HorizontalAlignment="Right" VerticalAlignment="Top" Click="BtReset_Click"/>
+
+    </Grid>
+</Window>

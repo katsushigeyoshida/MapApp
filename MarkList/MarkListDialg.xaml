@@ -1,0 +1,40 @@
+﻿<Window x:Class="MapApp.MarkListDialg"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:MapApp"
+        mc:Ignorable="d"
+        Title="マークリスト" Height="450" Width="200" Loaded="Window_Loaded" Closed="Window_Closed" LayoutUpdated="Window_LayoutUpdated">
+    <StackPanel>
+        <StatusBar>
+            <StatusBarItem HorizontalAlignment="Left">
+                <TextBlock Text="グループ" />
+            </StatusBarItem>
+            <StatusBarItem>
+                <ComboBox Name="CbGroup" Width="135" SelectionChanged="CbGroup_SelectionChanged"  />
+            </StatusBarItem>
+        </StatusBar>
+        <ListBox x:Name="LbMarkList" ScrollViewer.VerticalScrollBarVisibility="Auto" Height="360" MouseDoubleClick="LbMarkList_MouseDoubleClick">
+            <ListBox.ContextMenu>
+                <ContextMenu>
+                    <MenuItem Name="LbMarkListMenuEdit" Header="編集" Click="LbMarkListMenu_Click" />
+                    <MenuItem Name="LbMarkListMenuAdd" Header="追加" Click="LbMarkListMenu_Click" />
+                    <MenuItem Name="LbMarkListMenuDelete" Header="削除" Click="LbMarkListMenu_Click" />
+                    <MenuItem Name="LbMarkListMenuSort" Header="ソート" >
+                        <MenuItem Name="LbMarkListMenuSortNon" Header="ソートなし" Click="LbMarkListMenu_Click" />
+                        <MenuItem Name="LbMarkListMenuSortNormal" Header="昇順" Click="LbMarkListMenu_Click" />
+                        <MenuItem Name="LbMarkListMenuSortReverse" Header="降順" Click="LbMarkListMenu_Click" />
+                        <MenuItem Name="LbMarkListMenuSortDistance" Header="距離順" Click="LbMarkListMenu_Click" />
+                    </MenuItem>
+                    <MenuItem Name="LbMarkListMenuMarkSize" Header="マークサイズ倍率" Click="LbMarkListMenu_Click" />
+                    <MenuItem Name="LbMarkListMenuImport" Header="インポート" Click="LbMarkListMenu_Click" />
+                    <MenuItem Name="LbMarkListMenuExport" Header="エキスポート" Click="LbMarkListMenu_Click" />
+                </ContextMenu>
+            </ListBox.ContextMenu>
+        </ListBox>
+        <StatusBar >
+            <TextBlock x:Name="TbSort" />
+        </StatusBar>
+    </StackPanel>
+</Window>

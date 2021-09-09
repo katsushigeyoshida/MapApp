@@ -29,8 +29,7 @@
   
 4.GPSデータの登録・表示  
 　GPS機能を持った機器でトレースしたGPXデータの登録やトレース表示を行う。  
-<img src="Image/MapGpsTrace.png" width="50%"><img src="Image/MapGpsElevatorGraph.png
-" width="30%">  
+<img src="Image/MapGpsTrace.png" width="50%"><img src="Image/MapGpsElevatorGraph.png" width="30%">  
   
 5.Wikipediaのデータ参照  
 　Wikipediaには史跡や観光地、博物館、百名山などに位置情報を含むデーが登録されている。  

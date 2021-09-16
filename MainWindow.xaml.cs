@@ -53,6 +53,7 @@ namespace MapApp
         private string mMarkListFile = "MarkList.csv";          //  マークリスト保存ファイル名
         private static string mGpsListFile = "GpsDataList.csv"; //  GPSトレースデータリストファイル名(スレッド処理のためstaticとなる)
         private string mSeamlessLegendPath = "legend.csv";      //  日本シームレス地質図V2 凡例ファイル
+        private string mHelpFile = "MapAppManual.pdf";          //  PDFのヘルプファイル
 
         private MarkListDialg mMarkListDialog;                  //  位置情報登録ダイヤログ
         private GpsListDialog mGpsListDialog;                   //  GPSファイルの管理ダイヤログ
@@ -537,7 +538,10 @@ namespace MapApp
             //PdfView pdfView = new PdfView();
             //pdfView.mPdfFile = "MAPAPP説明書.pdf";
             //pdfView.Show();
-            System.Diagnostics.Process.Start("MAPAPP説明書.pdf");
+            if (File.Exists(mHelpFile))
+                System.Diagnostics.Process.Start(mHelpFile);
+            else
+                MessageBox.Show("ヘルプファイルがありません");
         }
 
         /// <summary>
@@ -729,11 +733,12 @@ namespace MapApp
             Point cp = mMapData.screen2Coordinates(mLastMovePoint);
             //  標高取得
             double ele = mMapData.getMapElavtor(mMapData.screen2Map(mLastMovePoint), ChkAutoOffLine.IsChecked);
+            //  20万分の1日本シームレス地質図V2の凡例表示
             string seamlessLegendTitle = "";
             if (mMapData.mDataIdName.CompareTo("seamless_v2")== 0) {
-                //  20万分の1日本シームレス地質図V2の凡例表示
                 seamlessLegendTitle = getSeamlessLegend(mMapData.screen2Map(mLastMovePoint));
             }
+            //  ステータスバーに表示
             TbCordinate.Text = "(" + cp.Y.ToString("#0.######") + "," + cp.X.ToString("#0.######") + ") 標高 "
                 + ele.ToString("#,###") + " m " + seamlessLegendTitle;
         }
@@ -1299,8 +1304,8 @@ namespace MapApp
             System.Drawing.Color color = ydraw.GButtonGetImagePixcel(getId(imp.X, imp.Y), dx, dy);
             string legendTitle = "";
             if (8 <= color.Name.Length && mSeamlessLegend.ContainsKey(color.Name.Substring(2, 6)))  //  [2]value(色)をキーとする
-                legendTitle = mSeamlessLegend[color.Name.Substring(2, 6)][0] + " [" +               //  [0]title
-                    mSeamlessLegend[color.Name.Substring(2, 6)][1] + "]";                           //  [1]symbole
+                legendTitle =" [" + mSeamlessLegend[color.Name.Substring(2, 6)][1] + "] " +         //  [1]symbole
+                                mSeamlessLegend[color.Name.Substring(2, 6)][0];                     //  [0]title
             return legendTitle;
         }
 

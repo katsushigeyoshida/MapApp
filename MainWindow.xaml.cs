@@ -533,15 +533,9 @@ namespace MapApp
         {
             //HelpView help = new HelpView();
             //help.mHelpText = HelpText.mMapAppHelp + HelpText.mMarkListHelp + HelpText.mGpsTraceListHelp + HelpText.mWikiListHelp;
-            //help.mPdfFile = new string[] { "MAPAPP説明書.pdf" };
+            //help.mPdfFile = new string[] { "mHelpFile" };
             //help.Show();
-            //PdfView pdfView = new PdfView();
-            //pdfView.mPdfFile = "MAPAPP説明書.pdf";
-            //pdfView.Show();
-            if (File.Exists(mHelpFile))
-                System.Diagnostics.Process.Start(mHelpFile);
-            else
-                MessageBox.Show("ヘルプファイルがありません");
+            ylib.fileExecute(mHelpFile);
         }
 
         /// <summary>

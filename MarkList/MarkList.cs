@@ -67,8 +67,7 @@ namespace MapApp
         public MapMark getMapMark(string title , string group)
         {
             foreach ( MapMark mapMark in mMapMarkList) {
-                if (mapMark.mTitle.CompareTo(title) == 0 && 
-                    (group.Length == 0 || mapMark.mGroup.CompareTo(group) == 0))
+                if (mapMark.mTitle.CompareTo(title) == 0 && mapMark.containGroup(group))
                     return mapMark;
             }
             return null;
@@ -83,7 +82,7 @@ namespace MapApp
         {
             List<string> titleList = new List<string>();
             foreach (MapMark mark in mMapMarkList) {
-                if (group.Length == 0 || mark.mGroup.CompareTo(group) == 0)
+                if (mark.containGroup(group))
                     if (!titleList.Contains(mark.mTitle))
                         titleList.Add(mark.mTitle);
             }
@@ -105,8 +104,11 @@ namespace MapApp
         {
             List<string> groupList = new List<string>();
             foreach (MapMark mark in mMapMarkList) {
-                if (!groupList.Contains(mark.mGroup))
-                    groupList.Add(mark.mGroup);
+                string[] group = mark.mGroup.Split(',');
+                for (int i = 0; i < group.Length; i++) {
+                    if (!groupList.Contains(group[i].Trim()))
+                        groupList.Add(group[i].Trim());
+                }
             }
             return groupList;
         }

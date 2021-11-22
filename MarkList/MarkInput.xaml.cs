@@ -24,10 +24,11 @@ namespace MapApp
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
             if (mMapMark != null) {
+                //  既存データの設定
                 TbTitle.Text = mMapMark.mTitle;
                 ChkTitleDisp.IsChecked = mMapMark.mTitleVisible;
                 CbGroup.ItemsSource = mGroups;
-                CbGroup.SelectedIndex = Array.IndexOf(mGroups, mMapMark.mGroup);
+                CbGroup.Text = mMapMark.mGroup;
                 CbMarkType.ItemsSource = mMapMark.mMarkName;
                 CbMarkType.SelectedIndex = mMapMark.mMarkType;
                 CbSize.ItemsSource = mMapMark.mSizeName;

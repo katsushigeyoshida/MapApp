@@ -72,7 +72,7 @@ namespace MapApp
         public void draw(YGButton ydraw, MapData mapData, string filterGroup)
         {
             if (insideChk(mapData.getArea(), mLocation) && 
-                (filterGroup.Length < 1 || filterGroup.CompareTo(mGroup) == 0)) {
+                (filterGroup.Length < 1 || containGroup(filterGroup))) {
                 ydraw.setThickness(1.0);
                 for (int i = 0; i < mMarkPath[mMarkType].Length; i++) {
                     switch (mMarkPath[mMarkType][i][0]) {
@@ -105,6 +105,23 @@ namespace MapApp
                 return true;
         }
 
+        /// <summary>
+        /// 指定のグループの有無を確認
+        /// 指定グループ名が空の場合はすべて該当
+        /// </summary>
+        /// <param name="group">グループ名</param>
+        /// <returns>グループの有無</returns>
+        public bool containGroup(string group)
+        {
+            if (group == null || group.Length == 0)
+                return true;
+            string[] groups = mGroup.Split(',');
+            for (int i=0; i < groups.Length; i++) {
+                if (groups[i].Trim().CompareTo(group) == 0)
+                    return true;
+            }
+            return false;
+        }
 
         /// <summary>
         /// タイルを表示する

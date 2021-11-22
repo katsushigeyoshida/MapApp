@@ -9,6 +9,7 @@ namespace MapApp
 {
     /// <summary>
     /// MarkListDialg.xaml の相互作用ロジック
+    /// マークリスト表示ダイヤログの処理
     /// </summary>
     public partial class MarkListDialg : Window
     {
@@ -137,7 +138,8 @@ namespace MapApp
                 if (group.CompareTo("すべて") == 0)
                     group = "";
                 mMarkList.mFilterGroup = group;
-                LbMarkList.ItemsSource = mMarkList.getTitleList(group).ToArray();
+                setSort((int)mMarkList.mListSort, group);
+                //LbMarkList.ItemsSource = mMarkList.getTitleList(group).ToArray();
                 mMainWindow.mapDisp(false);
             }
         }
@@ -248,9 +250,10 @@ namespace MapApp
         /// <summary>
         /// マークリストをソートして表示
         /// </summary>
-        private void setSort(int sortType)
+        private void setSort(int sortType, string group = null)
         {
-            string group = CbGroup.Text.CompareTo("すべて") == 0 ? "" : CbGroup.Text;
+            if (group == null)
+                group = CbGroup.Text.CompareTo("すべて") == 0 ? "" : CbGroup.Text;
             mMarkList.mCenter = MapData.baseMap2Coordinates(mMainWindow.mMapData.getCenter());
             switch (sortType) {
                 case 1: mMarkList.mListSort = MarkList.SORTTYPE.Normal; break;

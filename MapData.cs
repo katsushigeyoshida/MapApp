@@ -165,6 +165,20 @@ namespace MapApp
         }
 
         /// <summary>
+        /// 標高データのIDからデータNoを取得
+        /// </summary>
+        /// <param name="id">データID</param>
+        /// <returns>データo</returns>
+        public int getElevatorDataNo(string id)
+        {
+            for (int i = 0; i < MapInfoData.mMapElevatorData.Count; i++) {
+                if (MapInfoData.mMapElevatorData[i][1].CompareTo(id) == 0)
+                    return i;
+            }
+            return 0;
+        }
+
+        /// <summary>
         /// 国土地理院地図の標高データのWebアドレスの取得
         /// </summary>
         /// <param name="x">X座標(Map座標)</param>
@@ -172,7 +186,7 @@ namespace MapApp
         /// <returns>Webアドレス</returns>
         public string getElevatorWebAddress(double x, double y)
         {
-            int elevatorZoom = ylib.intParse(MapInfoData.mMapElvatorData[mElevatorDataNo][4]);  //  標高データの最大ズーム値
+            int elevatorZoom = ylib.intParse(MapInfoData.mMapElevatorData[mElevatorDataNo][4]);  //  標高データの最大ズーム値
             Point pos = new Point(x, y);
             if (elevatorZoom < mZoom) {
                 //  標高データはズームレベル15(DEM5)までなのでそれ以上は15のデータを取得
@@ -180,8 +194,8 @@ namespace MapApp
             } else {
                 elevatorZoom = mZoom;
             }
-            return MapInfoData.mGsiUrl + MapInfoData.mMapElvatorData[mElevatorDataNo][1] + "/" + elevatorZoom +
-                "/" + (int)pos.X + "/" + (int)pos.Y + "." + MapInfoData.mMapElvatorData[mElevatorDataNo][2];
+            return MapInfoData.mGsiUrl + MapInfoData.mMapElevatorData[mElevatorDataNo][1] + "/" + elevatorZoom +
+                "/" + (int)pos.X + "/" + (int)pos.Y + "." + MapInfoData.mMapElevatorData[mElevatorDataNo][2];
         }
 
         /// <summary>
@@ -192,7 +206,7 @@ namespace MapApp
         /// <returns>ファイルパス</returns>
         public string downloadElevatorPath(double x, double y)
         {
-            int elevatorZoom = ylib.intParse(MapInfoData.mMapElvatorData[mElevatorDataNo][4]);  //  標高データの最大ズーム値
+            int elevatorZoom = ylib.intParse(MapInfoData.mMapElevatorData[mElevatorDataNo][4]);  //  標高データの最大ズーム値
             Point pos = new Point(x, y);
             if (elevatorZoom < mZoom) {
                 //  標高データはズームレベル15(DEM5)までなのでそれ以上は15のデータを取得
@@ -200,8 +214,8 @@ namespace MapApp
             } else {
                 elevatorZoom = mZoom;
             }
-            return mBaseFolder + "\\" + MapInfoData.mMapElvatorData[mElevatorDataNo][1] + "\\" + elevatorZoom +
-                "\\" + (int)pos.X + "\\" + (int)pos.Y + "." + MapInfoData.mMapElvatorData[mElevatorDataNo][2];
+            return mBaseFolder + "\\" + MapInfoData.mMapElevatorData[mElevatorDataNo][1] + "\\" + elevatorZoom +
+                "\\" + (int)pos.X + "\\" + (int)pos.Y + "." + MapInfoData.mMapElevatorData[mElevatorDataNo][2];
         }
 
         /// <summary>
@@ -212,7 +226,7 @@ namespace MapApp
         /// <returns></returns>
         public Point cnvElevatorPos(Point mp)
         {
-            int elevatorZoomMax = ylib.intParse(MapInfoData.mMapElvatorData[mElevatorDataNo][4]);
+            int elevatorZoomMax = ylib.intParse(MapInfoData.mMapElevatorData[mElevatorDataNo][4]);
             if (elevatorZoomMax < mZoom) {
                 //  標高データはズームレベル15(DEM5)までなのでそれ以上は15のデータを取得
                 return cnvMapPostionZoom(elevatorZoomMax, mp);

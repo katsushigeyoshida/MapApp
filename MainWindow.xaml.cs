@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
@@ -557,11 +558,11 @@ namespace MapApp
             } else if (menuItem.Name.CompareTo("DataIDEditMenu") == 0) {
                 //  データの編集
                 MapDataSet dlg = new MapDataSet();
-                for (int i = 0; i < MapInfoData.mMapData[CbDataID.SelectedIndex].Length; i++)
+                for (int i = 0; i < dlg.mDatas.Length && i < dlg.mDatas.Length; i++)
                     dlg.mDatas[i] = MapInfoData.mMapData[CbDataID.SelectedIndex][i];
                 var result = dlg.ShowDialog();
                 if (result == true) {
-                    for (int i = 0; i < MapInfoData.mMapData[CbDataID.SelectedIndex].Length; i++)
+                    for (int i = 0; i < dlg.mDatas.Length && i < MapInfoData.mMapData[CbDataID.SelectedIndex].Length; i++)
                         MapInfoData.mMapData[CbDataID.SelectedIndex][i] = dlg.mDatas[i];
                     setMapData();
                 }
@@ -807,7 +808,7 @@ namespace MapApp
 
         /// <summary>
         /// スクリーン座標からCanvasの座標に変換
-        /// 左と上のコントロール分お布施ってする
+        /// 左と上のコントロール分オフセットする
         /// </summary>
         /// <param name="sp">スクリーン座標</param>
         /// <returns>Cnavas座標</returns>
@@ -892,10 +893,11 @@ namespace MapApp
                 return false;
             //  地図情報の設定
             mMapData.mDataId = CbDataID.SelectedIndex;
-            mMapData.mMapUrl = MapInfoData.mMapData[mMapData.mDataId][7];
-            mMapData.mDataIdName = MapInfoData.mMapData[mMapData.mDataId][1];
-            mMapData.mExt = MapInfoData.mMapData[mMapData.mDataId][2];
-            mMapData.mTileOrder = MapInfoData.mMapData[mMapData.mDataId][8];
+            mMapData.mMapUrl = MapInfoData.mMapData[mMapData.mDataId][7];       //  国土地理院データ以外のURL
+            mMapData.mDataIdName = MapInfoData.mMapData[mMapData.mDataId][1];   //  データID
+            mMapData.mExt = MapInfoData.mMapData[mMapData.mDataId][2];          //  データファイルの拡張子
+            mMapData.mTileOrder = MapInfoData.mMapData[mMapData.mDataId][8];    //  {z}/{x}/{y}以外のタイル座標順
+            mMapData.mElevatorDataNo = mMapData.getElevatorDataNo(MapInfoData.mMapData[mMapData.mDataId][10]);
             //  座標情報の設定
             mMapData.mZoom = int.Parse(mZoomName[CbZoom.SelectedIndex]);
             mMapData.mStart.X = double.Parse(TbX.Text);
@@ -1245,8 +1247,11 @@ namespace MapApp
                 titleList.Add(data[0]);
             }
             foreach (string[] data in dataList) {
-                if (!titleList.Contains(data[0]))
-                    MapInfoData.mMapData.Add(data);
+                if (!titleList.Contains(data[0])) {
+                    string[] buf = Enumerable.Repeat<string>("", MapInfoData.mMapData[0].Length).ToArray();
+                    Array.Copy(data, buf, buf.Length < data.Length ? buf.Length : data.Length);
+                    MapInfoData.mMapData.Add(buf);
+                }
             }
         }
 

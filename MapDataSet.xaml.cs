@@ -9,7 +9,7 @@ namespace MapApp
     /// </summary>
     public partial class MapDataSet : Window
     {
-        public string[] mDatas = new string[10] {"", "", "", "", "", "", "", "", "" , ""} ; //  地図データ
+        public string[] mDatas = new string[] {"", "", "", "", "", "", "", "", "" , "", "" } ; //  地図データ
 
         public MapDataSet()
         {
@@ -35,6 +35,7 @@ namespace MapApp
             TbWebDataAddress.Text = mDatas[7];
             TbRefTitle.Text = mDatas[8];
             TbWebAddress.Text = mDatas[9];
+            TbElevatorID.Text = mDatas[10];
         }
 
         /// <summary>
@@ -64,6 +65,7 @@ namespace MapApp
             mDatas[7] = TbWebDataAddress.Text;
             mDatas[8] = TbRefTitle.Text;
             mDatas[9] = TbWebAddress.Text;
+            mDatas[10] = TbElevatorID.Text;
             DialogResult = true;
             Close();
         }
@@ -92,7 +94,7 @@ namespace MapApp
                     return true;
             }
             //  標高データ
-            foreach (string[] mapEleInf in MapInfoData.mMapElvatorData) {
+            foreach (string[] mapEleInf in MapInfoData.mMapElevatorData) {
                 if (mapEleInf[1].ToLower().CompareTo(mapId.ToLower()) == 0)
                     return true;
             }

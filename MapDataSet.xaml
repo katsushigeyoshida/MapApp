@@ -18,6 +18,8 @@
                  ToolTip="地図でのデータID(地図の種類の識別子、重複不可)" />
         <Label Content="ファイルの拡張子" HorizontalAlignment="Left" Margin="10,100,0,0" VerticalAlignment="Top"/>
         <TextBox x:Name="TbFIleExt" HorizontalAlignment="Left" Height="23" Margin="110,100,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="120" />
+        <Label Content="標高データID" HorizontalAlignment="Left" Margin="235,100,0,0" VerticalAlignment="Top"/>
+        <TextBox x:Name="TbElevatorID" HorizontalAlignment="Left" Height="23" Margin="310,100,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="120" />
         <Label Content="地図の種類" HorizontalAlignment="Left" Margin="10,130,0,0" VerticalAlignment="Top"/>
         <TextBox x:Name="TbMapType" Height="23" Margin="110,130,20,0" TextWrapping="Wrap" VerticalAlignment="Top"
                  ToolTip="地図の種類の説明" />

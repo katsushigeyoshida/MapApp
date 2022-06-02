@@ -253,10 +253,10 @@ namespace MapApp
                 //  Web上にないファイルはダウンロードに行かない
                 if (autoOffline != false || !mImageFileSet.Contains(url)) {
                     Directory.CreateDirectory(folder);
-                    System.Diagnostics.Debug.WriteLine($"getDownLoadFile: {url} {downloadPath}");
+                    //System.Diagnostics.Debug.WriteLine($"getDownLoadFile: {url} {downloadPath}");
                     if (!ylib.webFileDownload(url, downloadPath)) {
                         if (ylib.getError()) {
-                            System.Diagnostics.Debug.WriteLine($"getDownLoadFile: {url} {ylib.getErrorMessage()}");
+                            System.Diagnostics.Debug.WriteLine($"Error getDownLoadFile: {url} {ylib.getErrorMessage()}");
                         }
                         //  Web上にないファイルを登録
                         mImageFileSet.Add(url);
@@ -389,12 +389,19 @@ namespace MapApp
         /// </summary>
         /// <param name="nextZoom">変更後のズームレベル</param>
         /// <param name="ctr">ズームの中心位置(MAP座標)</param>
-        public void setZoom(int nextZoom, Point ctr)
+        public void setZoom(int nextZoom, Point pos)
         {
             if (mMaxZoom < nextZoom)
                 return;
-            mStart.X = ctr.X * Math.Pow(2, nextZoom - mZoom) - mColCount / 2.0;
-            mStart.Y = ctr.Y * Math.Pow(2, nextZoom - mZoom) - getRowCountF() / 2.0;
+
+            double zoom = Math.Pow(2, nextZoom - mZoom);
+            Point ctr = getMapCenter();
+            Point v = pos.vector(ctr);
+            v.scale(1.0 / zoom - 1.0);
+            ctr.Offset(v.X, v.Y);
+
+            mStart.X = ctr.X * zoom - mColCount / 2.0;
+            mStart.Y = ctr.Y * zoom - getRowCountF() / 2.0;
             mZoom = nextZoom;
         }
 
@@ -482,6 +489,15 @@ namespace MapApp
         public Point getCenter()
         {
             return map2BaseMap(new Point(mStart.X + (double)mColCount / 2.0, mStart.Y + getRowCountF() / 2.0));
+        }
+
+        /// <summary>
+        /// 中心座標(Map)の取得
+        /// </summary>
+        /// <returns></returns>
+        public Point getMapCenter()
+        {
+            return new Point(mStart.X + (double)mColCount / 2.0, mStart.Y + getRowCountF() / 2.0);
         }
 
         /// <summary>

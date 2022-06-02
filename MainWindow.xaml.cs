@@ -31,6 +31,7 @@ namespace MapApp
 
         private bool mCombboxEnable = true;                     //  地図、ズームレベルや列数切替時の抑制フラグ
         private double mCenterCrossSize = 100.0;                //  地図の中心クロスの大きさ
+        private bool? mOnLine = null;                           //  地図データのダウンロードモード
 
         private string[] mZoomName = {                          //  ズームレベル選択表示用
             "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10",
@@ -252,7 +253,14 @@ namespace MapApp
             } else if (e.Key == Key.F5) {           //  再表示
                 if (getParametor()) {
                     setParametor();
+                    bool? onLine = mOnLine;
+                    if (Keyboard.IsKeyDown(Key.LeftCtrl) || 
+                        Keyboard.IsKeyDown(Key.RightCtrl)) {
+                        //  コントロールキーが押されていればデータ更新
+                        mOnLine = true;
+                    }
                     mapDisp(true);
+                    mOnLine = onLine;
                 }
             }
         }
@@ -321,12 +329,16 @@ namespace MapApp
         private void ChkAutoOffLine_Click(object sender, RoutedEventArgs e)
         {
             //  チェックボックスは3ステート設定
-            if (ChkAutoOffLine.IsChecked == true)
+            if (ChkAutoOffLine.IsChecked == true) {
                 ChkAutoOffLine.Content = "オンライン";
-            else if (ChkAutoOffLine.IsChecked == false)
+                mOnLine = true;
+            } else if (ChkAutoOffLine.IsChecked == false) {
                 ChkAutoOffLine.Content = "オフライン";
-            else
+                mOnLine = false;
+            } else {
                 ChkAutoOffLine.Content = "自動オンライン";
+                mOnLine = null;
+            }
         }
 
         /// <summary>
@@ -398,6 +410,7 @@ namespace MapApp
         {
             //  登録タイトル入力
             InputBox dialog = new InputBox();
+            dialog.mMainWindow = this;
             dialog.Title = "地図データの登録";
             dialog.mEditText = CbPositionList.Text;
             var result = dialog.ShowDialog();
@@ -748,12 +761,12 @@ namespace MapApp
             Point pos = screen2Canvas(e.GetPosition(this));
             //System.Diagnostics.Debug.WriteLine($"LeftButtonDown {pos.X} {pos.Y} {mMapMoveMode}");
             if (!mMapMoveMode) {
-                System.Diagnostics.Debug.WriteLine($"MoveStart {pos.X} {pos.Y}");
+                //System.Diagnostics.Debug.WriteLine($"MoveStart {pos.X} {pos.Y}");
                 //  画面移動
                 mLeftPressPoint = ydraw.cnvScreen2World(pos);
             }
             if (mMeasure.mMeasureMode && !mMapMoveMode) {
-                System.Diagnostics.Debug.WriteLine($"Mesure {pos.X} {pos.Y}");
+                //System.Diagnostics.Debug.WriteLine($"Mesure {pos.X} {pos.Y}");
                 //  測定モード
                 mMeasure.add(mMapData.screen2BaseMap(ydraw.cnvScreen2World(pos)));
                 if (1 < mMeasure.getCount())
@@ -1035,11 +1048,11 @@ namespace MapApp
                         //  標高データの取得
                         string elevatorUrl = mapData.getElevatorWebAddress(i, j);
                         string downloadPath = mapData.downloadElevatorPath(i, j);
-                        mapData.getDownLoadFile(elevatorUrl, downloadPath, ChkAutoOffLine.IsChecked);
+                        mapData.getDownLoadFile(elevatorUrl, downloadPath, mOnLine);
                         //  地図データの取得
                         string url = mapData.getWebAddress(i, j);
                         downloadPath = mapData.downloadPath(i, j);
-                        bool? result = mapData.getDownLoadFile(url, downloadPath, ChkAutoOffLine.IsChecked);
+                        bool? result = mapData.getDownLoadFile(url, downloadPath, mOnLine);
                         if (result == true) {
                             ydraw.GButtonImageFile(getId(i - (int)mapData.mStart.X, j - (int)mapData.mStart.Y), downloadPath);
                             //  プログレスバーを表示するためにDoEventでコントロールを更新する

@@ -146,7 +146,7 @@ namespace MapApp
         private void CheckBox_Checked(object sender, RoutedEventArgs e)
         {
             int index = LbGpsList.SelectedIndex;
-            System.Diagnostics.Debug.WriteLine($"CheckBox_Checked: {index}");
+            //System.Diagnostics.Debug.WriteLine($"CheckBox_Checked: {index}");
             visibleDataSet();
             mMainWindow.mapDisp(false);
         }
@@ -159,7 +159,7 @@ namespace MapApp
         private void CheckBox_Unchecked(object sender, RoutedEventArgs e)
         {
             int index = LbGpsList.SelectedIndex;
-            System.Diagnostics.Debug.WriteLine($"CheckBox_Checked: {index}");
+            //System.Diagnostics.Debug.WriteLine($"CheckBox_Checked: {index}");
             visibleDataSet();
             mMainWindow.mapDisp(false);
         }

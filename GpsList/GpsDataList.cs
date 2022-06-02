@@ -273,7 +273,7 @@ namespace MapApp
                 Rect area = mapData.baseMap2Screen(mLocArea);
                 if (area.Width < 10.0 || area.Height < 10) {
                     //  簡易表示
-                    System.Diagnostics.Debug.WriteLine($"GpsFileData: draw: 簡易表示 {mTitle}");
+                    //System.Diagnostics.Debug.WriteLine($"GpsFileData: draw: 簡易表示 {mTitle}");
                     ydraw.drawRectangle(area, 0.0);
                 } else {
                     //  正規表示
@@ -283,7 +283,7 @@ namespace MapApp
                         setFilePath(mFilePath);
                     }
                     if (1 < mLocData.Count && insideChk(mapData.getArea(), mLocArea)) {
-                        System.Diagnostics.Debug.WriteLine($"GpsFileData: draw: データ表示 {mTitle}");
+                        //System.Diagnostics.Debug.WriteLine($"GpsFileData: draw: データ表示 {mTitle}");
                         Point sp = mapData.coordinates2Screen(mLocData[0]);
                         for (int i = 1; i < mLocData.Count; i++) {
                             Point ep = mapData.coordinates2Screen(mLocData[i]);

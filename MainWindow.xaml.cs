@@ -503,7 +503,7 @@ namespace MapApp
         private void BtWikiList_Click(object sender, RoutedEventArgs e)
         {
             mWikiListDialog = new WikiList();
-            mWikiListDialog.Topmost = true;
+            //mWikiListDialog.Topmost = true;
             mWikiListDialog.mMarkList = mMapMarkList;
             mWikiListDialog.mMainWindow = this;
             mWikiListDialog.Show();

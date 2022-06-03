@@ -738,7 +738,7 @@ namespace MapApp
         private void messageBox(string buf, string title)
         {
             InputBox dlg = new InputBox();
-            dlg.mMainWindow = this;
+            //dlg.mMainWindow = this;
             dlg.Title = title;
             dlg.mWindowSizeOutSet = true;
             dlg.mWindowWidth  = 500.0;

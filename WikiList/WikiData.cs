@@ -158,6 +158,8 @@ namespace MapApp
                 }
                 //  基本情報に座標データがあれば座標項目に抽出して追加
                 int coordinateNo = titles.IndexOf("座標");
+                if (coordinateNo < 0)
+                    coordinateNo = titles.IndexOf("位置");
                 if (0 <= coordinateNo) {
                     foreach (string[] data in mTagSetData) {
                         string coordinate = ylib.getCoordinatePattern(data[1]);

@@ -707,11 +707,11 @@ namespace MapApp
         private Point stringCoordinate2Point(WikiData data)
         {
             foreach (string item in data.mTag) {
-                if (item != null && 0 <= item.IndexOf("北緯")) {
+                if (item != null && (0 <= item.IndexOf("北緯") || 0 <= item.IndexOf("南緯"))) {
                     return ylib.cnvCoordinate(item);
                 }
             }
-            if (0 <= data.mComment.IndexOf("北緯")) {
+            if (0 <= data.mComment.IndexOf("北緯") || 0 <= data.mComment.IndexOf("南緯")) {
                 return ylib.cnvCoordinate(data.mComment);
             }
             return new Point(0.0, 0.0);

@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:MapApp"
         mc:Ignorable="d"
-        Title="３次元表示" Height="450" Width="800" Loaded="Window_Loaded" Closing="Window_Closing" LayoutUpdated="Window_LayoutUpdated">
+        Title="３次元表示" Height="450" Width="800" Loaded="Window_Loaded" Closing="Window_Closing" LayoutUpdated="Window_LayoutUpdated" PreviewKeyDown="Window_PreviewKeyDown">
     <Grid>
         <WindowsFormsHost Name="glMapView" Margin="10,51,10,10"/>
         <Label Content="標高倍率"  Margin="10,7,0,0" Width="60" Height="25" HorizontalAlignment="Left" VerticalAlignment="Top"/>

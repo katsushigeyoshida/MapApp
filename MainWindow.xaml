@@ -86,17 +86,17 @@
                 <Button x:Name="BtDataDelete" Content="削除"  Width="40" Click="BtDataDelete_Click"/>
             </StatusBar>
             <StatusBar>
-                <CheckBox x:Name="ChkMarkDisp" Content="マーク表示" Click="ChkMarkDisp_Click" />
                 <Button x:Name="BtMarkEdit" Content="マークリスト" Click="BtMarkEdit_Click" />
+                <CheckBox x:Name="ChkMarkDisp" Content="マーク表示" Click="ChkMarkDisp_Click" />
             </StatusBar>
             <StatusBar>
-                <CheckBox x:Name="ChkGpsDisp" Content="GPS軌跡" Click="ChkGpsDisp_Click" />
                 <Button x:Name="BtGpsList" Content=" GPSリスト " Click="BtGpsList_Click" />
+                <CheckBox x:Name="ChkGpsDisp" Content="GPS軌跡" Click="ChkGpsDisp_Click" />
             </StatusBar>
-            <StatusBar HorizontalAlignment="Right" Margin="0,0,10,0">
+            <StatusBar HorizontalAlignment="Left" Margin="0,0,10,0">
                 <Button x:Name="BtWikiList" Content=" Wikiリスト " Click="BtWikiList_Click" />
             </StatusBar>
-            <StatusBar HorizontalAlignment="Right" Margin="0,0,10,0">
+            <StatusBar HorizontalAlignment="Left" Margin="0,0,10,0">
                 <Button x:Name="BtMap3DView" Content=" ３Ｄ表示 " Click="BtMap3DView_Click" />
             </StatusBar>
             <TextBlock Text="■地図の説明" Margin="10,0,0,0" />

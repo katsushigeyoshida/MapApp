@@ -3,6 +3,7 @@ using OpenTK.Graphics;
 using OpenTK.Graphics.OpenGL;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Windows;
 using System.Windows.Forms;
@@ -53,7 +54,7 @@ namespace MapApp
         private double mScaleUnit = 1000.0;         //  スケールの大きさ(m)
 
         //  標高の色配分　(Kashimil3Dのデータを参照)
-        private Dictionary<string,　List<int[]>> mColorPallete = new Dictionary<string,　List<int[]>> {
+        private Dictionary<string,　List<int[]>> mColorPallet = new Dictionary<string,　List<int[]>> {
             {   // 地図帳配色(StandardPal)
                 "地図帳配色",
                 //            標高(m),  R,  G,    B
@@ -330,11 +331,13 @@ namespace MapApp
                 }
             },
         };
-        private string mColorPaleteTitle = "地図帳配色"; //  標高色配分タイトル
+        private string mColorPalleteTitle = "地図帳配色";    //  標高色配分タイトル
+        private string mColorPalletFile = "Map3DColorPallet.csv";
 
         private GLControl glControl;                //  OpenTK.GLcontrol
         private GL3DLib m3Dlib;                     //  三次元表示ライブラリ
         private YLib mYlib = new YLib();            //  単なるライブラリ
+
 
         public Map3DView()
         {
@@ -345,6 +348,9 @@ namespace MapApp
             mPrevWindowWidth = mWindowWidth;
 
             WindowFormLoad();       //  Windowの位置とサイズを復元
+
+            //  カラーパレットの読込
+            LoadColorPallet(mColorPalletFile);
 
             //  OpenGLの設定
             glControl = new GLControl();
@@ -369,7 +375,7 @@ namespace MapApp
             CbAspect.SelectedIndex = 0;
             CbResolution.ItemsSource = mResolutionTitle;
             CbResolution.SelectedIndex = Array.IndexOf(mResolutionTitle, mResolution.ToString());
-            CbColorPallete.ItemsSource = mColorPallete.Keys.ToList();
+            CbColorPallete.ItemsSource = mColorPallet.Keys.ToList();
             CbColorPallete.SelectedIndex = 0;
             CbBackColor.ItemsSource = m3Dlib.mColor4Title;
             CbBackColor.SelectedIndex = Array.IndexOf(m3Dlib.mColor4, mBackColor);
@@ -666,20 +672,20 @@ namespace MapApp
         public Color4 elevator2Color(double ele)
         {
             Color4 col = new Color4();
-            col.R = mColorPallete[mColorPaleteTitle][mColorPallete[mColorPaleteTitle].Count - 1][1];
-            col.G = mColorPallete[mColorPaleteTitle][mColorPallete[mColorPaleteTitle].Count - 1][2];
-            col.B = mColorPallete[mColorPaleteTitle][mColorPallete[mColorPaleteTitle].Count - 1][3];
-            for (int i = 0; i < mColorPallete[mColorPaleteTitle].Count - 1; i++) {
-                if (mColorPallete[mColorPaleteTitle][i][0] < ele && ele < mColorPallete[mColorPaleteTitle][i + 1][0]) {
-                    col.R = (float)((mColorPallete[mColorPaleteTitle][i + 1][1] - mColorPallete[mColorPaleteTitle][i][1]) *
-                        (ele - mColorPallete[mColorPaleteTitle][i][0]) / (mColorPallete[mColorPaleteTitle][i + 1][0] - mColorPallete[mColorPaleteTitle][i][0]) +
-                        mColorPallete[mColorPaleteTitle][i][1]);
-                    col.G = (float)((mColorPallete[mColorPaleteTitle][i + 1][2] - mColorPallete[mColorPaleteTitle][i][2]) *
-                        (ele - mColorPallete[mColorPaleteTitle][i][0]) / (mColorPallete[mColorPaleteTitle][i + 1][0] - mColorPallete[mColorPaleteTitle][i][0]) +
-                        mColorPallete[mColorPaleteTitle][i][2]);
-                    col.B = (float)((mColorPallete[mColorPaleteTitle][i + 1][3] - mColorPallete[mColorPaleteTitle][i][3]) *
-                        (ele - mColorPallete[mColorPaleteTitle][i][0]) / (mColorPallete[mColorPaleteTitle][i + 1][0] - mColorPallete[mColorPaleteTitle][i][0]) +
-                        mColorPallete[mColorPaleteTitle][i][3]);
+            col.R = mColorPallet[mColorPalleteTitle][mColorPallet[mColorPalleteTitle].Count - 1][1];
+            col.G = mColorPallet[mColorPalleteTitle][mColorPallet[mColorPalleteTitle].Count - 1][2];
+            col.B = mColorPallet[mColorPalleteTitle][mColorPallet[mColorPalleteTitle].Count - 1][3];
+            for (int i = 0; i < mColorPallet[mColorPalleteTitle].Count - 1; i++) {
+                if (mColorPallet[mColorPalleteTitle][i][0] < ele && ele < mColorPallet[mColorPalleteTitle][i + 1][0]) {
+                    col.R = (float)((mColorPallet[mColorPalleteTitle][i + 1][1] - mColorPallet[mColorPalleteTitle][i][1]) *
+                        (ele - mColorPallet[mColorPalleteTitle][i][0]) / (mColorPallet[mColorPalleteTitle][i + 1][0] - mColorPallet[mColorPalleteTitle][i][0]) +
+                        mColorPallet[mColorPalleteTitle][i][1]);
+                    col.G = (float)((mColorPallet[mColorPalleteTitle][i + 1][2] - mColorPallet[mColorPalleteTitle][i][2]) *
+                        (ele - mColorPallet[mColorPalleteTitle][i][0]) / (mColorPallet[mColorPalleteTitle][i + 1][0] - mColorPallet[mColorPalleteTitle][i][0]) +
+                        mColorPallet[mColorPalleteTitle][i][2]);
+                    col.B = (float)((mColorPallet[mColorPalleteTitle][i + 1][3] - mColorPallet[mColorPalleteTitle][i][3]) *
+                        (ele - mColorPallet[mColorPalleteTitle][i][0]) / (mColorPallet[mColorPalleteTitle][i + 1][0] - mColorPallet[mColorPalleteTitle][i][0]) +
+                        mColorPallet[mColorPalleteTitle][i][3]);
                     break;
                 }
             }
@@ -697,6 +703,7 @@ namespace MapApp
 
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
+            SaveColorPallet(mColorPalletFile);  //  カラーパレットの保存
             WindowFormSave();       //  ウィンドの位置と大きさを保存
         }
 
@@ -762,6 +769,21 @@ namespace MapApp
         }
 
         /// <summary>
+        /// キー入力処理
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void Window_PreviewKeyDown(object sender, System.Windows.Input.KeyEventArgs e)
+        {
+            if (e.Key == System.Windows.Input.Key.C && e.KeyboardDevice.Modifiers == System.Windows.Input.ModifierKeys.Control) {
+                //  Ctrl + C で GL画面をキャプチャーしてクリップボードに入れる
+                YDrawingShapes ydraw = new YDrawingShapes();
+                Point sp = glMapView.PointToScreen(new Point(0, 0));
+                ydraw.screenCapture((int)(sp.X), (int)(sp.Y), (int)glMapView.ActualWidth, (int)glMapView.ActualHeight);
+            }
+        }
+
+        /// <summary>
         /// 標高倍率の選択変更
         /// </summary>
         /// <param name="sender"></param>
@@ -805,7 +827,7 @@ namespace MapApp
         private void CbColorPallete_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
         {
             if (0 <= CbColorPallete.SelectedIndex) {
-                mColorPaleteTitle = CbColorPallete.Items[CbColorPallete.SelectedIndex].ToString();
+                mColorPalleteTitle = CbColorPallete.Items[CbColorPallete.SelectedIndex].ToString();
             }
             if (mMapData != null) {
                 //setParameter();
@@ -862,6 +884,83 @@ namespace MapApp
         {
             mFrameDisp = false;
             renderFrame();
+        }
+
+        /// <summary>
+        /// ファイルからカラーパレットデータの読込
+        /// </summary>
+        /// <param name="path">ファイルパス</param>
+        public void LoadColorPallet(string path)
+        {
+            if (!File.Exists(path))
+                return;
+            List<string> palletList = mYlib.loadListData(path);
+            if (0 < palletList.Count) {
+                mColorPallet = list2DicList(palletList);
+            }
+        }
+
+        /// <summary>
+        /// カラーパレットをファイルに保存
+        /// </summary>
+        /// <param name="path">ファイルパス</param>
+        public void SaveColorPallet(string path)
+        {
+            if (File.Exists(path))
+                return;
+            List<string> palletList = dicList2List(mColorPallet);
+            palletList.Insert(0, "タイトル/標高(m),R,G,B");
+            mYlib.saveListData(path, palletList);
+        }
+
+
+        /// <summary>
+        /// カラーパレットのバイナリデータをテキストデータに変換
+        /// </summary>
+        /// <param name="pallet">カラーパレットデータ</param>
+        /// <returns>テキストリスト</returns>
+        private List<string> dicList2List(Dictionary<string, List<int[]>> pallet)
+        {
+            List<string> palletList = new List<string>();
+            foreach (string key in pallet.Keys) {
+                palletList.Add(key);
+                foreach (int[] data in pallet[key]) {
+                    palletList.Add(string.Join(",", data));
+                }
+            }
+            return palletList;
+        }
+
+        /// <summary>
+        /// カラーパレットのテキストデータをバイナリデータに変換
+        /// </summary>
+        /// <param name="palletList">テキストデータ</param>
+        /// <returns>バイナリデータ</returns>
+        private Dictionary<string, List<int[]>> list2DicList(List<string> palletList)
+        {
+            Dictionary<string, List<int[]>> pallet = new Dictionary<string, List<int[]>>();
+            char[] sep = { ',' };
+            string key = "";
+            List<int[]> buf = new List<int[]>();
+            foreach (string data in palletList) {
+                if (0 <= data.IndexOf("タイトル"))
+                    continue;
+                string[] datas = data.Split(sep);
+                if (datas.Length == 1) {
+                    if (0 < buf.Count && 0 < key.Length)
+                        pallet.Add(key, buf);
+                    key = datas[0];
+                    buf = new List<int[]>();
+                } else if (buf != null && 1 < datas.Length) {
+                    int[] intBuf = new int[datas.Length];
+                    for (int i = 0; i < datas.Length; i++)
+                        intBuf[i] = int.Parse(datas[i]);
+                    buf.Add(intBuf);
+                }
+            }
+            if (0 < buf.Count && 0 < key.Length)
+                pallet.Add(key, buf);
+            return pallet;
         }
     }
 }

@@ -7,7 +7,7 @@
 
 使い方などは[説明書](bin/Debug/MAPAPP説明書.pdf)を参照。
 
-#### おもな機能
+#### ■おもな機能
 1.Web上で公開されている地図表示  
 　国土地理院の地図と同じ方式が使える他の公開している地図の登録・表示ができる。  
 　事前登録している地図  
@@ -29,7 +29,8 @@
   
 4.GPSデータの登録・表示  
 　GPS機能を持った機器でトレースしたGPXデータの登録やトレース表示を行う。  
-<img src="Image/MapGpsTrace.png" width="50%"><img src="Image/MapGpsElevatorGraph.png" width="30%">  
+<img src="Image/MapGpsTrace.png" width="50%">  
+<img src="Image/MapGpsElevatorGraph.png" width="30%">  
   
 5.Wikipediaのデータ参照  
 　Wikipediaには史跡や観光地、博物館、百名山などに位置情報を含むデーが登録されている。  
@@ -40,3 +41,13 @@
 　国土地理院の標高データを利用して地図の表示エリアを三次元表示する。  
 <img src="Image/Map3DImage.png" width="50%">  
 
+### ■実行環境
+MapApp.zipをダウンロードして適当なフォルダに展開し、フォルダ内の MapApp.exe をダブルクリックして実行します。  
+初回は画像が乱れることがあるので、その場合は F5 キーで再表示するとなおります。
+
+### ■開発環境  
+開発ソフト : Microsoft Visual Studio 2022  
+開発言語　 : C# 7.3 Windows アプリケーション  
+フレームワーク　 :  .NET framework 4.7.2  
+NuGetライブラリ : OpenTK(3.3.2),OpenTK.GLControl(3.1.0)  
+自作ライブラリ  : WpfLib, Wpf3DLib

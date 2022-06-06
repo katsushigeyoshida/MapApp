@@ -13,13 +13,13 @@
 　事前登録している地図  
 　　・国土地理院地図(標準図や航空写真、色別標高図など14種類)  
 　　・オープンストリートマップ(OpenStreetMapの世界地図)  
-　　・地質調査総合センターで公開している「20万分の1日本シームレス地質図V2」(マウス位置で凡例表示を行う)  
+　　・地質調査総合センターで公開している「20万分の1日本シームレス地質図V2」  
 標準地図  
-<img src="Image/MapStdImage.png" width="50%">  
+<img src="Image/MapStdImage.png" width="80%">  
 色別標高図  
-<img src="Image/MapLerifImage.png" width="50%">  
+<img src="Image/MapLerifImage.png" width="80%">  
 20万分の1日本シームレス地質図V2 (マウス位置の地質名を下部ステータスバーに表示)  
-<img src="Image/MspSeamlessV2.png" width="50%">
+<img src="Image/MspSeamlessV2.png" width="80%">
   
 2.地図の解像度変更対応  
 　地図の表示は256x256のタイル画像を並べて表示しているので表示する画像の数を増やすと解像度を高くすることができる(画像列数で設定)  
@@ -29,17 +29,17 @@
   
 4.GPSデータの登録・表示  
 　GPS機能を持った機器でトレースしたGPXデータの登録やトレース表示を行う。  
-<img src="Image/MapGpsTrace.png" width="50%">  
-<img src="Image/MapGpsElevatorGraph.png" width="30%">  
+<img src="Image/MapGpsTrace.png" width="80%">  
+<img src="Image/MapGpsElevatorGraph.png" width="80%">  
   
 5.Wikipediaのデータ参照  
 　Wikipediaには史跡や観光地、博物館、百名山などに位置情報を含むデーが登録されている。  
 　これらの情報の一覧を作成し、それから位置座標取出して表示し、その位置に地図を移動させたり、マークの登録を行う。  
-<img src="Image/WikiListImage.png" width="50%">  
+<img src="Image/WikiListImage.png" width="90%">  
 
 6.三次元表示機能  
 　国土地理院の標高データを利用して地図の表示エリアを三次元表示する。  
-<img src="Image/Map3DImage.png" width="50%">  
+<img src="Image/Map3DImage.png" width="80%">  
 
 ### ■実行環境
 MapApp.zipをダウンロードして適当なフォルダに展開し、フォルダ内の MapApp.exe をダブルクリックして実行します。  

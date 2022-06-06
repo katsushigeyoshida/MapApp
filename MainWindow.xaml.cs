@@ -570,21 +570,25 @@ namespace MapApp
                 }
             } else if (menuItem.Name.CompareTo("DataIDEditMenu") == 0) {
                 //  データの編集
-                MapDataSet dlg = new MapDataSet();
-                for (int i = 0; i < dlg.mDatas.Length && i < dlg.mDatas.Length; i++)
-                    dlg.mDatas[i] = MapInfoData.mMapData[CbDataID.SelectedIndex][i];
-                var result = dlg.ShowDialog();
-                if (result == true) {
-                    for (int i = 0; i < dlg.mDatas.Length && i < MapInfoData.mMapData[CbDataID.SelectedIndex].Length; i++)
-                        MapInfoData.mMapData[CbDataID.SelectedIndex][i] = dlg.mDatas[i];
-                    setMapData();
+                if (0 <= CbDataID.SelectedIndex) {
+                    MapDataSet dlg = new MapDataSet();
+                    for (int i = 0; i < dlg.mDatas.Length && i < dlg.mDatas.Length; i++)
+                        dlg.mDatas[i] = MapInfoData.mMapData[CbDataID.SelectedIndex][i];
+                    var result = dlg.ShowDialog();
+                    if (result == true) {
+                        for (int i = 0; i < dlg.mDatas.Length && i < MapInfoData.mMapData[CbDataID.SelectedIndex].Length; i++)
+                            MapInfoData.mMapData[CbDataID.SelectedIndex][i] = dlg.mDatas[i];
+                        setMapData();
+                    }
                 }
             } else if (menuItem.Name.CompareTo("DataIDRemoveMenu") == 0) {
                 //  データの削除
-                MessageBoxResult result = MessageBox.Show(MapInfoData.mMapData[CbDataID.SelectedIndex][0] + "削除します", "確認", MessageBoxButton.OKCancel);
-                if (result == MessageBoxResult.OK) {
-                    MapInfoData.mMapData.RemoveAt(CbDataID.SelectedIndex);
-                    setMapData();
+                if (0 <= CbDataID.SelectedIndex) {
+                    MessageBoxResult result = MessageBox.Show(MapInfoData.mMapData[CbDataID.SelectedIndex][0] + "削除します", "確認", MessageBoxButton.OKCancel);
+                    if (result == MessageBoxResult.OK) {
+                        MapInfoData.mMapData.RemoveAt(CbDataID.SelectedIndex);
+                        setMapData();
+                    }
                 }
             }
         }

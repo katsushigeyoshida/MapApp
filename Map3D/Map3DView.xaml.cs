@@ -943,7 +943,7 @@ namespace MapApp
             string key = "";
             List<int[]> buf = new List<int[]>();
             foreach (string data in palletList) {
-                if (0 <= data.IndexOf("タイトル"))
+                if (0 == data.Length || data[0] == '#' || 0 <= data.IndexOf("タイトル"))
                     continue;
                 string[] datas = data.Split(sep);
                 if (datas.Length == 1) {
@@ -951,10 +951,10 @@ namespace MapApp
                         pallet.Add(key, buf);
                     key = datas[0];
                     buf = new List<int[]>();
-                } else if (buf != null && 1 < datas.Length) {
+                } else if (buf != null && 3 < datas.Length) {
                     int[] intBuf = new int[datas.Length];
                     for (int i = 0; i < datas.Length; i++)
-                        intBuf[i] = int.Parse(datas[i]);
+                        intBuf[i] = mYlib.intParse(datas[i]);
                     buf.Add(intBuf);
                 }
             }

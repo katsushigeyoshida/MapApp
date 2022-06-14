@@ -57,12 +57,24 @@ namespace MapApp
         public int mUseRow = 0;                         //  使用した行数
         public const int mMaxZoom = 18;
         public int mElevatorDataNo = 0;                 //  使用標高データのNo
+        public string mBaseDataIDName = "";             //  重ね合わせBase地図ID
+        public System.Drawing.Color mTransportColor = System.Drawing.Color.White;   //  重ねるデータの透過色
+        public bool mBaseMapOver = false;               //  ベースマップの重ねる順番で上になる
+        public MapData mBaseMap = null;
 
         private YLib ylib = new YLib();
 
         public MapData()
         {
 
+        }
+
+
+        public MapData(string mapID)
+        {
+            int mapDataIdNo = MapInfoData.mMapData.FindIndex(n => n[1].CompareTo(mapID) == 0);
+            if (0 <= mapDataIdNo)
+                setMapInfoData(mapDataIdNo);
         }
 
         /// <summary>
@@ -83,6 +95,31 @@ namespace MapApp
             mRowCount = mapData.mRowCount;
             mCellSize = mapData.mCellSize;
             mView = new Size(mapData.mView.Width, mapData.mView.Height);
+        }
+
+        /// <summary>
+        /// MapInfoDataの値を設定する
+        /// </summary>
+        /// <param name="mapDataID">MapInfoDataのNo</param>
+        public void setMapInfoData(int mapDataIdNo)
+        {
+            mDataId = mapDataIdNo;                                  //  MapInfoDataのNo
+            mMapUrl = MapInfoData.mMapData[mDataId][7];             //  国土地理院データ以外のURL
+            mDataIdName = MapInfoData.mMapData[mDataId][1];         //  データID
+            mExt = MapInfoData.mMapData[mDataId][2];                //  データファイルの拡張子
+            mTileOrder = MapInfoData.mMapData[mDataId][8];          //  {z}/{x}/{y}以外のタイル座標順 → ヘルプ参照先URL
+            mElevatorDataNo = getElevatorDataNo(MapInfoData.mMapData[mDataId][10]); //  標高データ
+            mBaseDataIDName = MapInfoData.mMapData[mDataId][11];    //  重ね合わせのベースマップID
+            if (0 <= mBaseDataIDName.Length && mDataIdName.CompareTo(mBaseDataIDName) != 0)
+                mBaseMap = new MapData(mBaseDataIDName);
+            //  透過色の設定
+            if (5 < MapInfoData.mMapData[mDataId][12].Length) {
+                int r = Convert.ToInt32(MapInfoData.mMapData[mDataId][12].Substring(0, 2), 16);
+                int g = Convert.ToInt32(MapInfoData.mMapData[mDataId][12].Substring(2, 2), 16);
+                int b = Convert.ToInt32(MapInfoData.mMapData[mDataId][12].Substring(4, 2), 16);
+                mTransportColor = System.Drawing.Color.FromArgb(r, g, b);
+            }
+            mBaseMapOver = MapInfoData.mMapData[mDataId][13].ToLower().CompareTo("true") == 0;
         }
 
         /// <summary>
@@ -134,48 +171,17 @@ namespace MapApp
         }
 
         /// <summary>
-        /// ダウンロード先のWebアドレスの取得
+        /// 標高データファイルの取得
         /// </summary>
         /// <param name="x">X座標(Map座標)</param>
         /// <param name="y">Y座標(Map座標)</param>
-        /// <returns>Webアドレス</returns>
-        public string getWebAddress(int x, int y)
+        /// <param name="autoOffline">データ取得モード(true:update/null:auto/false:offline)</param>
+        public void getElevatorDataFile(int x, int y, bool? autoOffline)
         {
-            if (0 < mMapUrl.Length) {
-                //  国土地理院地図以外
-                string url = mMapUrl.Replace("{z}", mZoom.ToString());
-                url = url.Replace("{x}", x.ToString());
-                url = url.Replace("{y}", y.ToString());
-                return url;
-            } else {
-                //  国土地理院地図
-                return MapInfoData.mGsiUrl + mDataIdName + "/" + mZoom + "/" + x + "/" + y + "." + mExt;
-            }
-        }
-
-        /// <summary>
-        /// ダウンロードした先のパス
-        /// </summary>
-        /// <param name="x">X座標(Map座標)</param>
-        /// <param name="y">Y座標(Map座標)</param>
-        /// <returns>ファイルパス</returns>
-        public string downloadPath(int x, int y)
-        {
-            return mBaseFolder + "\\" + mDataIdName + "\\" + mZoom + "\\" + x + "\\" + y + "." + mExt;
-        }
-
-        /// <summary>
-        /// 標高データのIDからデータNoを取得
-        /// </summary>
-        /// <param name="id">データID</param>
-        /// <returns>データo</returns>
-        public int getElevatorDataNo(string id)
-        {
-            for (int i = 0; i < MapInfoData.mMapElevatorData.Count; i++) {
-                if (MapInfoData.mMapElevatorData[i][1].CompareTo(id) == 0)
-                    return i;
-            }
-            return 0;
+            //  標高データの取得
+            string elevatorUrl = getElevatorWebAddress(x, y);
+            string downloadPath = downloadElevatorPath(x, y);
+            getDownLoadFile(elevatorUrl, downloadPath, autoOffline);
         }
 
         /// <summary>
@@ -219,6 +225,20 @@ namespace MapApp
         }
 
         /// <summary>
+        /// 標高データのIDからデータNoを取得
+        /// </summary>
+        /// <param name="id">データID</param>
+        /// <returns>データo</returns>
+        public int getElevatorDataNo(string id)
+        {
+            for (int i = 0; i < MapInfoData.mMapElevatorData.Count; i++) {
+                if (MapInfoData.mMapElevatorData[i][1].CompareTo(id) == 0)
+                    return i;
+            }
+            return 0;
+        }
+
+        /// <summary>
         /// 標高データの座標を取得
         /// ズームレベルが指定以上の場合は最大ズームレベルの座標(Map座標)に変換
         /// </summary>
@@ -233,6 +253,170 @@ namespace MapApp
             } else {
                 return mp;
             }
+        }
+
+        /// <summary>
+        /// 標高データの取得
+        /// ダウンロードしたテキストファイル(256x256)から標高データを取得
+        /// </summary>
+        /// <param name="mp">座標(Map値)</param>
+        /// <param name="autoOffline">データ取得モード(true:update/null:auto/false:offline)</param>
+        /// <returns>標高(m)</returns>
+        public double getMapElavtor(Point mp, bool? autoOffline)
+        {
+            string elevatorUrl = getElevatorWebAddress(mp.X, mp.Y);
+            string downloadPath = downloadElevatorPath(mp.X, mp.Y);
+            bool? result = getDownLoadFile(elevatorUrl, downloadPath, autoOffline);
+            if (result == null) {
+                return 0.0;
+            } else {
+                mp = cnvElevatorPos(mp);
+                return getMapElevatorFile(downloadPath, (int)(256.0 * (mp.X % 1.0)), (int)(256.0 * (mp.Y % 1.0)));
+            }
+        }
+
+        /// <summary>
+        /// 標高データファイルから標高値を取得
+        /// データファイルで標高がない部分は'e'が記載されている
+        /// </summary>
+        /// <param name="path">データファイルパス</param>
+        /// <param name="x">データファイル配列の列数</param>
+        /// <param name="y">データファイル配列の行数</param>
+        /// <returns>標高値(m)</returns>
+        private double getMapElevatorFile(string path, int x, int y)
+        {
+            List<string[]> eleList;
+            if (mElevatorDataList.ContainsKey(path)) {
+                eleList = mElevatorDataList[path];
+            } else {
+                eleList = ylib.loadCsvData(path);
+                mElevatorDataList.Add(path, eleList);
+            }
+            if (0 < eleList.Count)
+                return ylib.string2double(eleList[y][x]);
+            else
+                return 0;
+        }
+
+        private bool? mMapDataDwonloadResult = false;
+
+        /// <summary>
+        /// 地図データを取得する
+        /// </summary>
+        /// <param name="x">X座標(Map座標)</param>
+        /// <param name="y">Y座標(Map座標)</param>
+        /// <param name="autoOffline">データ取得モード(true:update/null:auto/false:offline)</param>
+        /// <returns>ファイルパス(ファイルがない時はnull)</returns>
+        public string getMapData(int x, int y, bool? autoOffline)
+        {
+            string downloadFilePath = "";
+            if (isMergeData()) {
+                //  重ね合わせデータの表示する場合
+                downloadFilePath = getMergeMapData(x, y, autoOffline);
+            } else {
+                //  単独のMapDataの表示する場合
+                downloadFilePath = getMapDataDownload(x, y, autoOffline);
+            }
+            if (mMapDataDwonloadResult == null)
+                return null;
+            else
+                return downloadFilePath;
+        }
+
+        /// <summary>
+        /// 重ね合わせた地図データの取得
+        /// </summary>
+        /// <param name="x">X座標(Map座標)</param>
+        /// <param name="y">Y座標(Map座標)</param>
+        /// <param name="autoOffline">データ取得モード(true:update / null:auto / false:offline)</param>
+        /// <returns>重ね合わせたデータファイルパス</returns>
+        public string getMergeMapData(int x, int y, bool? autoOffline)
+        {
+            string mergeDataPath = downloadMergeDataPath(x, y);
+            if (File.Exists(mergeDataPath) && autoOffline != true)
+                return mergeDataPath;           //  既にファイルが存在する
+            mBaseMap.mZoom = mZoom;             //  MaseMapのZoomを設定
+            string baseMapDataPath = mBaseMap.getMapDataDownload(x, y, autoOffline);    //  BaseMapのデータ取得
+            string lapMapDataPath = getMapDataDownload(x, y, autoOffline);              //  重ねるデータの取得
+            System.Drawing.Color transportColor = mTransportColor;                      //  透過色の設定
+            if (mBaseMapOver) {
+                //  BaseMapを上にする時
+                return ylib.imageOverlap(lapMapDataPath, baseMapDataPath, mergeDataPath, transportColor);   //  重ね合わせた処理
+            } else {
+                //  BaseMapを下にする時
+                return ylib.imageOverlap(baseMapDataPath, lapMapDataPath, mergeDataPath, transportColor);   //  重ね合わせた処理
+            }
+        }
+
+        /// <summary>
+        /// 重ね合わせの地図データの確認
+        /// BaseMapIDがあれば重ね合わせデータとする
+        /// </summary>
+        /// <returns></returns>
+        private bool isMergeData()
+        {
+            return 0 < mBaseDataIDName.Length;
+        }
+
+        /// <summary>
+        /// 智頭データをダウンロードする
+        /// </summary>
+        /// <param name="x">X座標(Map座標)</param>
+        /// <param name="y">Y座標(Map座標)</param>
+        /// <param name="autoOffline">データ取得モード(true:update/null:auto/false:offline)</param>
+        /// <returns>ダウンロードファイルパス</returns>
+        public string getMapDataDownload(int x, int y, bool? autoOffline)
+        {
+            string url = getWebAddress(x, y);
+            string downloadFilePath = downloadPath(x, y);
+            mMapDataDwonloadResult = getDownLoadFile(url, downloadFilePath, autoOffline);
+            return downloadFilePath;
+        }
+
+        /// <summary>
+        /// 地図データの取得結果を返すす
+        /// 結果: ダウンロードOK : true  ダウンロードなし(ファイルが既に存在する) : false ダウンロード失敗 : null
+        /// </summary>
+        /// <returns>(false:なし true:成功 null: 失敗)</returns>
+        public bool? getMapDataResult()
+        {
+            return mMapDataDwonloadResult;
+        }
+
+        /// <summary>
+        /// ダウンロード先のWebアドレスの取得
+        /// </summary>
+        /// <param name="x">X座標(Map座標)</param>
+        /// <param name="y">Y座標(Map座標)</param>
+        /// <returns>Webアドレス</returns>
+        public string getWebAddress(int x, int y)
+        {
+            if (0 < mMapUrl.Length) {
+                //  国土地理院地図以外
+                string url = mMapUrl.Replace("{z}", mZoom.ToString());
+                url = url.Replace("{x}", x.ToString());
+                url = url.Replace("{y}", y.ToString());
+                return url;
+            } else {
+                //  国土地理院地図
+                return MapInfoData.mGsiUrl + mDataIdName + "/" + mZoom + "/" + x + "/" + y + "." + mExt;
+            }
+        }
+
+        /// <summary>
+        /// ダウンロードした先のパス
+        /// </summary>
+        /// <param name="x">X座標(Map座標)</param>
+        /// <param name="y">Y座標(Map座標)</param>
+        /// <returns>ファイルパス</returns>
+        public string downloadPath(int x, int y)
+        {
+            return mBaseFolder + "\\" + mDataIdName + "\\" + mZoom + "\\" + x + "\\" + y + "." + mExt;
+        }
+
+        public string downloadMergeDataPath(int x, int y)
+        {
+            return mBaseFolder + "\\" + mDataIdName + "_" + mBaseDataIDName + "\\" + mZoom + "\\" + x + "\\" + y + "." + mExt;
         }
 
 
@@ -269,50 +453,6 @@ namespace MapApp
                 }
             }
             return result;
-        }
-
-
-        /// <summary>
-        /// 標高データの取得
-        /// ダウンロードしたテキストファイル(256x256)から標高データを取得
-        /// </summary>
-        /// <param name="mp">座標(Map値)</param>
-        /// <param name="autoOffline">データ取得モード(true:update/null:auto/false:offline)</param>
-        /// <returns>標高(m)</returns>
-        public double getMapElavtor(Point mp, bool? autoOffline)
-        {
-            string elevatorUrl = getElevatorWebAddress(mp.X, mp.Y);
-            string downloadPath = downloadElevatorPath(mp.X, mp.Y);
-            bool ? result = getDownLoadFile(elevatorUrl, downloadPath, autoOffline);
-            if (result == null) {
-                return 0.0;
-            } else {
-                mp = cnvElevatorPos(mp);
-                return getMapElevatorFile(downloadPath, (int)(256.0 * (mp.X % 1.0)), (int)(256.0 * (mp.Y % 1.0)));
-            }
-        }
-
-        /// <summary>
-        /// 標高データファイルから標高値を取得
-        /// データファイルで標高がない部分は'e'が記載されている
-        /// </summary>
-        /// <param name="path">データファイルパス</param>
-        /// <param name="x">データファイル配列の列数</param>
-        /// <param name="y">データファイル配列の行数</param>
-        /// <returns>標高値(m)</returns>
-        private double getMapElevatorFile(string path, int x, int y)
-        {
-            List<string[]> eleList;
-            if (mElevatorDataList.ContainsKey(path)) {
-                eleList = mElevatorDataList[path];
-            } else {
-                eleList = ylib.loadCsvData(path);
-                mElevatorDataList.Add(path, eleList);
-            }
-            if (0 < eleList.Count)
-                return ylib.string2double(eleList[y][x]);
-            else
-                return 0;
         }
 
         /// <summary>

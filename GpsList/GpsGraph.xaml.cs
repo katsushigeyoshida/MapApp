@@ -35,6 +35,10 @@ namespace MapApp
         private string[] mYTitle = new string[] {
             "標高(m)", "標高(m)", "速度(km/h)",
         };
+        private string[] mMoveAverageNo = new string[] {
+            "なし", "2", "3", "4", "5", "7", "10", "15", "20", "25", "30", "40",
+            "50", "60", "80", "100", "200", "300", "500", "1000", "2000", "3000"
+        };
         private List<double> mElevetor = new List<double>();    //  標高
         private List<double> mDistance = new List<double>();    //  累積距離
         private List<double> mSpeed = new List<double>();       //  速度
@@ -59,11 +63,12 @@ namespace MapApp
             CbGrphYType.SelectedIndex = 0;
             CbGrphXType.ItemsSource = mGraphXType;
             CbGrphXType.SelectedIndex = 0;
-            CbMoveAverage.Items.Clear();
-            CbMoveAverage.Items.Add("なし");
-            for (int i = 2; i <= 50; i++) {
-                CbMoveAverage.Items.Add(i.ToString());
-            }
+            CbMoveAverage.ItemsSource = mMoveAverageNo;
+            //CbMoveAverage.Items.Clear();
+            //CbMoveAverage.Items.Add("なし");
+            //for (int i = 2; i <= 50; i++) {
+            //    CbMoveAverage.Items.Add(i.ToString());
+            //}
             CbMoveAverage.SelectedIndex = 0;
         }
 
@@ -288,7 +293,7 @@ namespace MapApp
                 if (x == mArea.Left && x % mStepXsize != 0)
                     x -= x % mStepXsize;
             }
-            ydraw.drawText(getXScaleValue(mArea.Width), 
+            ydraw.drawText(getXScaleValue(mArea.Right), 
                 new Point(mArea.Right, mArea.Y - textMargine),
                 -Math.PI / 2, HorizontalAlignment.Left, VerticalAlignment.Center);
 
@@ -398,23 +403,26 @@ namespace MapApp
         /// <returns></returns>
         private double getYvalue(int i)
         {
+            int moveAveNo = 1;
+            if (0 <= CbMoveAverage.SelectedIndex)
+                moveAveNo = ylib.intParse(CbMoveAverage.Items[CbMoveAverage.SelectedIndex].ToString());
             if (CbGrphYType.SelectedIndex == 0) {           //  標高
                 if (CbMoveAverage.SelectedIndex == 0) {
                     return mElevetor[i];
                 } else {
-                    return ylib.movingAverage(mElevetor, i, CbMoveAverage.SelectedIndex + 1, true);
+                    return ylib.movingAverage(mElevetor, i, moveAveNo, true);
                 }
             } else if (CbGrphYType.SelectedIndex == 1) {    //  標高さ
                 if (CbMoveAverage.SelectedIndex == 0) {
                     return mElevetor[i];
                 } else {
-                    return ylib.movingAverage(mElevetor, i, CbMoveAverage.SelectedIndex + 1, true);
+                    return ylib.movingAverage(mElevetor, i, moveAveNo, true);
                 }
             } else if (CbGrphYType.SelectedIndex == 2) {    //  速度
                 if (CbMoveAverage.SelectedIndex == 0) {
                     return mSpeed[i];
                 } else {
-                    return ylib.movingAverage(mSpeed, i, CbMoveAverage.SelectedIndex + 1, true);
+                    return ylib.movingAverage(mSpeed, i, moveAveNo, true);
                 }
             } else {
                 return 0;

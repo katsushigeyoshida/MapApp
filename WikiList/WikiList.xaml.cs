@@ -691,7 +691,7 @@ namespace MapApp
             //  マークデータをダイヤ六表示
             MarkInput markInput = new MarkInput();
             markInput.mMapMark = mapMark;
-            markInput.mGroups = mMarkList.getGroupList().ToArray();
+            markInput.mMarkList = mMarkList;
             var result = markInput.ShowDialog();
             if (result == true) {
                 mMarkList.add(mapMark);

@@ -160,7 +160,7 @@ namespace MapApp
                 if (mapMark != null) {
                     MarkInput markInput = new MarkInput();
                     markInput.mMapMark = mapMark;
-                    markInput.mGroups = mMarkList.getGroupList().ToArray();
+                    markInput.mMarkList = mMarkList;
                     var result = markInput.ShowDialog();
                     if (result == true) {
                         dataLoad();
@@ -173,7 +173,7 @@ namespace MapApp
                 mapMark.mLocation = mMainWindow.mMapData.getCenter();
                 MarkInput markInput = new MarkInput();
                 markInput.mMapMark = mapMark;
-                markInput.mGroups = mMarkList.getGroupList().ToArray();
+                markInput.mMarkList = mMarkList;
                 var result = markInput.ShowDialog();
                 if (result == true) {
                     mMarkList.add(mapMark);

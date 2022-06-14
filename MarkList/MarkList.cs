@@ -21,6 +21,23 @@ namespace MapApp
         public Point mCenter = new Point();
         public double mSizeRate = 1.0;
 
+        public List<string[]> mMarkPath = new List<string[]>() {
+            //  記号パターン (T:マークタイトル L:線分 R:四角 A:円弧 C:色)
+            new string[] { "T=クロス",   "C=Black", "L=-1,0,1,0", "L=0,1,0,-1" },
+            new string[] { "T=クロス円", "C=Black", "L=-1,0,1,0", "L=0,1,0,-1", "C=Red", "A=0,0,0.7,0,360" },
+            new string[] { "T=三角形",   "C=Black", "L=-1,-1,1,-1", "L=1,-1,0,0", "L=0,0,-1,-1"},
+            new string[] { "T=家",       "C=Black", "L=-1,-1,1,-1", "L=1,-1,1,0", "L=1,0,0,1", "L=0,1,-1,0", "L=-1,0,-1,-1", "L=-1,0,1,0" },
+            new string[] { "T=ビル",     "C=Black", "R=-0.6, 1,0.6,-1", "R=-0.4,0.7,0.4,0.4", "R=-0.4,0.2,0.4,-0.2", "R=-0.4,-0.4,0.4,-0.7"},
+            new string[] { "T=工場",     "C=Black", "R=-1,0.0, 1,-1", "R=-0.7,1,-0.3,0.0"},
+            new string[] { "T=橋",       "C=Black", "L=-1.5,0,1.5,0", "A=0,0,1,0,180" },
+            new string[] { "T=公園",     "C=Black", "L=0,1.5,-1,0.3", "L=0,1.5,1,0.3", "L=1,0.3,-1,0.3",
+                                         "L=0,0.4,-1,-0.8", "L=0,0.4,1,-0.8", "L=1,-0.8,-1,-0.8", "L=0,-0.8,0,-1.5" },
+        };
+        public string[] mMarkName;
+        public string mMarkPathDataFile = "MarkPathData.csv";
+        public string[] mSizeName = { "1", "2", "4", "7", "10", "15", "20", "25", "30" };
+
+        private string mAppFolder;
         private YLib ylib = new YLib();
 
         /// <summary>
@@ -28,8 +45,73 @@ namespace MapApp
         /// </summary>
         public MarkList()
         {
+            loadPathData();
+            setMarkPath2Title();
+        }
+
+        /// <summary>
+        /// マークパスデータからマーク名だけを抽出する
+        /// </summary>
+        private void setMarkPath2Title()
+        {
+            mMarkName = new string[mMarkPath.Count];
+            for (int i = 0; i < mMarkPath.Count; i++) {
+                int n = mMarkPath[i][0].IndexOf("T=");
+                if (0 <= n && n < mMarkPath[i][0].Length)
+                    mMarkName[i] = mMarkPath[i][0].Substring(2);
+            }
+        }
+
+        /// <summary>
+        /// マークパスデータをファイルに保存
+        /// </summary>
+        public void savePathData()
+        {
+            if (File.Exists(mMarkPathDataFile))
+                return;
+            List<string> pathData = new List<string>();
+            pathData.Add("# マークの形状データ");
+            pathData.Add("# 名称　 : T=マーク名称");
+            pathData.Add("# 色設定 : C=カラー名称");
+            pathData.Add("# 線分　 : L=始点X座標,始点Y座標,終点X座標,終点Y座標");
+            pathData.Add("# 四角形 : R=始点X座標,始点Y座標,終点X座標,終点Y座標");
+            pathData.Add("# 円弧　 : R=中心点X座標,中心点Y座標,半径,開始角(度),修了角(度)");
+            foreach (string[] datas in mMarkPath) {
+                foreach (string data in datas) {
+                    pathData.Add(data);
+                }
+            }
+            if (0 < pathData.Count)
+                ylib.saveListData(mMarkPathDataFile, pathData);
+        }
+
+        /// <summary>
+        /// マークパスデータをファイルから呼び出す
+        /// </summary>
+        public void loadPathData()
+        {
+            if (File.Exists(mMarkPathDataFile)) {
+                List<string> pathdata = ylib.loadListData(mMarkPathDataFile);
+                mMarkPath.Clear();
+                List<string> buf = null;
+                foreach (string data in pathdata) {
+                    if (2 < data.Length && data[0] != '#') {
+                        if (0 == data.IndexOf("T=")) {
+                            if (buf != null && 0 < buf.Count)
+                                mMarkPath.Add(buf.ToArray());
+                            buf = new List<string>();
+                            buf.Add(data);
+                        } else if (buf != null && data[1] == '=') {
+                            buf.Add(data);
+                        }
+                    }
+                }
+                if (buf != null && 0 < buf.Count)
+                    mMarkPath.Add(buf.ToArray());
+            }
 
         }
+
 
         /// <summary>
         /// データ保存ファイルパスの設定
@@ -189,7 +271,7 @@ namespace MapApp
                     mMapMarkList.Clear();
                 foreach (string[] data in dataList) {
                     MapMark mapMark = new MapMark();
-                    mapMark.setStrinData(data);
+                    mapMark.setStrinData(data, mMarkPath);
                     if (getMapMark(mapMark.mTitle, mapMark.mGroup) == null)
                         mMapMarkList.Add(mapMark);
                 }

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Windows;
 using WpfLib;
 
@@ -20,20 +21,9 @@ namespace MapApp
         public bool mVisible = true;                                //   表示非表示
         public bool mTitleVisible = true;                           //  タイトルの表示/非表示
 
-        private string[][] mMarkPath = {    //  記号パターン (L:線分 R:四角 A:円弧 C:色)
-            new string[] { "C=Black", "L=-1,0,1,0", "L=0,-1,0,1" },                 //  クロス
-            new string[] { "C=Black", "L=-1,0,1,0", "L=0,-1,0,1", "C=Red", "A=0,0,0.7,0,360" }, //  クロスに〇
-            new string[] { "C=Black", "L=-1,1,1,1", "L=1,1,0,-1", "L=0,-1,-1,1"},   //  △
-            new string[] { "C=Black", "L=-1,1,1,1", "L=1,1,1,0", "L=1,0,0,-1", "L=0,-1,-1,0", "L=-1,0,-1,1", "L=-1,0,1,0" },    //  家
-            new string[] { "C=Black", "R=-0.6, -1,0.6,1", "R=-0.4,-0.7,0.4,-0.4", "R=-0.4,-0.2,0.4,0.2", "R=-0.4,0.4,0.4,0.7"},    //  ビル
-            new string[] { "C=Black", "R=-1,0.0, 1,1", "R=-0.7,-1,-0.3,0.0"},       //  工場
-            new string[] { "C=Black", "L=-1.5,0,1.5,0", "A=0,0,1,0,180" },          //  橋
-            new string[] { "C=Black", "L=0,-1.5,-1,-0.3", "L=0,-1.5,1,-0.3", "L=1,-0.3,-1,-0.3",
-                                      "L=0,-0.4,-1,0.8", "L=0,-0.4,1,0.8", "L=1,0.8,-1,0.8",
-                                      "L=0,0.8,0,1.5" },                            //  公園(木)
-        };
-        public string[] mMarkName = { "クロス", "クロス円", "三角形",　"家", "ビル" , "工場", "橋", "公園" };
-        public string[] mSizeName = { "1", "2", "4", "7", "10", "15", "20", "25", "30" };
+        public string[] mMarkPath;
+        public string mMarkName;
+
         public static string[] mMarkDataFormat = {
             "Title", "Group", "MarkType", "Size", "Comment", "Link", "Visible", "TitleVisible", "XLocation", "YLocation",
         };
@@ -45,7 +35,6 @@ namespace MapApp
         /// </summary>
         public MapMark()
         {
-
         }
 
         /// <summary>
@@ -74,13 +63,13 @@ namespace MapApp
             if (insideChk(mapData.getArea(), mLocation) && 
                 (filterGroup.Length < 1 || containGroup(filterGroup))) {
                 ydraw.setThickness(1.0);
-                for (int i = 0; i < mMarkPath[mMarkType].Length; i++) {
-                    switch (mMarkPath[mMarkType][i][0]) {
-                        case 'C': setColor(ydraw, mMarkPath[mMarkType][i]); break;
-                        case 'L': drawLine(ydraw, mMarkPath[mMarkType][i], mapData); break;
-                        case 'R': drawRect(ydraw, mMarkPath[mMarkType][i], mapData); break;
-                        case 'P': drawPolyLine(ydraw, mMarkPath[mMarkType][i], mapData); break;
-                        case 'A': drawArc(ydraw, mMarkPath[mMarkType][i], mapData); break;
+                for (int i = 1; i < mMarkPath.Length; i++) {
+                    switch (mMarkPath[i][0]) {
+                        case 'C': setColor(ydraw, mMarkPath[i]); break;
+                        case 'L': drawLine(ydraw, mMarkPath[i], mapData); break;
+                        case 'R': drawRect(ydraw, mMarkPath[i], mapData); break;
+                        case 'P': drawPolyLine(ydraw, mMarkPath[i], mapData); break;
+                        case 'A': drawArc(ydraw, mMarkPath[i], mapData); break;
                         default: break;
                     }
                 }
@@ -144,6 +133,7 @@ namespace MapApp
         {
             string color = command.Substring(command.IndexOf('=') + 1);
             ydraw.setColor(color.Trim());
+            ydraw.setFillColor(null);
         }
 
         /// <summary>
@@ -156,10 +146,10 @@ namespace MapApp
             string[] data = getParameter(command);
 
             Point pos = mapData.baseMap2Screen(mLocation);
-            double sx = double.Parse(data[0]) * mSize * mSizeRate + pos.X;
-            double sy = double.Parse(data[1]) * mSize * mSizeRate + pos.Y;
-            double ex = double.Parse(data[2]) * mSize * mSizeRate + pos.X;
-            double ey = double.Parse(data[3]) * mSize * mSizeRate + pos.Y;
+            double sx =  ylib.doubleParse(data[0]) * mSize * mSizeRate + pos.X;
+            double sy = -ylib.doubleParse(data[1]) * mSize * mSizeRate + pos.Y;
+            double ex =  ylib.doubleParse(data[2]) * mSize * mSizeRate + pos.X;
+            double ey = -ylib.doubleParse(data[3]) * mSize * mSizeRate + pos.Y;
             ydraw.drawLine(sx, sy, ex, ey);
         }
 
@@ -174,14 +164,11 @@ namespace MapApp
             string[] data = getParameter(command);
 
             Point pos = mapData.baseMap2Screen(mLocation);
-            double sx = double.Parse(data[0]) * mSize * mSizeRate + pos.X;
-            double sy = double.Parse(data[1]) * mSize * mSizeRate + pos.Y;
-            double ex = double.Parse(data[2]) * mSize * mSizeRate + pos.X;
-            double ey = double.Parse(data[3]) * mSize * mSizeRate + pos.Y;
-            ydraw.drawLine(sx, sy, sx, ey);
-            ydraw.drawLine(ex, sy, ex, ey);
-            ydraw.drawLine(sx, sy, ex, sy);
-            ydraw.drawLine(sx, ey, ex, ey);
+            double sx =  ylib.doubleParse(data[0]) * mSize * mSizeRate + pos.X;
+            double sy = -ylib.doubleParse(data[1]) * mSize * mSizeRate + pos.Y;
+            double ex =  ylib.doubleParse(data[2]) * mSize * mSizeRate + pos.X;
+            double ey = -ylib.doubleParse(data[3]) * mSize * mSizeRate + pos.Y;
+            ydraw.drawRectangle(new Point(sx,sy), new Point(ex, ey), 0.0);
         }
 
         /// <summary>
@@ -194,11 +181,11 @@ namespace MapApp
         {
             string[] data = getParameter(command);
             Point pos = mapData.baseMap2Screen(mLocation);
-            double sx = double.Parse(data[0]) * mSize * mSizeRate + pos.X;
-            double sy = double.Parse(data[1]) * mSize * mSizeRate + pos.Y;
+            double sx =  ylib.doubleParse(data[0]) * mSize * mSizeRate + pos.X;
+            double sy = -ylib.doubleParse(data[1]) * mSize * mSizeRate + pos.Y;
             for (int i = 2; i < data.Length; i += 2) {
-                double ex = double.Parse(data[i]) * mSize * mSizeRate + pos.X;
-                double ey = double.Parse(data[i+1]) * mSize * mSizeRate + pos.Y;
+                double ex =  ylib.doubleParse(data[i]) * mSize * mSizeRate + pos.X;
+                double ey = -ylib.doubleParse(data[i+1]) * mSize * mSizeRate + pos.Y;
                 ydraw.drawLine(sx, sy, ex, ey);
                 sx = ex;
                 sy = ey;
@@ -216,11 +203,11 @@ namespace MapApp
         {
             string[] data = getParameter(command);
             Point pos = mapData.baseMap2Screen(mLocation);
-            double cx = double.Parse(data[0]) + pos.X;
-            double cy = double.Parse(data[1]) + pos.Y;
-            double r = double.Parse(data[2]) * mSize * mSizeRate;
-            double sa = double.Parse(data[3]) * Math.PI / 180;
-            double ea = double.Parse(data[4]) * Math.PI / 180;
+            double cx =  ylib.doubleParse(data[0]) + pos.X;
+            double cy = -ylib.doubleParse(data[1]) + pos.Y;
+            double r  =  ylib.doubleParse(data[2]) * mSize * mSizeRate;
+            double sa =  ylib.doubleParse(data[3]) * Math.PI / 180;
+            double ea =  ylib.doubleParse(data[4]) * Math.PI / 180;
             ydraw.drawArc(cx, cy, r, sa, ea);
         }
 
@@ -271,7 +258,7 @@ namespace MapApp
         /// 文字配列からデータを設定する
         /// </summary>
         /// <param name="data"></param>
-        public void setStrinData(string[] data)
+        public void setStrinData(string[] data, List<string[]> markPathData)
         {
             mTitle        = data[0];
             mGroup        = data[1];
@@ -283,6 +270,7 @@ namespace MapApp
             mTitleVisible = ylib.boolParse(data[7], mTitleVisible);
             mLocation.X   = ylib.doubleParse(data[8], mLocation.X);
             mLocation.Y   = ylib.doubleParse(data[9], mLocation.Y);
+            mMarkPath     = markPathData[mMarkType < markPathData.Count ? mMarkType : 0];
         }
     }
 }

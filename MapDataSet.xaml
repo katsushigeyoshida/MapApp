@@ -5,40 +5,49 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:MapApp"
         mc:Ignorable="d"
-        Title="MapDataSet" Height="450" Width="500" Loaded="Window_Loaded">
+        Title="MapDataSet" Height="450" Width="600" Loaded="Window_Loaded">
     <Grid>
         <Label Content="タイトル" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top"/>
         <TextBox x:Name="TbTitle" Height="23" Margin="110,10,20,0" TextWrapping="Wrap"  VerticalAlignment="Top"
                  ToolTip="地図のタイトル名"/>
         <Label Content="データWebアドレス" HorizontalAlignment="Left" Margin="10,40,0,0" VerticalAlignment="Top" />
         <TextBox x:Name="TbWebDataAddress" Height="23" Margin="110,40,20,0" TextWrapping="Wrap" VerticalAlignment="Top"
-                 ToolTip="地図データのURL(国土地理院地図は不要) 例: https://cyberjapandata.gsi.go.jp/xyz/std/{z}/{x}/{y}.png" />
+                 ToolTip="地図データのURL 例: https://cyberjapandata.gsi.go.jp/xyz/std/{z}/{x}/{y}.png" />
         <Label Content="データＩＤ" HorizontalAlignment="Left" Margin="10,70,0,0" VerticalAlignment="Top"/>
-        <TextBox x:Name="TbDataID" Height="23" Margin="110,70,20,0" TextWrapping="Wrap" VerticalAlignment="Top"
-                 ToolTip="地図でのデータID(地図の種類の識別子、重複不可)" />
-        <Label Content="ファイルの拡張子" HorizontalAlignment="Left" Margin="10,100,0,0" VerticalAlignment="Top"/>
-        <TextBox x:Name="TbFIleExt" HorizontalAlignment="Left" Height="23" Margin="110,100,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="120" />
-        <Label Content="標高データID" HorizontalAlignment="Left" Margin="235,100,0,0" VerticalAlignment="Top"/>
-        <TextBox x:Name="TbElevatorID" HorizontalAlignment="Left" Height="23" Margin="310,100,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="120" />
-        <Label Content="地図の種類" HorizontalAlignment="Left" Margin="10,130,0,0" VerticalAlignment="Top"/>
+        <TextBox x:Name="TbDataID" Height="23" Width="120" Margin="110,70,0,0" TextWrapping="Wrap" VerticalAlignment="Top"
+                 ToolTip="地図でのデータID(地図の種類の識別子、重複不可)" HorizontalAlignment="Left" />
+        <Label Content="ベースデータID" Margin="10,100,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" />
+        <TextBox x:Name="TbBaseID" Height="23" Width="120" Margin="110,100,0,0" TextWrapping="Wrap" VerticalAlignment="Top" HorizontalAlignment="Left"
+                 ToolTip="重ね合わせ時のベースとなるデータID" />
+        <Label Content="透過色RGB" HorizontalAlignment="Left" Margin="235,100,0,0" VerticalAlignment="Top" />
+        <TextBox x:Name="TbTransportColor" Height="23" Width="70" Margin="325,100,0,0" TextWrapping="Wrap" VerticalAlignment="Top" HorizontalAlignment="Left"
+                 ToolTip="重ね合わせ時の透過色をRGBで16進で指定する、省略時は白になる"/>
+        <CheckBox x:Name="CbBaseOrder" Content="ベースを上" Margin="405,105,0,0" Width="100" Height="16" HorizontalAlignment="Left" VerticalAlignment="Top"
+                  ToolTip="チェックを入れるとベースIDの地図を上に重ねる"/>
+        <Label Content="ファイルの拡張子" Margin="235,70,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" Width="92"
+               ToolTip="地図データの拡張子を指定する"/>
+        <TextBox x:Name="TbFIleExt" Height="23" Width="70" Margin="325,70,0,0" TextWrapping="Wrap" HorizontalAlignment="Left"  VerticalAlignment="Top" />
+        <Label Content="標高データID" Margin="400,70,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" Width="70"/>
+        <TextBox x:Name="TbElevatorID" Height="23" Width="80" Margin="475,70,0,0" HorizontalAlignment="Left" VerticalAlignment="Top"
+                 ToolTip="標高データのIDを入力、国内だけの時は dem、海外も含むときは demgmを使う、省略時は demとなる"/>
+        <Label Content="地図の種類" Margin="10,130,0,0" HorizontalAlignment="Left" VerticalAlignment="Top"/>
         <TextBox x:Name="TbMapType" Height="23" Margin="110,130,20,0" TextWrapping="Wrap" VerticalAlignment="Top"
                  ToolTip="地図の種類の説明" />
-        <Label Content="ズーム範囲" HorizontalAlignment="Left" Margin="10,160,0,0" VerticalAlignment="Top"/>
+        <Label Content="ズーム範囲" Margin="10,160,0,0" HorizontalAlignment="Left" VerticalAlignment="Top"/>
         <TextBox x:Name="TbZoomLevel" Height="23" Margin="110,160,20,0" TextWrapping="Wrap" VerticalAlignment="Top" 
                  ToolTip="表示できるズーム範囲" />
-        <Label Content="整備範囲" HorizontalAlignment="Left" Margin="10,190,0,0" VerticalAlignment="Top"/>
+        <Label Content="整備範囲" Margin="10,190,0,0" HorizontalAlignment="Left" VerticalAlignment="Top"/>
         <TextBox x:Name="TbMapArea" Height="23" Margin="110,190,20,0" TextWrapping="Wrap" VerticalAlignment="Top"
                  ToolTip="表示できる領域または地域"/>
-        <Label Content="概要" HorizontalAlignment="Left" Margin="10,220,0,0" VerticalAlignment="Top"/>
+        <Label Content="概要" Margin="10,220,0,0" HorizontalAlignment="Left"  VerticalAlignment="Top"/>
         <TextBox x:Name="TbDiscription" Margin="110,220,20,125" TextWrapping="Wrap"
                  ToolTip="地図についての簡単な説明"/>
-        <Label Content="参照先名" HorizontalAlignment="Left" Margin="10,0,0,93" Height="26" VerticalAlignment="Bottom"/>
-        <TextBox x:Name="TbRefTitle" Margin="110,0,20,96" TextWrapping="Wrap"
-                 ToolTip="参照先ボタンのタイトル名" Height="23" VerticalAlignment="Bottom"/>
-        <Label Content="参照先Webアドレス" HorizontalAlignment="Left" Margin="5,0,0,63" Height="26" VerticalAlignment="Bottom" />
+        <Label Content="参照先名" Margin="10,0,0,93" Height="26" HorizontalAlignment="Left" VerticalAlignment="Bottom"/>
+        <TextBox x:Name="TbRefTitle" Margin="110,0,20,96" TextWrapping="Wrap" Height="23" VerticalAlignment="Bottom"
+                 ToolTip="参照先ボタンのタイトル名(省略時は国土地理院となる)" />
+        <Label Content="参照先Webアドレス" Margin="5,0,0,63" Height="26" HorizontalAlignment="Left" VerticalAlignment="Bottom" />
         <TextBox x:Name="TbWebAddress" Margin="110,0,20,66" TextWrapping="Wrap"
-                 ToolTip="地図データの参照URL(国土地理院地図は不要)" Height="23" VerticalAlignment="Bottom" />
-
+                 ToolTip="地図データの参照URL(省略時は国土地理院地図のURL)" Height="23" VerticalAlignment="Bottom" />
         <Button x:Name="BtOK" Content="OK" Margin="0,0,120,20" HorizontalAlignment="Right" Width="75" Height="20" VerticalAlignment="Bottom" Click="BtOK_Click"/>
         <Button x:Name="BtCancel" Content="Cancel" Margin="0,0,30,20" HorizontalAlignment="Right" Width="75" Height="20" VerticalAlignment="Bottom" Click="BtCancel_Click"/>
     </Grid>

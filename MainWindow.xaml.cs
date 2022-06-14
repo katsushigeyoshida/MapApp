@@ -145,6 +145,7 @@ namespace MapApp
             mAreaDataList.saveData();
             mMapMarkList.saveFile();
             mGpsDataList.saveGpsFile(mGpsListFile);
+            mMapMarkList.savePathData();
 
             //  地図データ設定値の保存
             Properties.Settings.Default.MapAppDataNum = mMapData.mDataId;
@@ -560,6 +561,7 @@ namespace MapApp
         private void DataIDMenu_Click(object sender, RoutedEventArgs e)
         {
             MenuItem menuItem = (MenuItem)e.Source;
+            int dataIdNo = CbDataID.SelectedIndex;
             if (menuItem.Name.CompareTo("DataIDAddMenu") == 0) {
                 //  データの追加
                 MapDataSet dlg = new MapDataSet();
@@ -567,23 +569,25 @@ namespace MapApp
                 if (result == true) {
                     MapInfoData.mMapData.Add(dlg.mDatas);
                     setMapData();
+                    CbDataID.SelectedIndex = 0;
                 }
             } else if (menuItem.Name.CompareTo("DataIDEditMenu") == 0) {
                 //  データの編集
-                if (0 <= CbDataID.SelectedIndex) {
+                if (0 <= dataIdNo) {
                     MapDataSet dlg = new MapDataSet();
-                    for (int i = 0; i < dlg.mDatas.Length && i < dlg.mDatas.Length; i++)
+                    for (int i = 0; i < dlg.mDatas.Length && i < MapInfoData.mMapData[CbDataID.SelectedIndex].Length; i++)
                         dlg.mDatas[i] = MapInfoData.mMapData[CbDataID.SelectedIndex][i];
                     var result = dlg.ShowDialog();
                     if (result == true) {
                         for (int i = 0; i < dlg.mDatas.Length && i < MapInfoData.mMapData[CbDataID.SelectedIndex].Length; i++)
                             MapInfoData.mMapData[CbDataID.SelectedIndex][i] = dlg.mDatas[i];
                         setMapData();
+                        CbDataID.SelectedIndex = dataIdNo;  //  再表示させる
                     }
                 }
             } else if (menuItem.Name.CompareTo("DataIDRemoveMenu") == 0) {
                 //  データの削除
-                if (0 <= CbDataID.SelectedIndex) {
+                if (0 <= dataIdNo) {
                     MessageBoxResult result = MessageBox.Show(MapInfoData.mMapData[CbDataID.SelectedIndex][0] + "削除します", "確認", MessageBoxButton.OKCancel);
                     if (result == MessageBoxResult.OK) {
                         MapInfoData.mMapData.RemoveAt(CbDataID.SelectedIndex);
@@ -641,7 +645,7 @@ namespace MapApp
                 MapMark mapMark = new MapMark("", mMapData.screen2BaseMap(mRightPressPoint), 0);
                 MarkInput markInput = new MarkInput();
                 markInput.mMapMark = mapMark;
-                markInput.mGroups = mMapMarkList.getGroupList().ToArray();
+                markInput.mMarkList = mMapMarkList;
                 var result = markInput.ShowDialog();
                 if (result == true) {
                     mMapMarkList.add(mapMark);
@@ -653,7 +657,7 @@ namespace MapApp
                 if (mapMark != null) {
                     MarkInput markInput = new MarkInput();
                     markInput.mMapMark = mapMark;
-                    markInput.mGroups = mMapMarkList.getGroupList().ToArray();
+                    markInput.mMarkList = mMapMarkList;
                     var result = markInput.ShowDialog();
                     if (result == true) {
                         mapDisp(false);
@@ -749,6 +753,9 @@ namespace MapApp
             string seamlessLegendTitle = "";
             if (mMapData.mDataIdName.CompareTo("seamless_v2")== 0) {
                 seamlessLegendTitle = getSeamlessLegend(mMapData.screen2Map(mLastMovePoint));
+            } else {
+                System.Drawing.Color color = getPointColor(mMapData.screen2Map(mLastMovePoint));
+                seamlessLegendTitle = "Color RGB [" + color.R.ToString("X2") + color.G.ToString("X2") + color.B.ToString("X2") + "]";
             }
             //  ステータスバーに表示
             TbCordinate.Text = "(" + cp.Y.ToString("#0.######") + "," + cp.X.ToString("#0.######") + ") 標高 "
@@ -909,12 +916,7 @@ namespace MapApp
                 CbSize.SelectedIndex < 0)
                 return false;
             //  地図情報の設定
-            mMapData.mDataId = CbDataID.SelectedIndex;
-            mMapData.mMapUrl = MapInfoData.mMapData[mMapData.mDataId][7];       //  国土地理院データ以外のURL
-            mMapData.mDataIdName = MapInfoData.mMapData[mMapData.mDataId][1];   //  データID
-            mMapData.mExt = MapInfoData.mMapData[mMapData.mDataId][2];          //  データファイルの拡張子
-            mMapData.mTileOrder = MapInfoData.mMapData[mMapData.mDataId][8];    //  {z}/{x}/{y}以外のタイル座標順
-            mMapData.mElevatorDataNo = mMapData.getElevatorDataNo(MapInfoData.mMapData[mMapData.mDataId][10]);
+            mMapData.setMapInfoData(CbDataID.SelectedIndex);
             //  座標情報の設定
             mMapData.mZoom = int.Parse(mZoomName[CbZoom.SelectedIndex]);
             mMapData.mStart.X = double.Parse(TbX.Text);
@@ -1050,23 +1052,15 @@ namespace MapApp
                 for (int j = (int)mapData.mStart.Y; j < mapData.mStart.Y + mapData.mRowCount; j++) {
                     if (i <= (int)Math.Pow(2, mapData.mZoom) && j <= (int)Math.Pow(2, mapData.mZoom)) {
                         //  標高データの取得
-                        string elevatorUrl = mapData.getElevatorWebAddress(i, j);
-                        string downloadPath = mapData.downloadElevatorPath(i, j);
-                        mapData.getDownLoadFile(elevatorUrl, downloadPath, mOnLine);
+                        mapData.getElevatorDataFile(i, j, mOnLine);
                         //  地図データの取得
-                        string url = mapData.getWebAddress(i, j);
-                        downloadPath = mapData.downloadPath(i, j);
-                        bool? result = mapData.getDownLoadFile(url, downloadPath, mOnLine);
-                        if (result == true) {
-                            ydraw.GButtonImageFile(getId(i - (int)mapData.mStart.X, j - (int)mapData.mStart.Y), downloadPath);
+                        string downloadPath = mapData.getMapData(i, j, mOnLine);
+                        ydraw.GButtonImageFile(getId(i - (int)mapData.mStart.X, j - (int)mapData.mStart.Y), downloadPath);
+                        if (mapData.getMapDataResult() == true) {
                             //  プログレスバーを表示するためにDoEventでコントロールを更新する
                             PbDownLoadCount.Value = loadCount;
                             if (doEvent)
                                 ylib.DoEvents();
-                        } else if (result == null) {
-                            ydraw.GButtonImageFile(getId(i - (int)mapData.mStart.X, j - (int)mapData.mStart.Y), null);
-                        } else {
-                            ydraw.GButtonImageFile(getId(i - (int)mapData.mStart.X, j - (int)mapData.mStart.Y), downloadPath);
                         }
                     } else {
                         ydraw.GButtonImageFile(getId(i - (int)mapData.mStart.X, j - (int)mapData.mStart.Y), null);
@@ -1300,6 +1294,21 @@ namespace MapApp
         /// <returns></returns>
         private string getSeamlessLegend(Point mp)
         {
+            System.Drawing.Color color = getPointColor(mp);
+            string legendTitle = "";
+            if (8 <= color.Name.Length && mSeamlessLegend.ContainsKey(color.Name.Substring(2, 6)))  //  [2]value(色)をキーとする
+                legendTitle =" [" + mSeamlessLegend[color.Name.Substring(2, 6)][1] + "] " +         //  [1]symbole
+                                mSeamlessLegend[color.Name.Substring(2, 6)][0];                     //  [0]title
+            return legendTitle;
+        }
+
+        /// <summary>
+        /// 指定点のカラーを取得する
+        /// </summary>
+        /// <param name="mp">Map座標</param>
+        /// <returns>色</returns>
+        private System.Drawing.Color getPointColor(Point mp)
+        {
             PointI imp = new PointI(mp);
             imp.Subtruct(new PointI(mMapData.mStart));
             int dx = (int)(mDataImageSize * (mp.X % 1.0));
@@ -1317,12 +1326,7 @@ namespace MapApp
                     dy = dy < 0 ? 0 : dy;
                 }
             }
-            System.Drawing.Color color = ydraw.GButtonGetImagePixcel(getId(imp.X, imp.Y), dx, dy);
-            string legendTitle = "";
-            if (8 <= color.Name.Length && mSeamlessLegend.ContainsKey(color.Name.Substring(2, 6)))  //  [2]value(色)をキーとする
-                legendTitle =" [" + mSeamlessLegend[color.Name.Substring(2, 6)][1] + "] " +         //  [1]symbole
-                                mSeamlessLegend[color.Name.Substring(2, 6)][0];                     //  [0]title
-            return legendTitle;
+            return ydraw.GButtonGetImagePixcel(getId(imp.X, imp.Y), dx, dy);
         }
 
         /// <summary>

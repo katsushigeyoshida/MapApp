@@ -16,14 +16,14 @@
         <Label Content="サイズ" Margin="10,115,0,0" HorizontalAlignment="Left" VerticalAlignment="Top"/>
         <ComboBox Name="CbSize" Width="120" Margin="80,115,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" />
         <Label Content="座標" Margin="10,150,0,0"  HorizontalAlignment="Left" VerticalAlignment="Top"/>
-        <TextBox x:Name="TbCoordinates" Height="23" Margin="80,150,20,0" TextWrapping="Wrap"  VerticalAlignment="Top" />
+        <TextBox x:Name="TbCoordinates" ToolTip="[緯度,経度]を度で入力" Height="23" Margin="80,150,20,0" TextWrapping="Wrap"  VerticalAlignment="Top" />
         <Label Content="コメント" Margin="10,180,0,0"  HorizontalAlignment="Left" VerticalAlignment="Top"/>
         <TextBox x:Name="TbComment" Height="50" Margin="80,180,20,0" TextWrapping="Wrap"  VerticalAlignment="Top" MinLines="2" />
         <Label Content="リンク" Margin="10,235,0,0"  HorizontalAlignment="Left" VerticalAlignment="Top"/>
         <TextBox x:Name="TbLink" Margin="80,240,80,0" TextWrapping="Wrap"  VerticalAlignment="Top" />
         <Button x:Name="BtOpen" Content="開く" Margin="0,240,20,0" VerticalAlignment="Top" HorizontalAlignment="Right" Width="50" Click="BtOpen_Click" />
         <CheckBox x:Name="ChkTitleDisp" Content="タイトル表示" Margin="300,15,0,0" HorizontalAlignment="Left" VerticalAlignment="Top"/>
-        <Button x:Name="BtPast" Content="貼付け" Margin="80,0,0,20" Width="60" Height="20" HorizontalAlignment="Left" VerticalAlignment="Bottom" Click="BtPast_Click" />
+        <!--<Button x:Name="BtPast" Content="貼付け" ToolTip="WikiListで「コピー」したデータの貼り付け" Margin="80,0,0,20" Width="60" Height="20" HorizontalAlignment="Left" VerticalAlignment="Bottom" Click="BtPast_Click" />-->
         <Button x:Name="BtOk" Content="OK" Margin="0,0,100,20" Width="60" Height="20" HorizontalAlignment="Right" VerticalAlignment="Bottom" Click="BtOk_Click"/>
         <Button x:Name="BtCancel" Content="Cancel" Margin="0,0,20,20" Width="60" Height="20" HorizontalAlignment="Right" VerticalAlignment="Bottom" Click="BtCancel_Click"/>
 

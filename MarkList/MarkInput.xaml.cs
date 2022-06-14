@@ -13,7 +13,8 @@ namespace MapApp
     public partial class MarkInput : Window
     {
         public MapMark mMapMark;
-        public string[] mGroups;
+        public MarkList mMarkList;
+
         YLib ylib = new YLib();
 
         public MarkInput()
@@ -27,14 +28,14 @@ namespace MapApp
                 //  既存データの設定
                 TbTitle.Text = mMapMark.mTitle;
                 ChkTitleDisp.IsChecked = mMapMark.mTitleVisible;
-                CbGroup.ItemsSource = mGroups;
+                CbGroup.ItemsSource = mMarkList.getGroupList().ToArray();
                 CbGroup.Text = mMapMark.mGroup;
-                CbMarkType.ItemsSource = mMapMark.mMarkName;
+                CbMarkType.ItemsSource = mMarkList.mMarkName;
                 CbMarkType.SelectedIndex = mMapMark.mMarkType;
-                CbSize.ItemsSource = mMapMark.mSizeName;
+                CbSize.ItemsSource = mMarkList.mSizeName;
                 Point cp = MapData.baseMap2Coordinates(mMapMark.mLocation);
                 TbCoordinates.Text = cp.Y.ToString() + "," + cp.X.ToString();
-                CbSize.SelectedIndex = Array.IndexOf(mMapMark.mSizeName, mMapMark.mSize.ToString());
+                CbSize.SelectedIndex = Array.IndexOf(mMarkList.mSizeName, mMapMark.mSize.ToString());
                 TbComment.Text = ylib.strControlCodeRev(mMapMark.mComment);
                 TbLink.Text = mMapMark.mLink;
             }
@@ -53,6 +54,11 @@ namespace MapApp
             }
         }
 
+        /// <summary>
+        /// [OK]ボタン
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void BtOk_Click(object sender, RoutedEventArgs e)
         {
             //  データの保存
@@ -60,6 +66,7 @@ namespace MapApp
             mMapMark.mTitleVisible = ChkTitleDisp.IsChecked == true;
             mMapMark.mGroup = CbGroup.Text;
             mMapMark.mMarkType = CbMarkType.SelectedIndex;
+            mMapMark.mMarkPath = mMarkList.mMarkPath[mMapMark.mMarkType < mMarkList.mMarkPath.Count ? mMapMark.mMarkType : 0];
             mMapMark.mSize = int.Parse(CbSize.Items[CbSize.SelectedIndex].ToString());
             mMapMark.mComment = ylib.strControlCodeCnv(TbComment.Text);
             mMapMark.mLink = Uri.UnescapeDataString(TbLink.Text);
@@ -73,22 +80,27 @@ namespace MapApp
                         mMapMark.mLocation = MapData.coordinates2BaseMap(cp);
                     }
                 }
-            } 
-            if (mMapMark.mLocation.X < 0.83 || 0.93 < mMapMark.mLocation.X ||
-                mMapMark.mLocation.Y < 0.35 || 0.45 < mMapMark.mLocation.Y) {
-                MessageBox.Show("緯度経度座標が範囲外です");
-                return;
             }
+            //  国内判定
+            //if (mMapMark.mLocation.X < 0.83 || 0.93 < mMapMark.mLocation.X ||
+            //    mMapMark.mLocation.Y < 0.35 || 0.45 < mMapMark.mLocation.Y) {
+            //    MessageBox.Show("緯度経度座標が範囲外です");
+            //    return;
+            //}
             if (mMapMark.mTitle.Length < 1) {
                 MessageBox.Show("タイトルが設定されていません");
                 return;
             }
 
-
             DialogResult = true;
             Close();
         }
 
+        /// <summary>
+        /// [Cancel]ボタン
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void BtCancel_Click(object sender, RoutedEventArgs e)
         {
             DialogResult = false;

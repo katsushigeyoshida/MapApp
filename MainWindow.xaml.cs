@@ -104,7 +104,7 @@ namespace MapApp
             setMapData();
             CbZoom.ItemsSource = mZoomName;
             CbSize.ItemsSource = mColCountName;
-            ChkAutoOffLine.IsChecked = null;
+            ChkAutoOnLine.IsChecked = null;
             BtMapsGSI.Content = MapInfoData.mMapData[mMapData.mDataId][9].Length == 0 ? "国土地理院" : MapInfoData.mMapData[mMapData.mDataId][0];
 
             setParametor();
@@ -327,17 +327,17 @@ namespace MapApp
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        private void ChkAutoOffLine_Click(object sender, RoutedEventArgs e)
+        private void ChkAutoOnLine_Click(object sender, RoutedEventArgs e)
         {
             //  チェックボックスは3ステート設定
-            if (ChkAutoOffLine.IsChecked == true) {
-                ChkAutoOffLine.Content = "オンライン";
+            if (ChkAutoOnLine.IsChecked == true) {
+                ChkAutoOnLine.Content = "オンライン";
                 mOnLine = true;
-            } else if (ChkAutoOffLine.IsChecked == false) {
-                ChkAutoOffLine.Content = "オフライン";
+            } else if (ChkAutoOnLine.IsChecked == false) {
+                ChkAutoOnLine.Content = "オフライン";
                 mOnLine = false;
             } else {
-                ChkAutoOffLine.Content = "自動オンライン";
+                ChkAutoOnLine.Content = "自動オンライン";
                 mOnLine = null;
             }
         }
@@ -594,6 +594,11 @@ namespace MapApp
                         setMapData();
                     }
                 }
+            } else if (menuItem.Name.CompareTo("DataIDMapInitMenu") == 0) {
+                //  地図データの削除
+                if (0 <= dataIdNo) {
+                    mMapData.removeMapData();
+                }
             }
         }
 
@@ -627,7 +632,7 @@ namespace MapApp
                 Clipboard.SetText(coordinate);
                 //  座標と標高をダイヤログ表示
                 coordinate = "座標(" + cp.Y.ToString("#.######") + ", " + cp.X.ToString("#.######") + ")";
-                coordinate += mMapData.getMapElavtor(mMapData.screen2Map(mRightPressPoint), ChkAutoOffLine.IsChecked).ToString(" 標高 #,### m");
+                coordinate += mMapData.getMapElavtor(mMapData.screen2Map(mRightPressPoint), ChkAutoOnLine.IsChecked).ToString(" 標高 #,### m");
                 MessageBox.Show(coordinate);
             }
         }
@@ -748,14 +753,12 @@ namespace MapApp
             //  緯度経度表示
             Point cp = mMapData.screen2Coordinates(mLastMovePoint);
             //  標高取得
-            double ele = mMapData.getMapElavtor(mMapData.screen2Map(mLastMovePoint), ChkAutoOffLine.IsChecked);
+            double ele = mMapData.getMapElavtor(mMapData.screen2Map(mLastMovePoint), ChkAutoOnLine.IsChecked);
             //  20万分の1日本シームレス地質図V2の凡例表示
-            string seamlessLegendTitle = "";
+            System.Drawing.Color color = getPointColor(mMapData.screen2Map(mLastMovePoint));
+            string seamlessLegendTitle = "Color [" + color.R.ToString("X2") + color.G.ToString("X2") + color.B.ToString("X2") + "]";
             if (mMapData.mDataIdName.CompareTo("seamless_v2")== 0) {
-                seamlessLegendTitle = getSeamlessLegend(mMapData.screen2Map(mLastMovePoint));
-            } else {
-                System.Drawing.Color color = getPointColor(mMapData.screen2Map(mLastMovePoint));
-                seamlessLegendTitle = "Color RGB [" + color.R.ToString("X2") + color.G.ToString("X2") + color.B.ToString("X2") + "]";
+                seamlessLegendTitle += " " + getSeamlessLegend(mMapData.screen2Map(mLastMovePoint));
             }
             //  ステータスバーに表示
             TbCordinate.Text = "(" + cp.Y.ToString("#0.######") + "," + cp.X.ToString("#0.######") + ") 標高 "
@@ -1253,16 +1256,14 @@ namespace MapApp
             List<string[]> dataList = ylib.loadCsvData(path, MapInfoData.mMapDataFormat);
             if (dataList == null)
                 return;
-            List<string> titleList = new List<string>();
-            foreach (string[] data in MapInfoData.mMapData) {
-                titleList.Add(data[0]);
-            }
+
+            int bufSize = MapInfoData.mMapData[0].Length;
+            MapInfoData.mMapData.Clear();
             foreach (string[] data in dataList) {
-                if (!titleList.Contains(data[0])) {
-                    string[] buf = Enumerable.Repeat<string>("", MapInfoData.mMapData[0].Length).ToArray();
-                    Array.Copy(data, buf, buf.Length < data.Length ? buf.Length : data.Length);
-                    MapInfoData.mMapData.Add(buf);
-                }
+                //  空の配列作成
+                string[] buf = Enumerable.Repeat<string>("", bufSize).ToArray();
+                Array.Copy(data, buf, buf.Length < data.Length ? buf.Length : data.Length);
+                MapInfoData.mMapData.Add(buf);
             }
         }
 
@@ -1346,7 +1347,7 @@ namespace MapApp
                     return;
                 }
             }
-            List<string[]> legendList = ylib.loadCsvData(path, true);
+            List<string[]> legendList = ylib.loadCsvData(path, true);   //  タブセパレート
             if (mSeamlessLegend == null)
                 mSeamlessLegend = new Dictionary<string, string[]>();
             for (int i = 1; i < legendList.Count; i++) {

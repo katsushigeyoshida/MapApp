@@ -16,6 +16,7 @@
                         <MenuItem Name="DataIDAddMenu" Header="データの追加" Click="DataIDMenu_Click" />
                         <MenuItem Name="DataIDEditMenu" Header="データの編集" Click="DataIDMenu_Click" />
                         <MenuItem Name="DataIDRemoveMenu" Header="データの削除" Click="DataIDMenu_Click" />
+                        <MenuItem Name="DataIDMapInitMenu" Header="地図データの初期化" Click="DataIDMenu_Click" />
                     </ContextMenu>
                 </ComboBox.ContextMenu>
             </ComboBox>
@@ -27,7 +28,7 @@
             <TextBox x:Name="TbY" Width="50" />
             <TextBlock Text="画像列数" />
             <ComboBox Name="CbSize" Width="50" Focusable="False" SelectionChanged="CbSize_SelectionChanged" />
-            <CheckBox x:Name="ChkAutoOffLine" Content="自動オフライン" IsThreeState="True" Click="ChkAutoOffLine_Click" 
+            <CheckBox x:Name="ChkAutoOnLine" Content="自動オフライン" IsThreeState="True" Click="ChkAutoOnLine_Click" 
                       ToolTip="地図のロード状態の設定と表示" />
             <Button x:Name="BtMapsGSI" Content="国土地理院" Click="BtMapsGSI_Click" />
             <!--<Button x:Name="BtHelp" Content=" ? " Click="BtHelp_Click" />-->

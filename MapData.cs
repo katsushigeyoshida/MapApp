@@ -38,6 +38,7 @@ namespace MapApp
     {
         private HashSet<string> mImageFileSet = new HashSet<string>();  //  地図イメージデータ取得リスト
         private Dictionary<string, List<string[]>> mElevatorDataList = new Dictionary<string, List<string[]>>();    //  標高データ
+        private Dictionary<string, string[]> mColorLegend;  //  色凡例
         public string mBaseFolder = "Map";              //  保存先フォルダ
 
         public string mMapUrl = MapInfoData.mGsiUrl;    //  地図データURL(ディフォルトは地理院地図)
@@ -58,10 +59,11 @@ namespace MapApp
         public const int mMaxZoom = 18;
         public int mElevatorDataNo = 0;                 //  使用標高データのNo
         public string mBaseDataIDName = "";             //  重ね合わせBase地図ID
-        public System.Drawing.Color mTransportColor = System.Drawing.Color.White;   //  重ねるデータの透過色
+        public System.Drawing.Color[] mTransportColors; //  重ねるデータの透過色
         public bool mBaseMapOver = false;               //  ベースマップの重ねる順番で上になる
         public MapData mBaseMap = null;
 
+        private YDrawingShapes ydraw = new YDrawingShapes();
         private YLib ylib = new YLib();
 
         public MapData()
@@ -113,13 +115,18 @@ namespace MapApp
             if (0 <= mBaseDataIDName.Length && mDataIdName.CompareTo(mBaseDataIDName) != 0)
                 mBaseMap = new MapData(mBaseDataIDName);
             //  透過色の設定
-            if (5 < MapInfoData.mMapData[mDataId][12].Length) {
-                int r = Convert.ToInt32(MapInfoData.mMapData[mDataId][12].Substring(0, 2), 16);
-                int g = Convert.ToInt32(MapInfoData.mMapData[mDataId][12].Substring(2, 2), 16);
-                int b = Convert.ToInt32(MapInfoData.mMapData[mDataId][12].Substring(4, 2), 16);
-                mTransportColor = System.Drawing.Color.FromArgb(r, g, b);
+            if (0 < MapInfoData.mMapData[mDataId][12].Length) {
+                string[] stringColors = MapInfoData.mMapData[mDataId][12].Split(',');
+                mTransportColors = new System.Drawing.Color[stringColors.Length];
+                for (int i = 0; i < stringColors.Length; i++) {
+                    mTransportColors[i] = ylib.hexString2Color(stringColors[i]);
+                }
+            } else {
+                //  設定が空の時
+                mTransportColors = new System.Drawing.Color[1];
+                mTransportColors[0] = System.Drawing.Color.White;
             }
-            mBaseMapOver = MapInfoData.mMapData[mDataId][13].ToLower().CompareTo("true") == 0;
+            mBaseMapOver = MapInfoData.mMapData[mDataId][13].ToLower().CompareTo("true") == 0;  //  BaseMapの上下
         }
 
         /// <summary>
@@ -175,13 +182,13 @@ namespace MapApp
         /// </summary>
         /// <param name="x">X座標(Map座標)</param>
         /// <param name="y">Y座標(Map座標)</param>
-        /// <param name="autoOffline">データ取得モード(true:update/null:auto/false:offline)</param>
-        public void getElevatorDataFile(int x, int y, bool? autoOffline)
+        /// <param name="autoOnline">データ取得モード(true:update/null:auto/false:offline)</param>
+        public void getElevatorDataFile(int x, int y, bool? autoOnline)
         {
             //  標高データの取得
             string elevatorUrl = getElevatorWebAddress(x, y);
             string downloadPath = downloadElevatorPath(x, y);
-            getDownLoadFile(elevatorUrl, downloadPath, autoOffline);
+            getDownLoadFile(elevatorUrl, downloadPath, autoOnline);
         }
 
         /// <summary>
@@ -260,13 +267,13 @@ namespace MapApp
         /// ダウンロードしたテキストファイル(256x256)から標高データを取得
         /// </summary>
         /// <param name="mp">座標(Map値)</param>
-        /// <param name="autoOffline">データ取得モード(true:update/null:auto/false:offline)</param>
+        /// <param name="autoOnline">データ取得モード(true:update/null:auto/false:offline)</param>
         /// <returns>標高(m)</returns>
-        public double getMapElavtor(Point mp, bool? autoOffline)
+        public double getMapElavtor(Point mp, bool? autoOnline)
         {
             string elevatorUrl = getElevatorWebAddress(mp.X, mp.Y);
             string downloadPath = downloadElevatorPath(mp.X, mp.Y);
-            bool? result = getDownLoadFile(elevatorUrl, downloadPath, autoOffline);
+            bool? result = getDownLoadFile(elevatorUrl, downloadPath, autoOnline);
             if (result == null) {
                 return 0.0;
             } else {
@@ -298,6 +305,7 @@ namespace MapApp
                 return 0;
         }
 
+        //  Webからのダウンロード結果(true:Download OK, false:データ既存, null:失敗)
         private bool? mMapDataDwonloadResult = false;
 
         /// <summary>
@@ -305,17 +313,21 @@ namespace MapApp
         /// </summary>
         /// <param name="x">X座標(Map座標)</param>
         /// <param name="y">Y座標(Map座標)</param>
-        /// <param name="autoOffline">データ取得モード(true:update/null:auto/false:offline)</param>
+        /// <param name="autoOnline">データ取得モード(true:update/null:auto/false:offline)</param>
         /// <returns>ファイルパス(ファイルがない時はnull)</returns>
-        public string getMapData(int x, int y, bool? autoOffline)
+        public string getMapData(int x, int y, bool? autoOnline)
         {
             string downloadFilePath = "";
             if (isMergeData()) {
                 //  重ね合わせデータの表示する場合
-                downloadFilePath = getMergeMapData(x, y, autoOffline);
+                downloadFilePath = getMergeMapData(x, y, autoOnline);
+                if (downloadFilePath != null)
+                    mMapDataDwonloadResult = true;
+                else
+                    mMapDataDwonloadResult = null;
             } else {
                 //  単独のMapDataの表示する場合
-                downloadFilePath = getMapDataDownload(x, y, autoOffline);
+                downloadFilePath = getMapDataDownload(x, y, autoOnline);
             }
             if (mMapDataDwonloadResult == null)
                 return null;
@@ -328,24 +340,27 @@ namespace MapApp
         /// </summary>
         /// <param name="x">X座標(Map座標)</param>
         /// <param name="y">Y座標(Map座標)</param>
-        /// <param name="autoOffline">データ取得モード(true:update / null:auto / false:offline)</param>
+        /// <param name="autoOnline">データ取得モード(true:update / null:auto / false:offline)</param>
         /// <returns>重ね合わせたデータファイルパス</returns>
-        public string getMergeMapData(int x, int y, bool? autoOffline)
+        public string getMergeMapData(int x, int y, bool? autoOnline)
         {
             string mergeDataPath = downloadMergeDataPath(x, y);
-            if (File.Exists(mergeDataPath) && autoOffline != true)
-                return mergeDataPath;           //  既にファイルが存在する
-            mBaseMap.mZoom = mZoom;             //  MaseMapのZoomを設定
-            string baseMapDataPath = mBaseMap.getMapDataDownload(x, y, autoOffline);    //  BaseMapのデータ取得
-            string lapMapDataPath = getMapDataDownload(x, y, autoOffline);              //  重ねるデータの取得
-            System.Drawing.Color transportColor = mTransportColor;                      //  透過色の設定
+            if (File.Exists(mergeDataPath) && autoOnline != true)
+                return mergeDataPath;                                                   //  既にファイルが存在する
+
+            mBaseMap.mZoom = mZoom;                                                     //  BaseMapのZoomを設定
+            string baseMapDataPath = mBaseMap.getMapDataDownload(x, y, autoOnline);    //  BaseMapのデータ取得
+            string lapMapDataPath = getMapDataDownload(x, y, autoOnline);              //  重ねるデータの取得
+            if (!ylib.createPathFolder(mergeDataPath))
+                return null;
             if (mBaseMapOver) {
                 //  BaseMapを上にする時
-                return ylib.imageOverlap(lapMapDataPath, baseMapDataPath, mergeDataPath, transportColor);   //  重ね合わせた処理
+                mergeDataPath = ydraw.imageOverlap(lapMapDataPath, baseMapDataPath, mergeDataPath, mTransportColors);   //  重ね合わせた処理
             } else {
                 //  BaseMapを下にする時
-                return ylib.imageOverlap(baseMapDataPath, lapMapDataPath, mergeDataPath, transportColor);   //  重ね合わせた処理
+                mergeDataPath = ydraw.imageOverlap(baseMapDataPath, lapMapDataPath, mergeDataPath, mTransportColors);   //  重ね合わせた処理
             }
+            return mergeDataPath;
         }
 
         /// <summary>
@@ -359,17 +374,17 @@ namespace MapApp
         }
 
         /// <summary>
-        /// 智頭データをダウンロードする
+        /// 地図データをダウンロードする
         /// </summary>
         /// <param name="x">X座標(Map座標)</param>
         /// <param name="y">Y座標(Map座標)</param>
-        /// <param name="autoOffline">データ取得モード(true:update/null:auto/false:offline)</param>
+        /// <param name="autoOnline">データ取得モード(true:update/null:auto/false:offline)</param>
         /// <returns>ダウンロードファイルパス</returns>
-        public string getMapDataDownload(int x, int y, bool? autoOffline)
+        public string getMapDataDownload(int x, int y, bool? autoOnline)
         {
             string url = getWebAddress(x, y);
             string downloadFilePath = downloadPath(x, y);
-            mMapDataDwonloadResult = getDownLoadFile(url, downloadFilePath, autoOffline);
+            mMapDataDwonloadResult = getDownLoadFile(url, downloadFilePath, autoOnline);
             return downloadFilePath;
         }
 
@@ -381,6 +396,39 @@ namespace MapApp
         public bool? getMapDataResult()
         {
             return mMapDataDwonloadResult;
+        }
+
+        /// <summary>
+        /// 地図データの削除
+        /// </summary>
+        public void removeMapData()
+        {
+            string path = Path.GetFullPath(getDownloadDataBasePath());
+            if (MessageBox.Show(path + " を削除します", "確認", MessageBoxButton.YesNo) == MessageBoxResult.Yes) {
+                Directory.Delete(path, true);
+                removeImageFileList();
+            }
+        }
+
+        /// <summary>
+        /// ImageFileListから自分のURLを削除する
+        /// </summary>
+        public void removeImageFileList()
+        {
+            string url;
+            if (0 < mMapUrl.Length) {
+                url = mMapUrl.Substring(0, ylib.lastIndexCountOf(mMapUrl, "/", 3));
+            } else {
+                url = MapInfoData.mGsiUrl + mDataIdName;
+            }
+
+            var removeList = new List<string>();
+            foreach (var item in mImageFileSet) {
+                if (0 <= item.IndexOf(url))
+                    removeList.Add(item);
+            }
+            foreach (var item in removeList)
+                mImageFileSet.Remove(item);
         }
 
         /// <summary>
@@ -414,28 +462,51 @@ namespace MapApp
             return mBaseFolder + "\\" + mDataIdName + "\\" + mZoom + "\\" + x + "\\" + y + "." + mExt;
         }
 
+        /// <summary>
+        /// マージしたデータファイル名のパス(重ね合わせた地図データ)
+        /// </summary>
+        /// <param name="x">X座標(Map座標)</param>
+        /// <param name="y">Y座標(Map座標)</param>
+        /// <returns>ファイルパス</returns>
         public string downloadMergeDataPath(int x, int y)
         {
-            return mBaseFolder + "\\" + mDataIdName + "_" + mBaseDataIDName + "\\" + mZoom + "\\" + x + "\\" + y + "." + mExt;
+            return mBaseFolder + "\\" + mDataIdName + "_" + mBaseDataIDName + (mBaseMapOver ? "_up" : "")
+                    + "\\" + mZoom + "\\" + x + "\\" + y + "." + mExt;
         }
 
+        /// <summary>
+        /// 地図データを保存するフォルダ名の取得
+        /// </summary>
+        /// <returns></returns>
+        public string getDownloadDataBasePath()
+        {
+            if (isMergeData()) {
+                return mBaseFolder + "\\" + mDataIdName + "_" + mBaseDataIDName + (mBaseMapOver ? "_up" : "");
+            } else {
+                return mBaseFolder + "\\" + mDataIdName;
+            }
+        }
 
         /// <summary>
         /// タイルデータをWebからダウンロードする
         /// </summary>
         /// <param name="url">Webアドレス</param>
         /// <param name="downloadPath">ダウンロードパス</param>
-        /// <param name="autoOffline">データ取得モード(true:update/null:auto/false:offline)</param>
+        /// <param name="autoOnline">データ取得モード(true:update/null:auto/false:offline)</param>
         /// <returns>ダウンロード結果(false:なし true:成功 null: 失敗)</returns>
-        public bool? getDownLoadFile(string url, string downloadPath, bool? autoOffline)
+        public bool? getDownLoadFile(string url, string downloadPath, bool? autoOnline)
         {
             bool? result = false;
             string folder = Path.GetDirectoryName(downloadPath);    //  フォルダ名
 
+            //  オンラインの時はファイル登録を一度削除する
+            if (autoOnline == true && mImageFileSet.Contains(url))
+                mImageFileSet.Remove(url);
+
             //  ファイルがなければダウンロードする
-            if (!File.Exists(downloadPath) || autoOffline == true) {
+            if (!File.Exists(downloadPath) || autoOnline == true) {
                 //  Web上にないファイルはダウンロードに行かない
-                if (autoOffline != false || !mImageFileSet.Contains(url)) {
+                if (autoOnline != false || !mImageFileSet.Contains(url)) {
                     Directory.CreateDirectory(folder);
                     //System.Diagnostics.Debug.WriteLine($"getDownLoadFile: {url} {downloadPath}");
                     if (!ylib.webFileDownload(url, downloadPath)) {

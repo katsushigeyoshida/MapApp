@@ -56,11 +56,9 @@ Wikipediaの一覧ページとその個別ページから一覧リストを作�
 　国土地理院の標高データを利用して地図の表示エリアを三次元表示する。  
 <img src="Image/Map3DImage.png" width="80%">  
 八ヶ岳  
-<img src="Image/ヒマラヤ周辺.png
-" width="80%">  
+<img src="Image/ヒマラヤ周辺.png" width="80%">  
 ヒマラヤ(Outdoors map)  
-<img src="Image/ヒマラヤ周辺3D.png
-" width="80%">  
+<img src="Image/ヒマラヤ周辺3D.png" width="80%">  
 ヒマラヤ(3D)
 
 

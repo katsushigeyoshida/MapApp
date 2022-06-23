@@ -108,6 +108,16 @@ namespace MapApp
         }
 
         /// <summary>
+        /// リンク先テキストボックスをダブルクリックした時の処理
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void TbLink_MouseDoubleClick(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        {
+            TbLink.Text = ylib.fileSelect(TbLink.Text, "*");
+        }
+
+        /// <summary>
         /// Wikiリストで「コピー」したデータを貼り付ける
         /// </summary>
         /// <param name="sender"></param>

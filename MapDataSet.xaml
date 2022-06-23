@@ -20,10 +20,10 @@
         <TextBox x:Name="TbBaseID" Height="23" Width="120" Margin="110,100,0,0" TextWrapping="Wrap" VerticalAlignment="Top" HorizontalAlignment="Left"
                  ToolTip="重ね合わせ時のベースとなるデータID" />
         <Label Content="透過色RGB" HorizontalAlignment="Left" Margin="235,100,0,0" VerticalAlignment="Top" />
-        <TextBox x:Name="TbTransportColor" Height="23" Width="70" Margin="325,100,0,0" TextWrapping="Wrap" VerticalAlignment="Top" HorizontalAlignment="Left"
-                 ToolTip="重ね合わせ時の透過色をRGBで16進で指定する、省略時は白になる"/>
-        <CheckBox x:Name="CbBaseOrder" Content="ベースを上" Margin="405,105,0,0" Width="100" Height="16" HorizontalAlignment="Left" VerticalAlignment="Top"
-                  ToolTip="チェックを入れるとベースIDの地図を上に重ねる"/>
+        <TextBox x:Name="TbTransportColor" Height="23" Margin="325,100,130,0" TextWrapping="Wrap" VerticalAlignment="Top"
+                 ToolTip="重ね合わせ時の透過色をRGBでF0F088など16進で指定する。複数指定する時はカンマで区切る。省略時は白(FFFFFF)になる"/>
+        <CheckBox x:Name="CbBaseOrder" Content="ベースを上" Margin="0,105,20,0" Height="16" VerticalAlignment="Top"
+                  ToolTip="チェックを入れるとベースIDの地図を上に重ねる" HorizontalAlignment="Right" Width="100"/>
         <Label Content="ファイルの拡張子" Margin="235,70,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" Width="92"
                ToolTip="地図データの拡張子を指定する"/>
         <TextBox x:Name="TbFIleExt" Height="23" Width="70" Margin="325,70,0,0" TextWrapping="Wrap" HorizontalAlignment="Left"  VerticalAlignment="Top" />

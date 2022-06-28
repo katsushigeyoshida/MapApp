@@ -39,7 +39,7 @@ namespace MapApp
         };
         private string[] mColCountName = {                       //  列数選択表示用
             "1", "2", "3", "4", "5", "6", "7", "8", "9", "10",
-            "11", "12", "13", "14", "15", "16", "17", "18", "19", "20"
+            "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "25", "30"
         };
 
         public MapData mMapData = new MapData();                //  地図データクラス
@@ -62,7 +62,7 @@ namespace MapApp
         private WikiList mWikiListDialog;                       //  Wikipedia検索ダイヤログ
         private Map3DView mMap3DView;                           //  地図の3次元表示
         private Dictionary<string, string[]> mSeamlessLegend;   //  20万分の1日本シームレス地質図V2 地質の凡例データ
-        private Task mTaskGpsLoad;
+        private Task mTaskGpsLoad;                              //  GPSデータリスト読込タスク
 
         private YGButton ydraw;
         private YLib ylib;
@@ -133,6 +133,7 @@ namespace MapApp
         {
             if (getParametor()) {
                 setParametor();
+                mMapData.setDateTime();
                 mapDisp(true);
             }
         }
@@ -252,17 +253,7 @@ namespace MapApp
             } else if (e.Key == Key.PageDown) {     //  縮小
                 setZoom(mMapData.mZoom, mMapData.mZoom - 1);
             } else if (e.Key == Key.F5) {           //  再表示
-                if (getParametor()) {
-                    setParametor();
-                    bool? onLine = mOnLine;
-                    if (Keyboard.IsKeyDown(Key.LeftCtrl) || 
-                        Keyboard.IsKeyDown(Key.RightCtrl)) {
-                        //  コントロールキーが押されていればデータ更新
-                        mOnLine = true;
-                    }
-                    mapDisp(true);
-                    mOnLine = onLine;
-                }
+                refresh(Keyboard.IsKeyDown(Key.LeftCtrl) || Keyboard.IsKeyDown(Key.RightCtrl));
             }
         }
 
@@ -279,6 +270,9 @@ namespace MapApp
                 } else {
                     BtMapsGSI.Content = MapInfoData.mMapData[mMapData.mDataId][8];
                 }
+                //  地図取得時間 (雨雲レーダーに合わせ5分おきに設定)
+                mMapData.setDateTime();
+
                 mapDisp(true);
             }
         }
@@ -540,6 +534,49 @@ namespace MapApp
         }
 
         /// <summary>
+        /// 気象庁の天気図予報を現在時間設定
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void BtNowTime_Click(object sender, RoutedEventArgs e)
+        {
+            mMapData.mDateTimeInc = 0;
+            refresh(true);
+        }
+
+        /// <summary>
+        /// 気象庁の天気図予報を一つ戻す
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void BtPrevTime_Click(object sender, RoutedEventArgs e)
+        {
+            mMapData.mDateTimeInc--;
+            refresh(true);
+        }
+
+        /// <summary>
+        /// 気象庁の天気図予報を一つ進める
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void BtNextTime_Click(object sender, RoutedEventArgs e)
+        {
+            mMapData.mDateTimeInc++;
+            refresh(true);
+        }
+
+        /// <summary>
+        /// [(更新)]ボタン
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void BtRefresh_Click(object sender, RoutedEventArgs e)
+        {
+            refresh(true);
+        }
+
+        /// <summary>
         /// [?]ボタン ヘルプ表示
         /// </summary>
         /// <param name="sender"></param>
@@ -754,15 +791,15 @@ namespace MapApp
             Point cp = mMapData.screen2Coordinates(mLastMovePoint);
             //  標高取得
             double ele = mMapData.getMapElavtor(mMapData.screen2Map(mLastMovePoint), ChkAutoOnLine.IsChecked);
-            //  20万分の1日本シームレス地質図V2の凡例表示
+            //  色の凡例表示
             System.Drawing.Color color = getPointColor(mMapData.screen2Map(mLastMovePoint));
-            string seamlessLegendTitle = "Color [" + color.R.ToString("X2") + color.G.ToString("X2") + color.B.ToString("X2") + "]";
-            if (mMapData.mDataIdName.CompareTo("seamless_v2")== 0) {
-                seamlessLegendTitle += " " + getSeamlessLegend(mMapData.screen2Map(mLastMovePoint));
+            string colorLegendTitle = "Color [" + color.R.ToString("X2") + color.G.ToString("X2") + color.B.ToString("X2") + "]";
+            if (mMapData.mColorLegend != null) {
+                colorLegendTitle += " " + mMapData.getColorLegend(getPointColor(mMapData.screen2Map(mLastMovePoint)));
             }
             //  ステータスバーに表示
             TbCordinate.Text = "(" + cp.Y.ToString("#0.######") + "," + cp.X.ToString("#0.######") + ") 標高 "
-                + ele.ToString("#,###") + " m " + seamlessLegendTitle;
+                + ele.ToString("#,###") + " m " + colorLegendTitle;
         }
 
         /// <summary>
@@ -910,6 +947,25 @@ namespace MapApp
         }
 
         /// <summary>
+        /// 地図画面の表示更新
+        /// </summary>
+        /// <param name="onLine">OnLineでデータも更新する</param>
+        private void refresh(bool onLine)
+        {
+            if (getParametor()) {
+                setParametor();
+                bool? tmpOnLine = mOnLine;
+                if (onLine) {
+                    //  データ更新と地図取得時間 (雨雲レーダーに合わせ5分おきに設定)
+                    mOnLine = true;
+                    mMapData.setDateTime();
+                }
+                mapDisp(true);
+                mOnLine = tmpOnLine;
+            }
+        }
+
+        /// <summary>
         /// 画像データのパラメータをコントロールから取得
         /// </summary>
         /// <returns></returns>
@@ -922,9 +978,7 @@ namespace MapApp
             mMapData.setMapInfoData(CbDataID.SelectedIndex);
             //  座標情報の設定
             mMapData.mZoom = int.Parse(mZoomName[CbZoom.SelectedIndex]);
-            mMapData.mStart.X = double.Parse(TbX.Text);
-            mMapData.mStart.Y = double.Parse(TbY.Text);
-            mMapData.mColCount = CbSize.SelectedIndex + 1;
+            mMapData.mColCount = ylib.intParse(CbSize.Items[CbSize.SelectedIndex].ToString());
             mMapData.normarized();
             return true;
         }
@@ -936,11 +990,13 @@ namespace MapApp
         {
             mCombboxEnable = false;
             mMapData.normarized();
-            TbX.Text = mMapData.mStart.X.ToString();
-            TbY.Text = mMapData.mStart.Y.ToString();
+            TbX.Text = mMapData.mStart.X.ToString("#,###");
+            TbY.Text = mMapData.mStart.Y.ToString("#,###");
             CbDataID.SelectedIndex = mMapData.mDataId;
             CbZoom.SelectedIndex = mMapData.mZoom;
-            CbSize.SelectedIndex = mMapData.mColCount - 1;
+            int colIndex = mColCountName.FindIndex<string>(mMapData.mColCount.ToString());
+            if (0 <= colIndex)
+                CbSize.SelectedIndex = colIndex;
             TbScale.Text = "1 / " + MapInfoData.mZoomScale[mMapData.mZoom].ToString("#,##0");
             mCombboxEnable = true;
         }
@@ -955,6 +1011,23 @@ namespace MapApp
             if (getMapFile(mMapData, doEvent))
                 drawMap(mMapData);
             mapDiscription();
+            timeButtonSet();
+        }
+
+        /// <summary>
+        /// 天気図などの時間設定ボタンの表示/非表示
+        /// </summary>
+        private void timeButtonSet()
+        {
+            if (mMapData.isDateTimeData()) {
+                BtNowTime.Visibility = Visibility.Visible;
+                BtPrevTime.Visibility = Visibility.Visible;
+                BtNextTime.Visibility = Visibility.Visible;
+            } else {
+                BtNowTime.Visibility = Visibility.Hidden;
+                BtPrevTime.Visibility = Visibility.Hidden;
+                BtNextTime.Visibility = Visibility.Hidden;
+            }
         }
 
         /// <summary>
@@ -1110,6 +1183,10 @@ namespace MapApp
             if (ChkGpsDisp.IsChecked == true) {
                 mGpsDataList.draw(ydraw, mapData);
             }
+            //  日時指定付きURLのデータ取得日時の表示
+            if (mMapData.isDateTimeData()) {
+                drawDateTime();
+            }
         }
 
         /// <summary>
@@ -1146,6 +1223,16 @@ namespace MapApp
             ydraw.drawLine(sp, ep);
             ydraw.drawText(string.Format("{0:F2} km", mls), 
                 new Point(mMapData.mView.Width * (epx - l * mls / ls / 2.0), mMapData.mView.Height * epy), 0.0);
+        }
+
+        /// <summary>
+        /// 日時指定付きURLのデータ取得日時の表示
+        /// </summary>
+        private void drawDateTime()
+        {
+            ydraw.setTextColor(System.Windows.Media.Brushes.Black);
+            string dateTimeText = mMapData.mDispMapDateTime.ToString("yyyy年MM月dd日HH時mm分ss秒");
+            ydraw.drawText(dateTimeText, new Point(30, 5), 0.0);
         }
 
         /// <summary>
@@ -1354,6 +1441,14 @@ namespace MapApp
                 if (!mSeamlessLegend.ContainsKey(legendList[i][2]))
                     mSeamlessLegend.Add(legendList[i][2], legendList[i]);
             }
+            //List<string[]> legendOutList = new List<string[]>();
+            //foreach (string[] legend in legendList) {
+            //    string[] buf = { legend[2], "[" + legend[1] + "] " + legend[0] };   //  [1]symbole  [0]title
+            //    legendOutList.Add(buf);
+            //}
+            //path = "legend_" + "seamless_v2" + ".csv";
+            //string[] title = { "RGB", "comment" };
+            //ylib.saveCsvData(path, title, legendOutList);
         }
     }
 }

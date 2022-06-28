@@ -38,10 +38,13 @@ namespace MapApp
     {
         private HashSet<string> mImageFileSet = new HashSet<string>();  //  地図イメージデータ取得リスト
         private Dictionary<string, List<string[]>> mElevatorDataList = new Dictionary<string, List<string[]>>();    //  標高データ
-        private Dictionary<string, string[]> mColorLegend;  //  色凡例
+        public Dictionary<string, string> mColorLegend;         //  色凡例データ
+        private string[] mLegendTitle = { "RGB", "comment" };   //  色凡例データタイトル
         public string mBaseFolder = "Map";              //  保存先フォルダ
 
         public string mMapUrl = MapInfoData.mGsiUrl;    //  地図データURL(ディフォルトは地理院地図)
+        private string mMapUrl2 = "";
+        private string mDateTimeFolder = "";
         public string mDataIdName = "std";              //  データ種別名(std...)
         public string mExt = "png";                     //  タイル画像の拡張子
         public string mTileOrder = "";                  //  タイルデータの座標順(していない時は{z}/{x}/{y})
@@ -52,6 +55,7 @@ namespace MapApp
         public Point mStart = new Point(0, 0);          //  表示開始位置(MAP座標(タイル画像単位))
         public int mColCount = 4;                       //  表示するタイル画像の列数
         public int mRowCount = 4;                       //  表示するタイル画像の行数
+        private int mMaxColCount = 30;                  //  表示できる最大列数
         public double mCellSize = 256;                  //  タイル画像の大きさ(一辺の長さ)
         public Size mView = new Size(1000, 1000);       //  表示するViewの大きさ
         public int mUseCol = 0;                         //  使用した列数
@@ -61,14 +65,22 @@ namespace MapApp
         public string mBaseDataIDName = "";             //  重ね合わせBase地図ID
         public System.Drawing.Color[] mTransportColors; //  重ねるデータの透過色
         public bool mBaseMapOver = false;               //  ベースマップの重ねる順番で上になる
-        public MapData mBaseMap = null;
+        public MapData mBaseMap = null;                 //  重ね合わせるベースの地図
+        public DateTime[] mChangeMapDateTime;           //  地図を切り替えた時の時間
+        public string[] mDateTimeForm = {               //  地図切替時間をURLとPATHに設定するフォーム
+            "yyyyMMddHHmmss", 
+            "yyyyMMddHHmmssUTC", "yyyyMMddHHmmssUTC0",  //  雨雲レーダー用
+            "yyyyMMddHHmmssUTC1", "yyyyMMddHHmmssUTC2"  //  天気分布予報用
+        };
+        public DateTime mDispMapDateTime;               //  画面表示時間(日本時間)
+        public int mDateTimeInc = 0;                    //  表示時間の増加数
 
         private YDrawingShapes ydraw = new YDrawingShapes();
         private YLib ylib = new YLib();
 
         public MapData()
         {
-
+            setDateTime();
         }
 
 
@@ -77,6 +89,7 @@ namespace MapApp
             int mapDataIdNo = MapInfoData.mMapData.FindIndex(n => n[1].CompareTo(mapID) == 0);
             if (0 <= mapDataIdNo)
                 setMapInfoData(mapDataIdNo);
+            setDateTime();
         }
 
         /// <summary>
@@ -97,7 +110,74 @@ namespace MapApp
             mRowCount = mapData.mRowCount;
             mCellSize = mapData.mCellSize;
             mView = new Size(mapData.mView.Width, mapData.mView.Height);
+
+            loadLegendData();
         }
+
+        /// <summary>
+        ///  取得時間設定 (雨雲レーダーに合わせ5分おきに設定)
+        /// </summary>
+        public void setDateTime()
+        {
+            //  時間ちょうどだとデータが未完の場合があるので1分の遅延時間を入れる
+            mChangeMapDateTime = new DateTime[mDateTimeForm.Length];
+            //  日本時間
+            DateTime date2 = DateTime.Now;
+            DateTime date = date2.Add(new TimeSpan(0, 0, 0));               //  時間調整用
+            mChangeMapDateTime[0] = new DateTime(date.Year, date.Month, date.Day, date.Hour, date.Minute / 5 * 5, 0);
+            //  UTC時間 雨雲レーダー用
+            DateTime dateUtc2 = DateTime.UtcNow;
+            DateTime dateUtc = dateUtc2.Add(new TimeSpan(0, 0, 0));         //  時間調整用
+            mChangeMapDateTime[1] = new DateTime(dateUtc.Year, dateUtc.Month, dateUtc.Day, dateUtc.Hour, dateUtc.Minute / 5 * 5, 0);
+            dateUtc = dateUtc2.Add(new TimeSpan(0, 15 * mDateTimeInc, 0));  //  15分単位で時間をかえる
+            mChangeMapDateTime[2] = new DateTime(dateUtc.Year, dateUtc.Month, dateUtc.Day, dateUtc.Hour, dateUtc.Minute / 5 * 5, 0);
+            //  UTC時間 天気予報分布(気温)
+            dateUtc = dateUtc2.Add(new TimeSpan(0, 0, 0));
+            mChangeMapDateTime[3] = roundDateTime(dateUtc);
+            dateUtc = dateUtc2.Add(new TimeSpan(3 * mDateTimeInc, 0, 0));   //  3時間単位で時間を変える
+            mChangeMapDateTime[4] = new DateTime(dateUtc.Year, dateUtc.Month, dateUtc.Day, dateUtc.Hour / 3 * 3, 0, 0);
+
+            //  時間単位に取得するデータは過去データを削除
+            mMapUrl2 = mMapUrl;
+            if (isDateTimeData()) {
+                //  日時指定がある場合
+                for (int i = 0; i < mDateTimeForm.Length; i++) {
+                    if (0 <= mMapUrl2.IndexOf("{" + mDateTimeForm[i] + "}")) {
+                        int n = mDateTimeForm[i].IndexOf("UTC");
+                        string dateTimeForm = 0 < n ? mDateTimeForm[i].Substring(0, n) : mDateTimeForm[i];
+                        mMapUrl2 = mMapUrl2.Replace("{" + mDateTimeForm[i] + "}", mChangeMapDateTime[i].ToString(dateTimeForm));
+                        mDateTimeFolder = "\\" + mChangeMapDateTime[i].ToString(dateTimeForm);
+                        mDispMapDateTime = 0 <= n ? mChangeMapDateTime[i].Add(new TimeSpan(9, 0 ,0)) : mChangeMapDateTime[i];
+                    }
+                }
+                if (0 < mDateTimeFolder.Length)
+                    removeMapData(false);   //  データ削除
+            } else {
+                mDateTimeFolder = "";
+            }
+        }
+
+        /// <summary>
+        /// 時間データを2時、8時、20時に丸める
+        /// </summary>
+        /// <param name="date">時間</param>
+        /// <returns>丸めた時間</returns>
+        private DateTime roundDateTime(DateTime date)
+        {
+            DateTime roundDate;
+            if (2 < date.Hour && date.Hour < 8)
+                roundDate = new DateTime(date.Year, date.Month, date.Day, 2, 0, 0);
+            else if (8 < date.Hour && date.Hour < 20)
+                roundDate = new DateTime(date.Year, date.Month, date.Day, 8, 0, 0);
+            else if (20 < date.Hour && date.Hour < 24)
+                roundDate = new DateTime(date.Year, date.Month, date.Day, 20, 0, 0);
+            else {
+                date = date.Add(new TimeSpan(-1, 0, 0, 0));
+                roundDate = new DateTime(date.Year, date.Month, date.Day, 20, 0, 0);
+            }
+            return roundDate;
+        }
+
 
         /// <summary>
         /// MapInfoDataの値を設定する
@@ -127,6 +207,8 @@ namespace MapApp
                 mTransportColors[0] = System.Drawing.Color.White;
             }
             mBaseMapOver = MapInfoData.mMapData[mDataId][13].ToLower().CompareTo("true") == 0;  //  BaseMapの上下
+
+            loadLegendData();                                       //  凡例データ読込
         }
 
         /// <summary>
@@ -171,10 +253,23 @@ namespace MapApp
             double maxColCount = getMaxColCount();
             mStart.X = Math.Min(Math.Max(mStart.X, 0), maxColCount);
             mStart.Y = Math.Min(Math.Max(mStart.Y, 0), maxColCount);
-            mColCount = Math.Min(Math.Max(mColCount, 1), 20);
+            mColCount = Math.Min(Math.Max(mColCount, 1), mMaxColCount);
             mColCount = (int)Math.Min(mColCount, maxColCount);
             mCellSize = getTileSize();
             mRowCount = (int)getRowCount();
+        }
+
+        /// <summary>
+        /// 日時データを使う地図かの確認
+        /// </summary>
+        /// <returns></returns>
+        public bool isDateTimeData()
+        {
+            for (int i = 0; i< mDateTimeForm.Length; i++) {
+                if (0 <= mMapUrl.IndexOf(mDateTimeForm[i]))
+                    return true;
+            }
+            return false;
         }
 
         /// <summary>
@@ -199,7 +294,7 @@ namespace MapApp
         /// <returns>Webアドレス</returns>
         public string getElevatorWebAddress(double x, double y)
         {
-            int elevatorZoom = ylib.intParse(MapInfoData.mMapElevatorData[mElevatorDataNo][4]);  //  標高データの最大ズーム値
+            int elevatorZoom = getMaxZoom(MapInfoData.mMapElevatorData[mElevatorDataNo][4]);  //  標高データの最大ズーム値
             Point pos = new Point(x, y);
             if (elevatorZoom < mZoom) {
                 //  標高データはズームレベル15(DEM5)までなのでそれ以上は15のデータを取得
@@ -219,7 +314,7 @@ namespace MapApp
         /// <returns>ファイルパス</returns>
         public string downloadElevatorPath(double x, double y)
         {
-            int elevatorZoom = ylib.intParse(MapInfoData.mMapElevatorData[mElevatorDataNo][4]);  //  標高データの最大ズーム値
+            int elevatorZoom = getMaxZoom(MapInfoData.mMapElevatorData[mElevatorDataNo][4]);  //  標高データの最大ズーム値
             Point pos = new Point(x, y);
             if (elevatorZoom < mZoom) {
                 //  標高データはズームレベル15(DEM5)までなのでそれ以上は15のデータを取得
@@ -253,7 +348,7 @@ namespace MapApp
         /// <returns></returns>
         public Point cnvElevatorPos(Point mp)
         {
-            int elevatorZoomMax = ylib.intParse(MapInfoData.mMapElevatorData[mElevatorDataNo][4]);
+            int elevatorZoomMax = getMaxZoom(MapInfoData.mMapElevatorData[mElevatorDataNo][4]);
             if (elevatorZoomMax < mZoom) {
                 //  標高データはズームレベル15(DEM5)までなのでそれ以上は15のデータを取得
                 return cnvMapPostionZoom(elevatorZoomMax, mp);
@@ -261,6 +356,24 @@ namespace MapApp
                 return mp;
             }
         }
+
+        /// <summary>
+        /// MapInfoのZoom情報から最大のZoomレベルを求める
+        /// </summary>
+        /// <param name="zoom">zoom情報</param>
+        /// <returns>最大Zoomレベル</returns>
+        private int getMaxZoom(string zoom)
+        {
+            if (zoom.Length < 1)
+                return 14;
+            List<string> zoomlist = ylib.string2StringNumbers(zoom);
+            int maxzoom = 0;
+            foreach (var str in zoomlist) {
+                maxzoom = Math.Max(maxzoom, Math.Abs(int.Parse(str)));
+            }
+            return maxzoom;
+        }
+
 
         /// <summary>
         /// 標高データの取得
@@ -317,7 +430,7 @@ namespace MapApp
         /// <returns>ファイルパス(ファイルがない時はnull)</returns>
         public string getMapData(int x, int y, bool? autoOnline)
         {
-            string downloadFilePath = "";
+            string downloadFilePath;
             if (isMergeData()) {
                 //  重ね合わせデータの表示する場合
                 downloadFilePath = getMergeMapData(x, y, autoOnline);
@@ -346,9 +459,9 @@ namespace MapApp
         {
             string mergeDataPath = downloadMergeDataPath(x, y);
             if (File.Exists(mergeDataPath) && autoOnline != true)
-                return mergeDataPath;                                                   //  既にファイルが存在する
+                return mergeDataPath;                                                  //  既にファイルが存在する
 
-            mBaseMap.mZoom = mZoom;                                                     //  BaseMapのZoomを設定
+            mBaseMap.mZoom = mZoom;                                                    //  BaseMapのZoomを設定
             string baseMapDataPath = mBaseMap.getMapDataDownload(x, y, autoOnline);    //  BaseMapのデータ取得
             string lapMapDataPath = getMapDataDownload(x, y, autoOnline);              //  重ねるデータの取得
             if (!ylib.createPathFolder(mergeDataPath))
@@ -400,13 +513,27 @@ namespace MapApp
 
         /// <summary>
         /// 地図データの削除
+        /// <param name="msg">確認メッセージを出す</param>
         /// </summary>
-        public void removeMapData()
+        public void removeMapData(bool msg = true)
         {
             string path = Path.GetFullPath(getDownloadDataBasePath());
-            if (MessageBox.Show(path + " を削除します", "確認", MessageBoxButton.YesNo) == MessageBoxResult.Yes) {
-                Directory.Delete(path, true);
-                removeImageFileList();
+            if (!msg || MessageBox.Show(path + " を削除します", "確認", MessageBoxButton.YesNo) == MessageBoxResult.Yes) {
+                try {
+                    if (Directory.Exists(path)) {
+                        Directory.Delete(path, true);
+                        removeImageFileList();
+                    }
+                    if (isMergeData()) {
+                        path = Path.GetFullPath(getDownloadDataBasePath(false));
+                        if (Directory.Exists(path)) {
+                            Directory.Delete(path, true);
+                            removeImageFileList();
+                        }
+                    }
+                } catch (Exception e) {
+                    System.Diagnostics.Debug.WriteLine(e.Message);
+                }
             }
         }
 
@@ -441,7 +568,7 @@ namespace MapApp
         {
             if (0 < mMapUrl.Length) {
                 //  国土地理院地図以外
-                string url = mMapUrl.Replace("{z}", mZoom.ToString());
+                string url = mMapUrl2.Replace("{z}", mZoom.ToString());
                 url = url.Replace("{x}", x.ToString());
                 url = url.Replace("{y}", y.ToString());
                 return url;
@@ -459,7 +586,7 @@ namespace MapApp
         /// <returns>ファイルパス</returns>
         public string downloadPath(int x, int y)
         {
-            return mBaseFolder + "\\" + mDataIdName + "\\" + mZoom + "\\" + x + "\\" + y + "." + mExt;
+            return mBaseFolder + "\\" + mDataIdName + mDateTimeFolder + "\\" + mZoom + "\\" + x + "\\" + y + "." + mExt;
         }
 
         /// <summary>
@@ -478,9 +605,9 @@ namespace MapApp
         /// 地図データを保存するフォルダ名の取得
         /// </summary>
         /// <returns></returns>
-        public string getDownloadDataBasePath()
+        public string getDownloadDataBasePath(bool merge = true)
         {
-            if (isMergeData()) {
+            if (merge && isMergeData()) {
                 return mBaseFolder + "\\" + mDataIdName + "_" + mBaseDataIDName + (mBaseMapOver ? "_up" : "");
             } else {
                 return mBaseFolder + "\\" + mDataIdName;
@@ -885,6 +1012,41 @@ namespace MapApp
             Point cps = map2Coordinates(mps);
             Point cpe = map2Coordinates(mpe);
             return ylib.coordinateDistance(cps, cpe);
+        }
+
+        /// <summary>
+        /// 色凡例のコメントを返す
+        /// </summary>
+        /// <param name="color">色コード</param>
+        /// <returns></returns>
+        public string getColorLegend(System.Drawing.Color color)
+        {
+            if (8 <= color.Name.Length && mColorLegend.ContainsKey(color.Name.Substring(2, 6)))
+                return mColorLegend[color.Name.Substring(2, 6)];
+            else
+                return "";
+        }
+
+        /// <summary>
+        /// 凡例データ読込
+        /// ファイル名は "legend_" + データID + ".csv"
+        /// </summary>
+        private void loadLegendData()
+        {
+            mColorLegend = null;
+            string path = "legend_" + mDataIdName + ".csv";
+            if (!File.Exists(path))
+                return;
+
+            List<string[]> legendList = ylib.loadCsvData(path, mLegendTitle, false, false);
+            if (legendList != null && 0 < legendList.Count) {
+                mColorLegend = new Dictionary<string, string>();
+                foreach (string[] legend in legendList) {
+                    if (1 < legend.Length && legend[0][0] != '#') {
+                        mColorLegend.Add(legend[0].ToLower(), legend[1]);
+                    }
+                }
+            }
         }
     }
 }

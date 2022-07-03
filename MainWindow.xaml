@@ -31,17 +31,16 @@
             <CheckBox x:Name="ChkAutoOnLine" Content="自動オフライン" IsThreeState="True" Click="ChkAutoOnLine_Click" 
                       ToolTip="地図のロード状態の設定と表示" />
             <Button x:Name="BtMapsGSI" Content="国土地理院" Click="BtMapsGSI_Click" />
-            <Button x:Name="BtPrevTime" Click="BtPrevTime_Click" >
+            <Button x:Name="BtPrevTime" Click="BtPrevTime_Click" ToolTip="予想時間を戻す&#13;範囲外では非表示になる" >
                 <Path Fill="DarkGreen" Margin="3" Width="15" Height="15" Data="M 4,0 L 2,2 L 4,4 Z M 2,0 L 0,2 L2,4 Z" Stretch="Fill" StrokeLineJoin="Round"/>
             </Button>
-            <Button x:Name="BtNowTime" Click="BtNowTime_Click" >
+            <Button x:Name="BtNowTime" Click="BtNowTime_Click" ToolTip="現時間でのデータを表示する" >
                 <Rectangle Fill="DarkGreen" Width="15" Height="15" Margin="3" RadiusX="2" RadiusY="2"/>
             </Button>
-            <Button x:Name="BtNextTime" Click="BtNextTime_Click" >
+            <Button x:Name="BtNextTime" Click="BtNextTime_Click" ToolTip="予想時間を進める&#13;範囲外では非表示になる" >
                 <Path Fill="DarkGreen" Margin="3" Width="15" Height="15" Data="M 0,0 L 2,2 L 0,4 Z M 2,0 L 4,2 L2,4 Z" Stretch="Fill" StrokeLineJoin="Round"/>
             </Button>
-            <!--<Button x:Name="BtHelp" Content=" ? " Click="BtHelp_Click" />-->
-            <StatusBarItem HorizontalContentAlignment="Right" >
+            <StatusBarItem HorizontalContentAlignment="Right" ToolTip="地図のデータを更新する" >
                 <Button x:Name="BtRefresh" Width="25" Height="22" Click="BtRefresh_Click" >
                     <Path Data="M4,1 A10,10 0 0 0 4,15 M4,15 L1,14 M6,1 A10,10 0 0 1 6,15 M6,1 L9,2" Stroke="DarkGreen" StrokeThickness="2" Stretch="Fill" Height="16" Width="16" />
                 </Button>
@@ -58,7 +57,7 @@
                 </TextBlock.ContextMenu>
             </TextBlock>
             <StatusBarItem HorizontalContentAlignment="Right" >
-                <Button x:Name="BtHelp" Width="25" Height="22" Click="BtHelp_Click" >
+                <Button x:Name="BtHelp" Width="25" Height="22" Click="BtHelp_Click" ToolTip="ヘルプ(マニュアル)を開く" >
                     <Path Data="M6,7 A 4.5,4 0 1 0 1,4 M6,7 6,11 M6,12 6,15" Stroke="Blue" StrokeThickness="3" />
                 </Button>
             </StatusBarItem>
@@ -69,28 +68,28 @@
                 <TextBlock x:Name="TbScale" Text="1 / 10000"/>
             </StatusBar>
             <StatusBar HorizontalAlignment="Center">
-                <Button x:Name="BtZoomUp" Height="22" Width="40" Click="BtZoomUp_Click" >
+                <Button x:Name="BtZoomUp" Height="22" Width="40" Click="BtZoomUp_Click" ToolTip="地図を拡大する" >
                     <Path Data="M10,3 L10,15 M4,9 16,9 M10,0 " Margin="1" Stroke="Black" StrokeThickness="1.5" />
                 </Button>
-                <Button x:Name="BtZoomDown" Height="22" Width="40" Click="BtZoomDown_Click">
+                <Button x:Name="BtZoomDown" Height="22" Width="40" Click="BtZoomDown_Click" ToolTip="地図を縮小する">
                     <Path Data="M4,4 16,4" Margin="2" Stroke="Black" StrokeThickness="1.5" />
                 </Button>
             </StatusBar>
             <StatusBar HorizontalAlignment="Center" >
-                <Button x:Name="BtUpMove" Width="40" Click="BtUpMove_Click" >
+                <Button x:Name="BtUpMove" Width="40" Click="BtUpMove_Click" ToolTip="地図を下に移動する" >
                     <Path Margin="1" Width="15" Height="15" Data="M 0.5,0 L 0,2 L 1,2 Z" Stretch="Fill" StrokeLineJoin="Round" Fill="Black" StrokeThickness="3"/>
                 </Button>
             </StatusBar>
             <StatusBar HorizontalAlignment="Center">
-                <Button x:Name="BtLeftMove"  Width="40" Click="BtLeftMove_Click" >
+                <Button x:Name="BtLeftMove"  Width="40" Click="BtLeftMove_Click" ToolTip="地図を右に移動する" >
                     <Path Margin="1" Width="15" Height="15" Data="M 1,0 L 0,1 L 1,2 Z" Stretch="Fill" StrokeLineJoin="Round" Fill="Black" StrokeThickness="3"/>
                 </Button>
-                <Button x:Name="BtRightMove" Width="40" Click="BtRightMove_Click">
+                <Button x:Name="BtRightMove" Width="40" Click="BtRightMove_Click" ToolTip="地図を左に移動する">
                     <Path Margin="1" Width="15" Height="15" Data="M 0,0 L 1,1 L 0,2 Z" Stretch="Fill" StrokeLineJoin="Round" Fill="Black" StrokeThickness="3"/>
                 </Button>
             </StatusBar>
             <StatusBar HorizontalAlignment="Center" >
-                <Button x:Name="BtDownMove" Width="40" Click="BtDownMove_Click" >
+                <Button x:Name="BtDownMove" Width="40" Click="BtDownMove_Click" ToolTip="地図を上に移動する">
                     <Path Margin="1" Width="15" Height="15" Data="M 0.5,2 L 0,0 L 1,0 Z" Stretch="Fill" StrokeLineJoin="Round" Fill="Black" StrokeThickness="3"/>
                 </Button>
             </StatusBar>

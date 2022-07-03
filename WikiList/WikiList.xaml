@@ -19,7 +19,12 @@
                     <MenuItem Name="LbUrlCopyMenu" Header="コピー" Click="LbUrlContextMenu_Click"  />
                     <MenuItem Name="LbUrlOpenMenu" Header="開く" Click="LbUrlContextMenu_Click"  />
                     <MenuItem Name="LbUrlAddMenu" Header="URL追加" Click="LbUrlContextMenu_Click"  />
-                    <MenuItem Name="LbUrlRemoveMenu" Header="URL削除" Click="LbUrlContextMenu_Click"  />
+                    <MenuItem Name="LbUrlRemoveMenu" Header="URL削除" Click="LbUrlContextMenu_Click" />
+                    <MenuItem Name="LbMarkListMenuSort" Header="ソート" >
+                        <MenuItem Name="LbUrlMenuSortNon" Header="ソートなし" Click="LbUrlSortMenu_Click" />
+                        <MenuItem Name="LbUrlMenuSortNormal" Header="昇順" Click="LbUrlSortMenu_Click" />
+                        <MenuItem Name="LbUrlMenuSortReverse" Header="降順" Click="LbUrlSortMenu_Click" />
+                    </MenuItem>
                 </ContextMenu>
             </Label.ContextMenu>
         </Label>

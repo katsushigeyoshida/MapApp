@@ -130,8 +130,9 @@ namespace MapApp
         {
             if (0 <= CbTitle.SelectedIndex && mProgressMode == PROGRESSMODE.NON) {
                 //  URLまたはファイルからWikiリストを取得
-                LbUrlAddress.Content = mWikiUrlList.mUrlList[CbTitle.SelectedIndex][1];
-                getWikiDataList(mWikiUrlList.mUrlList[CbTitle.SelectedIndex][1]);
+                int urlListIndex = mWikiUrlList.mUrlList.FindIndex(p => p[0].CompareTo(CbTitle.Items[CbTitle.SelectedIndex]) == 0);
+                LbUrlAddress.Content = mWikiUrlList.mUrlList[urlListIndex][1];
+                getWikiDataList(mWikiUrlList.mUrlList[urlListIndex][1]);
             }
         }
 
@@ -224,9 +225,10 @@ namespace MapApp
             } else if (menuItem.Name.CompareTo("LbUrlRemoveMenu") == 0) {
                 //  URLの削除
                 if (0 <= CbTitle.SelectedIndex) {
-                    var result = MessageBox.Show("[" + mWikiUrlList.mUrlList[CbTitle.SelectedIndex][0] + "] を削除します", "削除確認", MessageBoxButton.OKCancel);
+                    int urlListIndex = mWikiUrlList.mUrlList.FindIndex(p => p[0].CompareTo(CbTitle.Items[CbTitle.SelectedIndex]) == 0);
+                    var result = MessageBox.Show("[" + mWikiUrlList.mUrlList[urlListIndex][0] + "] を削除します", "削除確認", MessageBoxButton.OKCancel);
                     if (result == MessageBoxResult.OK) {
-                        mWikiUrlList.mUrlList.RemoveAt(CbTitle.SelectedIndex);
+                        mWikiUrlList.mUrlList.RemoveAt(urlListIndex);
                         setUrlList();
                     }
                 }
@@ -240,7 +242,7 @@ namespace MapApp
         /// <param name="e"></param>
         private void BtPrevSearch_Click(object sender, RoutedEventArgs e)
         {
-            int n = mWikiDataList.prevSearchData(TbSearch.Text.ToString(), DgDataList.SelectedIndex);
+            int n = mWikiDataList.searchData(TbSearch.Text.ToString(), DgDataList.SelectedIndex, false);
             if (0 <= n) {
                 DgDataList.SelectedIndex = n;
                 WikiData item = (WikiData)DgDataList.Items[n];
@@ -255,7 +257,7 @@ namespace MapApp
         /// <param name="e"></param>
         private void BtNextSearch_Click(object sender, RoutedEventArgs e)
         {
-            int n = mWikiDataList.nextSearchData(TbSearch.Text.ToString(), DgDataList.SelectedIndex);
+            int n = mWikiDataList.searchData(TbSearch.Text.ToString(), DgDataList.SelectedIndex, true);
             if (0 <= n) {
                 DgDataList.SelectedIndex = n;
                 WikiData item = (WikiData)DgDataList.Items[n];
@@ -272,7 +274,8 @@ namespace MapApp
         {
             if (0 < TbSearch.Text.Length) {
                 mGetInfoDataAbort = false;      //  中断フラグ
-                string fileName = CbTitle.SelectedIndex <= 0 ? "" : mWikiUrlList.mUrlList[CbTitle.SelectedIndex][0];
+                int urlListIndex = mWikiUrlList.mUrlList.FindIndex(p => p[0].CompareTo(CbTitle.Items[CbTitle.SelectedIndex]) == 0);
+                string fileName = CbTitle.SelectedIndex <= 0 ? "" : mWikiUrlList.mUrlList[urlListIndex][0];
                 getSearchFileWikiData(TbSearch.Text, mDataFolder, fileName);
                 //mWikiDataList.getSearchAllWikiData(TbSearch.Text, mDataFolder, fileName);
                 //getSearchFileTextTermnate();
@@ -348,6 +351,18 @@ namespace MapApp
             }
         }
 
+        private void LbUrlSortMenu_Click(object sender, RoutedEventArgs e)
+        {
+            MenuItem menuItem = (MenuItem)e.Source;
+            if (menuItem.Name.CompareTo("LbUrlMenuSortNon") == 0) {
+                setUrlList(0);
+            } else if (menuItem.Name.CompareTo("LbUrlMenuSortNormal") == 0) {
+                setUrlList(1);
+            } else if (menuItem.Name.CompareTo("LbUrlMenuSortReverse") == 0) {
+                setUrlList(2);
+            }
+        }
+
         /// <summary>
         /// [プログレスバー]詳細データの取得完了処理
         /// </summary>
@@ -374,15 +389,29 @@ namespace MapApp
 
         /// <summary>
         /// URLのデータリストのタイトルをCbTitleのコンボボックスに設定
+        /// <param name="order">ソート順</param>
         /// </summary>
-        private void setUrlList()
+        private void setUrlList(int order = 0)
         {
+            //  ソート
+            List<string[]> urlList = new List<string[]>();
+            for (int i = 1; i < mWikiUrlList.mUrlList.Count; i++)
+                urlList.Add(mWikiUrlList.mUrlList[i]);
+            if (order == 1)
+                urlList.Sort((a, b) => a[0].CompareTo(b[0]));   //  昇順
+            else if (order == 2)
+                urlList.Sort((b, a) => a[0].CompareTo(b[0]));   //  降順
+            urlList.Insert(0, mWikiUrlList.mUrlList[0]);
+
+            //  コンボボックスに設定
             CbTitle.Items.Clear();
-            foreach (string[] data in mWikiUrlList.mUrlList)
+            foreach (string[] data in urlList)
                 CbTitle.Items.Add(data[0]);
+
             CbTitle.SelectedIndex = 0;
-            if (0 <= CbTitle.SelectedIndex)
-                LbUrlAddress.Content = mWikiUrlList.mUrlList[CbTitle.SelectedIndex][1];
+            int urlListIndex = mWikiUrlList.mUrlList.FindIndex(p => p[0].CompareTo(CbTitle.Items[CbTitle.SelectedIndex]) == 0);
+            if (0 <= urlListIndex)
+                LbUrlAddress.Content = mWikiUrlList.mUrlList[urlListIndex][1];
             else
                 LbUrlAddress.Content = "";
         }
@@ -431,7 +460,8 @@ namespace MapApp
             initHeader();
             //  一覧ページのリストの取得
             setListSearchForm();
-            mWikiDataList.getWikiDataList(mWikiUrlList.mUrlList[CbTitle.SelectedIndex][0], mWikiUrlList.mUrlList[CbTitle.SelectedIndex][1]);
+            int urlListIndex = mWikiUrlList.mUrlList.FindIndex(p => p[0].CompareTo(CbTitle.Items[CbTitle.SelectedIndex]) == 0);
+            mWikiDataList.getWikiDataList(mWikiUrlList.mUrlList[urlListIndex][0], mWikiUrlList.mUrlList[CbTitle.SelectedIndex][1]);
             //  データを保存
             mCurTitle = mWikiUrlList.mUrlList[CbTitle.SelectedIndex][0].Replace(':', '_');
             curWikiListSave();

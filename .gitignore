@@ -1,3 +1,6 @@
-# .gitignore �̐ݒ�
+# .gitignore の設定
 bin/
 obj/
+GpsDataList.csv
+MarkList.csv
+MapAreaList.csv

@@ -411,39 +411,48 @@ namespace MapApp
         }
 
         /// <summary>
-        /// データの検索(次検索)
-        /// タイトルとコメント列から検索
-        /// </summary>
-        /// <param name="searchText">検索ワード</param>
-        /// <returns>検索位置</returns>
-        public int nextSearchData(string searchText, int searchIndex)
-        {
-            if (mDataList == null || mDataList.Count < 1)
-                return -1;
-            for (int i = Math.Max(searchIndex + 1, 0); i < mDataList.Count; i++) {
-                if (0 <= mDataList[i].mTitle.IndexOf(searchText) ||
-                    0 <= mDataList[i].mComment.IndexOf(searchText)) {
-                    return i;
-                }
-            }
-            return -1;
-        }
-
-        /// <summary>
         /// データの検索(前検索)
         /// タイトルとコメント列から検索
         /// </summary>
         /// <param name="searchText">検索ワード</param>
+        /// <param name="order">検索方向 昇順/降順</param>
         /// <returns>検索位置</returns>
-        public int prevSearchData(string searchText, int searchIndex)
+        public int searchData(string searchText, int searchIndex, bool order)
         {
             if (mDataList == null || mDataList.Count < 1)
                 return -1;
 
-            for (int i = Math.Min(searchIndex - 1, mDataList.Count - 1) ; 0 <= i; i--) {
-                if (0 <= mDataList[i].mTitle.IndexOf(searchText) ||
-                    0 <= mDataList[i].mComment.IndexOf(searchText)) {
-                    return i;
+            Point searchCoordinate = new Point();
+            double searchDistance = 20.0;
+            int coordinatePos = -1;
+            if (0 < ylib.getCoordinatePattern(searchText).Length) {
+                //  検索が座標の場合
+                searchCoordinate = ylib.cnvCoordinate(searchText);
+                int n = searchText.IndexOf(' ');
+                if (0 < n) {
+                    searchDistance = ylib.string2double(searchText.Substring(n));
+                    coordinatePos = getFormatTitleData().FindIndex("座標");
+                }
+            }
+
+            for (int i = order ? Math.Max(searchIndex + 1, 0) : Math.Min(searchIndex - 1, mDataList.Count - 1);
+                    order ? i < mDataList.Count : 0 <= i; i += order ? 1 : -1) {
+                if (searchCoordinate.X == 0 && searchCoordinate.Y == 0) {
+                    //  通常の検索
+                    if (0 <= mDataList[i].mTitle.IndexOf(searchText) ||
+                        0 <= mDataList[i].mComment.IndexOf(searchText)) {
+                        return i;
+                    }
+                } else {
+                    //  座標の距離検索
+                    if (0 <= coordinatePos) {
+                        Point pos = ylib.cnvCoordinate(mDataList[i].getStringData()[coordinatePos]);
+                        if (pos.X != 0 && pos.Y != 0) {
+                            double dis = ylib.coordinateDistance(searchCoordinate, pos);
+                            if (dis < searchDistance)
+                                return i;
+                        }
+                    }
                 }
             }
             return -1;

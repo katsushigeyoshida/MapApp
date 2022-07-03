@@ -43,8 +43,9 @@ namespace MapApp
         public string mBaseFolder = "Map";              //  保存先フォルダ
 
         public string mMapUrl = MapInfoData.mGsiUrl;    //  地図データURL(ディフォルトは地理院地図)
-        private string mMapUrl2 = "";
-        private string mDateTimeFolder = "";
+        private string mMapUrl2 = "";                   //  日時データ置き換え後のURL(z,x,yの置換え用)
+        private string mDateTimeFolder = "";            //  日時データ用のフォルダ名
+
         public string mDataIdName = "std";              //  データ種別名(std...)
         public string mExt = "png";                     //  タイル画像の拡張子
         public string mTileOrder = "";                  //  タイルデータの座標順(していない時は{z}/{x}/{y})
@@ -69,10 +70,11 @@ namespace MapApp
         public DateTime[] mChangeMapDateTime;           //  地図を切り替えた時の時間
         public string[] mDateTimeForm = {               //  地図切替時間をURLとPATHに設定するフォーム
             "yyyyMMddHHmmss", 
-            "yyyyMMddHHmmssUTC", "yyyyMMddHHmmssUTC0",  //  雨雲レーダー用
-            "yyyyMMddHHmmssUTC1", "yyyyMMddHHmmssUTC2"  //  天気分布予報用
+            "yyyyMMddHHmmss_UTC", "yyyyMMddHHmmss_UTC0",//  雨雲レーダー用
+            "yyyyMMddHHmmss_UTC1", "yyyyMMddHHmmss_UTC2"//  天気分布予報用
         };
-        public DateTime mDispMapDateTime;               //  画面表示時間(日本時間)
+        public List<DateTime> mDispMapDateTime = new List<DateTime>();  //  画面表示時間(日本時間)
+        private DateTime mDispMapPreDateTime = DateTime.MinValue;
         public int mDateTimeInc = 0;                    //  表示時間の増加数
 
         private YDrawingShapes ydraw = new YDrawingShapes();
@@ -114,47 +116,115 @@ namespace MapApp
             loadLegendData();
         }
 
+
         /// <summary>
         ///  取得時間設定 (雨雲レーダーに合わせ5分おきに設定)
         /// </summary>
         public void setDateTime()
         {
-            //  時間ちょうどだとデータが未完の場合があるので1分の遅延時間を入れる
-            mChangeMapDateTime = new DateTime[mDateTimeForm.Length];
-            //  日本時間
-            DateTime date2 = DateTime.Now;
-            DateTime date = date2.Add(new TimeSpan(0, 0, 0));               //  時間調整用
-            mChangeMapDateTime[0] = new DateTime(date.Year, date.Month, date.Day, date.Hour, date.Minute / 5 * 5, 0);
-            //  UTC時間 雨雲レーダー用
-            DateTime dateUtc2 = DateTime.UtcNow;
-            DateTime dateUtc = dateUtc2.Add(new TimeSpan(0, 0, 0));         //  時間調整用
-            mChangeMapDateTime[1] = new DateTime(dateUtc.Year, dateUtc.Month, dateUtc.Day, dateUtc.Hour, dateUtc.Minute / 5 * 5, 0);
-            dateUtc = dateUtc2.Add(new TimeSpan(0, 15 * mDateTimeInc, 0));  //  15分単位で時間をかえる
-            mChangeMapDateTime[2] = new DateTime(dateUtc.Year, dateUtc.Month, dateUtc.Day, dateUtc.Hour, dateUtc.Minute / 5 * 5, 0);
-            //  UTC時間 天気予報分布(気温)
-            dateUtc = dateUtc2.Add(new TimeSpan(0, 0, 0));
-            mChangeMapDateTime[3] = roundDateTime(dateUtc);
-            dateUtc = dateUtc2.Add(new TimeSpan(3 * mDateTimeInc, 0, 0));   //  3時間単位で時間を変える
-            mChangeMapDateTime[4] = new DateTime(dateUtc.Year, dateUtc.Month, dateUtc.Day, dateUtc.Hour / 3 * 3, 0, 0);
-
-            //  時間単位に取得するデータは過去データを削除
             mMapUrl2 = mMapUrl;
+            mDispMapDateTime.Clear();
             if (isDateTimeData()) {
-                //  日時指定がある場合
-                for (int i = 0; i < mDateTimeForm.Length; i++) {
-                    if (0 <= mMapUrl2.IndexOf("{" + mDateTimeForm[i] + "}")) {
-                        int n = mDateTimeForm[i].IndexOf("UTC");
-                        string dateTimeForm = 0 < n ? mDateTimeForm[i].Substring(0, n) : mDateTimeForm[i];
-                        mMapUrl2 = mMapUrl2.Replace("{" + mDateTimeForm[i] + "}", mChangeMapDateTime[i].ToString(dateTimeForm));
-                        mDateTimeFolder = "\\" + mChangeMapDateTime[i].ToString(dateTimeForm);
-                        mDispMapDateTime = 0 <= n ? mChangeMapDateTime[i].Add(new TimeSpan(9, 0 ,0)) : mChangeMapDateTime[i];
-                    }
+                setDateTime2(mMapUrl);
+                if (0 < mDateTimeFolder.Length && mDispMapDateTime[0] != mDispMapPreDateTime) {
+                    //  過去データを削除
+                    removeMapData(false);
+                    mDispMapPreDateTime = mDispMapDateTime[0];
                 }
-                if (0 < mDateTimeFolder.Length)
-                    removeMapData(false);   //  データ削除
             } else {
                 mDateTimeFolder = "";
             }
+            return;
+        }
+
+        /// <summary>
+        /// 日時形式の変換文字列の入った地図URLで日時データの置き換えをする
+        /// </summary>
+        /// <param name="mapUrl">日時置換えURL</param>
+        public void setDateTime2(string mapUrl)
+        {
+            List<string[]> transData = new List<string[]>();
+            mDispMapDateTime.Clear();
+
+            DateTime dateJpn = DateTime.Now;            //  日本時間
+            DateTime dateUtc = DateTime.UtcNow;         //  UTC時間
+            List<string> convForm = ylib.extractBrackets(mapUrl);
+            for (int i = 0; i < convForm.Count; i++) {
+                if (0 <= convForm[i].IndexOf("yyyy")) {
+                    string[] dateBuf = convForm[i].Split('_');
+                    string convData = transDate(dateBuf, dateJpn, dateUtc);
+                    transData.Add(new string[] { "{" + convForm[i] + "}", convData });
+                }
+            }
+            foreach (string[] data in transData)
+                mMapUrl2 = mMapUrl2.Replace(data[0], data[1]);
+        }
+
+        /// <summary>
+        /// 日時形式から日時データを設定する
+        /// </summary>
+        /// <param name="form">日時形式</param>
+        /// <param name="dateJpn">日本時間</param>
+        /// <param name="dateUtc">世界時間</param>
+        /// <returns>日時データ文字列</returns>
+        private string transDate(string[] form, DateTime dateJpn, DateTime dateUtc)
+        {
+            DateTime dateTime = DateTime.UtcNow;
+            if (form.Length == 1) {
+                dateTime = new DateTime(dateJpn.Year, dateJpn.Month, dateJpn.Day, dateJpn.Hour, dateJpn.Minute / 5 * 5, 0);
+                mDispMapDateTime.Add(dateTime);
+            } else if (form.Length == 2) {
+                //  yyyyMMddHHmmss_UTCx
+                if (form[1].CompareTo("UTC") == 0) {
+                    //  10分単位の時間
+                    dateTime = new DateTime(dateUtc.Year, dateUtc.Month, dateUtc.Day, dateUtc.Hour, dateUtc.Minute / 10 * 10, 0);
+                } else if (form[1].CompareTo("UTC0") == 0) {
+                    //  15分単位で時間をかえる
+                    dateUtc = dateUtc.Add(new TimeSpan(0, 15 * mDateTimeInc, 0));
+                    dateTime = new DateTime(dateUtc.Year, dateUtc.Month, dateUtc.Day, dateUtc.Hour, dateUtc.Minute / 15 * 15, 0);
+                } else if (form[1].CompareTo("UTC1") == 0) {
+                    dateTime = roundDateTime(dateUtc);
+                } else if (form[1].CompareTo("UTC2") == 0) {
+                    //  3時間単位で時間を変える
+                    dateUtc = dateUtc.Add(new TimeSpan(3 * mDateTimeInc, 0, 0));
+                    dateTime = new DateTime(dateUtc.Year, dateUtc.Month, dateUtc.Day, dateUtc.Hour / 3 * 3, 0, 0);
+                } else if (ylib.IsNumberString(form[1])) {
+                    //  {yyyyMMddHHmmss_n}
+                    int interval = ylib.intParse(form[2]);
+                    dateTime = new DateTime(dateJpn.Year, dateJpn.Month, dateJpn.Day, dateJpn.Hour, dateJpn.Minute / interval * interval, 0);
+                }
+            } else if (form.Length == 3) {
+                //  yyyyMMddHHmmss_UTCx_Interval
+                int interval = ylib.intParse(form[2]);
+                if (form[1].CompareTo("UTC") == 0) {
+                    dateTime = new DateTime(dateUtc.Year, dateUtc.Month, dateUtc.Day, dateUtc.Hour, dateUtc.Minute / interval * interval, 0);
+                } else if (form[1].CompareTo("UTC0") == 0) {
+                    dateUtc = dateUtc.Add(new TimeSpan(0, interval * mDateTimeInc, 0));
+                    dateTime = new DateTime(dateUtc.Year, dateUtc.Month, dateUtc.Day, dateUtc.Hour, dateUtc.Minute / interval * interval, 0);
+                }
+            } else if (form.Length == 4) {
+                //  yyyyMMddHHmmss_UTCx_Interval_Delay
+                int interval = ylib.intParse(form[2]);
+                int delay = ylib.intParse(form[3]);
+                if (form[1].CompareTo("UTC") == 0) {
+                    dateUtc = dateUtc.Add(new TimeSpan(0, -delay, 0));
+                    dateTime = new DateTime(dateUtc.Year, dateUtc.Month, dateUtc.Day, dateUtc.Hour, dateUtc.Minute / interval * interval, 0);
+                } else if (form[1].CompareTo("UTC0") == 0) {
+                    dateUtc = dateUtc.Add(new TimeSpan(0, -delay, 0));
+                    dateUtc = dateUtc.Add(new TimeSpan(0, interval * mDateTimeInc, 0));
+                    dateTime = new DateTime(dateUtc.Year, dateUtc.Month, dateUtc.Day, dateUtc.Hour, dateUtc.Minute / interval * interval, 0);
+                }
+            } else {
+                //  10分単位の時間
+                dateTime = new DateTime(dateJpn.Year, dateJpn.Month, dateJpn.Day, dateJpn.Hour, dateJpn.Minute / 10 * 10, 0);
+            }
+            //  地図に表示する日時データ(日本時間に変換)
+            DateTime dateTimeJpn = (0 <= form[1].IndexOf("UTC")) ? dateTime.Add(new TimeSpan(9, 0, 0)) : dateTime;
+            mDispMapDateTime.Add(dateTimeJpn);
+            //  日時データの追加フォルダ名
+            mDateTimeFolder = "\\" + dateTime.ToString(form[0]);
+
+            return dateTime.ToString(form[0]);
         }
 
         /// <summary>
@@ -517,7 +587,7 @@ namespace MapApp
         /// </summary>
         public void removeMapData(bool msg = true)
         {
-            string path = Path.GetFullPath(getDownloadDataBasePath());
+            string path = Path.GetFullPath(getDownloadDataBaseFolder());
             if (!msg || MessageBox.Show(path + " を削除します", "確認", MessageBoxButton.YesNo) == MessageBoxResult.Yes) {
                 try {
                     if (Directory.Exists(path)) {
@@ -525,7 +595,8 @@ namespace MapApp
                         removeImageFileList();
                     }
                     if (isMergeData()) {
-                        path = Path.GetFullPath(getDownloadDataBasePath(false));
+                        //  重ね合わせデータ
+                        path = Path.GetFullPath(getDownloadDataBaseFolder(false));
                         if (Directory.Exists(path)) {
                             Directory.Delete(path, true);
                             removeImageFileList();
@@ -533,6 +604,25 @@ namespace MapApp
                     }
                 } catch (Exception e) {
                     System.Diagnostics.Debug.WriteLine(e.Message);
+                }
+            }
+        }
+
+        /// <summary>
+        /// 日時管理地図データの削除(残すファイルを指定)
+        /// </summary>
+        /// <param name="withoutName">削除しない部分ファイル名</param>
+        public void removeMapDataWithoutFolder(string withoutName)
+        {
+            string path = Path.GetFullPath(getDownloadDataBaseFolder(false));
+            string[] dirList = Directory.GetDirectories(path);
+            foreach (string dir in dirList) {
+                string folder = Path.GetFileName(dir);
+                if (folder.IndexOf(withoutName) < 0) {
+                    if (Directory.Exists(dir)) {
+                        Directory.Delete(dir, true);
+
+                    }
                 }
             }
         }
@@ -604,8 +694,9 @@ namespace MapApp
         /// <summary>
         /// 地図データを保存するフォルダ名の取得
         /// </summary>
-        /// <returns></returns>
-        public string getDownloadDataBasePath(bool merge = true)
+        /// <param name="merge">true: 重ね合わせ先パス名</param>
+        /// <returns>ファイルパス</returns>
+        public string getDownloadDataBaseFolder(bool merge = true)
         {
             if (merge && isMergeData()) {
                 return mBaseFolder + "\\" + mDataIdName + "_" + mBaseDataIDName + (mBaseMapOver ? "_up" : "");

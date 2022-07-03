@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -54,14 +53,12 @@ namespace MapApp
         private string mPostionListFIle = "MapAreaList.csv";    //  地図画面保存リスト保存ファイル名
         private string mMarkListFile = "MarkList.csv";          //  マークリスト保存ファイル名
         private static string mGpsListFile = "GpsDataList.csv"; //  GPSトレースデータリストファイル名(スレッド処理のためstaticとなる)
-        private string mSeamlessLegendPath = "legend.csv";      //  日本シームレス地質図V2 凡例ファイル
         private string mHelpFile = "MapAppManual.pdf";          //  PDFのヘルプファイル
 
         private MarkListDialg mMarkListDialog;                  //  位置情報登録ダイヤログ
         private GpsListDialog mGpsListDialog;                   //  GPSファイルの管理ダイヤログ
         private WikiList mWikiListDialog;                       //  Wikipedia検索ダイヤログ
         private Map3DView mMap3DView;                           //  地図の3次元表示
-        private Dictionary<string, string[]> mSeamlessLegend;   //  20万分の1日本シームレス地質図V2 地質の凡例データ
         private Task mTaskGpsLoad;                              //  GPSデータリスト読込タスク
 
         private YGButton ydraw;
@@ -125,8 +122,6 @@ namespace MapApp
             //mTaskGpsLoad = Task.Run(async () => {
             //    await gpsDataLoad();
             //});
-            //  20万分の1日本シームレス地質図V2 凡例データ読込
-            loadSeamlessLegend(mSeamlessLegendPath);
         }
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
@@ -793,7 +788,7 @@ namespace MapApp
             double ele = mMapData.getMapElavtor(mMapData.screen2Map(mLastMovePoint), ChkAutoOnLine.IsChecked);
             //  色の凡例表示
             System.Drawing.Color color = getPointColor(mMapData.screen2Map(mLastMovePoint));
-            string colorLegendTitle = "Color [" + color.R.ToString("X2") + color.G.ToString("X2") + color.B.ToString("X2") + "]";
+            string colorLegendTitle = "色 [" + color.R.ToString("X2") + color.G.ToString("X2") + color.B.ToString("X2") + "]";
             if (mMapData.mColorLegend != null) {
                 colorLegendTitle += " " + mMapData.getColorLegend(getPointColor(mMapData.screen2Map(mLastMovePoint)));
             }
@@ -1231,8 +1226,13 @@ namespace MapApp
         private void drawDateTime()
         {
             ydraw.setTextColor(System.Windows.Media.Brushes.Black);
-            string dateTimeText = mMapData.mDispMapDateTime.ToString("yyyy年MM月dd日HH時mm分ss秒");
-            ydraw.drawText(dateTimeText, new Point(30, 5), 0.0);
+            string[] msg = { "取得時", "予想" };
+            double size = ydraw.getTextSize();
+            for (int i = 0; i < mMapData.mDispMapDateTime.Count(); i++) {
+                string dateTimeText = mMapData.mDispMapDateTime[i].ToString("yyyy年MM月dd日HH時mm分ss秒");
+                dateTimeText += " " + msg[i %  2];
+                ydraw.drawText(dateTimeText, new Point(10, 5 + size * i), 0.0);
+            }
         }
 
         /// <summary>
@@ -1376,21 +1376,6 @@ namespace MapApp
         }
 
         /// <summary>
-        /// Map座標から20万分の1日本シームレス地質図V2の凡例を取得
-        /// </summary>
-        /// <param name="mp">Map座標</param>
-        /// <returns></returns>
-        private string getSeamlessLegend(Point mp)
-        {
-            System.Drawing.Color color = getPointColor(mp);
-            string legendTitle = "";
-            if (8 <= color.Name.Length && mSeamlessLegend.ContainsKey(color.Name.Substring(2, 6)))  //  [2]value(色)をキーとする
-                legendTitle =" [" + mSeamlessLegend[color.Name.Substring(2, 6)][1] + "] " +         //  [1]symbole
-                                mSeamlessLegend[color.Name.Substring(2, 6)][0];                     //  [0]title
-            return legendTitle;
-        }
-
-        /// <summary>
         /// 指定点のカラーを取得する
         /// </summary>
         /// <param name="mp">Map座標</param>
@@ -1415,40 +1400,6 @@ namespace MapApp
                 }
             }
             return ydraw.GButtonGetImagePixcel(getId(imp.X, imp.Y), dx, dy);
-        }
-
-        /// <summary>
-        /// 20万分の1日本シームレス地質図V2の凡例データを読み込む
-        /// https://gbank.gsj.jp/seamless/v2/api/1.2.1/
-        /// 
-        /// [0]title(タイトル),[1]symbol(凡例記号),[2]value(色数値6桁16進RRGGBB) [3]r(R値) [4]g(G値) [5]b(B値)
-        /// [6]formationAge_ja(形成時代) [7]formationAge_en(形成時代) [8]group_ja(大区分) [9]group_en(大区分)
-        /// [10]lithology_ja(岩相) [11]lithology_en(岩相) 
-        /// </summary>
-        /// <param name="path"></param>
-        private void loadSeamlessLegend(string path)
-        {
-            if (!File.Exists(path)) {
-                if (!ylib.webFileDownload(MapInfoData.mLegendSeamless_V2, path)) {
-                    MessageBox.Show("地質図凡例ファイルがダウンロードできませんでした");
-                    return;
-                }
-            }
-            List<string[]> legendList = ylib.loadCsvData(path, true);   //  タブセパレート
-            if (mSeamlessLegend == null)
-                mSeamlessLegend = new Dictionary<string, string[]>();
-            for (int i = 1; i < legendList.Count; i++) {
-                if (!mSeamlessLegend.ContainsKey(legendList[i][2]))
-                    mSeamlessLegend.Add(legendList[i][2], legendList[i]);
-            }
-            //List<string[]> legendOutList = new List<string[]>();
-            //foreach (string[] legend in legendList) {
-            //    string[] buf = { legend[2], "[" + legend[1] + "] " + legend[0] };   //  [1]symbole  [0]title
-            //    legendOutList.Add(buf);
-            //}
-            //path = "legend_" + "seamless_v2" + ".csv";
-            //string[] title = { "RGB", "comment" };
-            //ylib.saveCsvData(path, title, legendOutList);
         }
     }
 }

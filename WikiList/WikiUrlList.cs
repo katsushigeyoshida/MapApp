@@ -8,11 +8,11 @@ namespace MapApp
     {
         public List<string[]> mUrlList = new List<string[]>() {
             new string[]{ "Wikipediaの一覧リスト",   ""},
-            //new string[]{ "日本の山一覧",            "https://ja.wikipedia.org/wiki/日本の山一覧" },
-            //new string[]{ "日本百名山",              "https://ja.wikipedia.org/wiki/日本百名山" },
-            //new string[]{ "日本二百名山",            "https://ja.wikipedia.org/wiki/日本二百名山" },
-            //new string[]{ "日本三百名山一覧",        "https://ja.wikipedia.org/wiki/日本三百名山" },
-            //new string[]{ "花の百名山",              "https://ja.wikipedia.org/wiki/花の百名山" },
+            new string[]{ "日本の山一覧",            "https://ja.wikipedia.org/wiki/日本の山一覧" },
+            new string[]{ "日本百名山",              "https://ja.wikipedia.org/wiki/日本百名山" },
+            new string[]{ "日本二百名山",            "https://ja.wikipedia.org/wiki/日本二百名山" },
+            new string[]{ "日本三百名山一覧",        "https://ja.wikipedia.org/wiki/日本三百名山" },
+            new string[]{ "花の百名山",              "https://ja.wikipedia.org/wiki/花の百名山" },
             //new string[]{ "新・花の百名山",          "https://ja.wikipedia.org/wiki/新・花の百名山" },
             //new string[]{ "北海道の百名山",          "https://ja.wikipedia.org/wiki/北海道の百名山" },
             //new string[]{ "北海道百名山",            "https://ja.wikipedia.org/wiki/北海道百名山" },
@@ -153,6 +153,15 @@ namespace MapApp
 
         private YLib ylib = new YLib();
 
+
+        public void sort(bool order)
+        {
+            if (order)
+                mUrlList.Sort((a, b) => a[0].CompareTo(b[0]));
+            else
+                mUrlList.Sort((b, a) => a[0].CompareTo(b[0]));
+        }
+
         /// <summary>
         /// URLの一覧リストを読み込む
         /// </summary>
@@ -201,6 +210,8 @@ namespace MapApp
             dlg.Title = "一覧リストWebページ設定";
             dlg.mTitle1 = "リストタイトル";
             dlg.mTitle2 = "ＵＲＬアドレス";
+            dlg.mToolTip1 = "リストのタイトルを設定\n省略時はURLアドレスの最後尾の単語が設定される";
+            dlg.mToolTip2 = "一覧リストのWebページのＵＲＬを入力する";
             var result = dlg.ShowDialog();
             if (result == true) {
                 string[] data = new string[2];

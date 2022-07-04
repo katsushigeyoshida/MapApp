@@ -129,6 +129,7 @@ namespace MapApp
             if (getParametor()) {
                 setParametor();
                 mMapData.setDateTime();
+                setAddTimeSelectData();
                 mapDisp(true);
             }
         }
@@ -265,8 +266,9 @@ namespace MapApp
                 } else {
                     BtMapsGSI.Content = MapInfoData.mMapData[mMapData.mDataId][8];
                 }
-                //  地図取得時間 (雨雲レーダーに合わせ5分おきに設定)
+                //  地図取得時間
                 mMapData.setDateTime();
+                setAddTimeSelectData();
 
                 mapDisp(true);
             }
@@ -536,7 +538,7 @@ namespace MapApp
         private void BtNowTime_Click(object sender, RoutedEventArgs e)
         {
             mMapData.mDateTimeInc = 0;
-            refresh(true);
+            CbAddTime.SelectedIndex = mMapData.mDateTimeInc;
         }
 
         /// <summary>
@@ -547,7 +549,7 @@ namespace MapApp
         private void BtPrevTime_Click(object sender, RoutedEventArgs e)
         {
             mMapData.mDateTimeInc--;
-            refresh(true);
+            CbAddTime.SelectedIndex = mMapData.mDateTimeInc;
         }
 
         /// <summary>
@@ -558,7 +560,20 @@ namespace MapApp
         private void BtNextTime_Click(object sender, RoutedEventArgs e)
         {
             mMapData.mDateTimeInc++;
-            refresh(true);
+            CbAddTime.SelectedIndex = mMapData.mDateTimeInc;
+        }
+
+        /// <summary>
+        /// 天気予報図などのの日時データを含む地図の予報時間の選択
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void CbAddTime_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (0 <= CbAddTime.SelectedIndex) {
+                mMapData.mDateTimeInc = CbAddTime.SelectedIndex;
+                refresh(true);
+            }
         }
 
         /// <summary>
@@ -1018,12 +1033,34 @@ namespace MapApp
                 BtNowTime.Visibility = Visibility.Visible;
                 BtPrevTime.Visibility = Visibility.Visible;
                 BtNextTime.Visibility = Visibility.Visible;
+                CbAddTime.Visibility = Visibility.Visible;
             } else {
                 BtNowTime.Visibility = Visibility.Hidden;
                 BtPrevTime.Visibility = Visibility.Hidden;
                 BtNextTime.Visibility = Visibility.Hidden;
+                CbAddTime.Visibility = Visibility.Hidden;
             }
         }
+
+        /// <summary>
+        /// 予報追加時間の設定
+        /// </summary>
+        private void setAddTimeSelectData()
+        {
+            CbAddTime.Items.Clear(); 
+            CbAddTime.Items.Add("予想時間");
+            for (int i = 1; i < 16; i++) {
+                int addtime = i * mMapData.mDateTimeInterval;
+                string timeString = "";
+                if (30 <= mMapData.mDateTimeInterval)
+                    timeString = (addtime / 60).ToString() + "時間後";
+                else
+                    timeString = addtime.ToString() + "分後";
+                CbAddTime.Items.Add(timeString);
+            }
+            CbAddTime.SelectedIndex = 0;
+        }
+
 
         /// <summary>
         /// 地図の説明表示
@@ -1123,7 +1160,7 @@ namespace MapApp
                 for (int j = (int)mapData.mStart.Y; j < mapData.mStart.Y + mapData.mRowCount; j++) {
                     if (i <= (int)Math.Pow(2, mapData.mZoom) && j <= (int)Math.Pow(2, mapData.mZoom)) {
                         //  標高データの取得
-                        mapData.getElevatorDataFile(i, j, mOnLine);
+                        mapData.getElevatorDataFile(i, j, null);
                         //  地図データの取得
                         string downloadPath = mapData.getMapData(i, j, mOnLine);
                         ydraw.GButtonImageFile(getId(i - (int)mapData.mStart.X, j - (int)mapData.mStart.Y), downloadPath);

@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:MapApp"
         mc:Ignorable="d"
-        Title="国土地理院地図表示アプリ" Height="500" Width="850" Loaded="Window_Loaded" Closing="Window_Closing" 
+        Title="国土地理院地図表示アプリ" Height="500" Width="900" Loaded="Window_Loaded" Closing="Window_Closing" 
         LayoutUpdated="Window_LayoutUpdated" PreviewKeyDown="Window_PreviewKeyDown">
     <DockPanel LastChildFill="True" >
         <StatusBar Name="SbTopStatusBar" DockPanel.Dock="Top" VerticalAlignment="Top">
@@ -40,6 +40,8 @@
             <Button x:Name="BtNextTime" Click="BtNextTime_Click" ToolTip="予想時間を進める&#13;範囲外では非表示になる" >
                 <Path Fill="DarkGreen" Margin="3" Width="15" Height="15" Data="M 0,0 L 2,2 L 0,4 Z M 2,0 L 4,2 L2,4 Z" Stretch="Fill" StrokeLineJoin="Round"/>
             </Button>
+            <ComboBox Name="CbAddTime" Width="70" SelectionChanged="CbAddTime_SelectionChanged"
+                      ToolTip="予想追加時間を設定"/>
             <StatusBarItem HorizontalContentAlignment="Right" ToolTip="地図のデータを更新する" >
                 <Button x:Name="BtRefresh" Width="25" Height="22" Click="BtRefresh_Click" >
                     <Path Data="M4,1 A10,10 0 0 0 4,15 M4,15 L1,14 M6,1 A10,10 0 0 1 6,15 M6,1 L9,2" Stroke="DarkGreen" StrokeThickness="2" Stretch="Fill" Height="16" Width="16" />

@@ -635,7 +635,7 @@ namespace MapApp
             Vector3 pos = new Vector3();
             pos.X = (float)(mXStart + dx * j);      //  X座標(Map座標)
             pos.Y = (float)(mYStart + dy * i);      //  Y座標(Map座標)
-            pos.Z = (float)mMapData.getMapElavtor(new Point(pos.X, pos.Y), false);  //  標高データ(m)
+            pos.Z = (float)mMapData.getMapElavtor(new Point(pos.X, pos.Y), null);  //  標高データ(m)
             pos.Y = (float)(mYEnd - dy * i);        //  Y方向の向きをかえる
             return pos;
         }

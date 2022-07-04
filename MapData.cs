@@ -76,6 +76,7 @@ namespace MapApp
         public List<DateTime> mDispMapDateTime = new List<DateTime>();  //  画面表示時間(日本時間)
         private DateTime mDispMapPreDateTime = DateTime.MinValue;
         public int mDateTimeInc = 0;                    //  表示時間の増加数
+        public int mDateTimeInterval = 0;               //  日時追加のインターバル時間(分)
 
         private YDrawingShapes ydraw = new YDrawingShapes();
         private YLib ylib = new YLib();
@@ -123,6 +124,7 @@ namespace MapApp
         public void setDateTime()
         {
             mMapUrl2 = mMapUrl;
+            mDateTimeInterval = 0;
             mDispMapDateTime.Clear();
             if (isDateTimeData()) {
                 setDateTime2(mMapUrl);
@@ -177,46 +179,50 @@ namespace MapApp
                 //  yyyyMMddHHmmss_UTCx
                 if (form[1].CompareTo("UTC") == 0) {
                     //  10分単位の時間
-                    dateTime = new DateTime(dateUtc.Year, dateUtc.Month, dateUtc.Day, dateUtc.Hour, dateUtc.Minute / 10 * 10, 0);
+                    dateTime = ylib.roundDateTimeMin(dateUtc, 10);
                 } else if (form[1].CompareTo("UTC0") == 0) {
                     //  15分単位で時間をかえる
+                    mDateTimeInterval = 15;
                     dateUtc = dateUtc.Add(new TimeSpan(0, 15 * mDateTimeInc, 0));
-                    dateTime = new DateTime(dateUtc.Year, dateUtc.Month, dateUtc.Day, dateUtc.Hour, dateUtc.Minute / 15 * 15, 0);
+                    dateTime = ylib.roundDateTimeMin(dateUtc, 15);
                 } else if (form[1].CompareTo("UTC1") == 0) {
                     dateTime = roundDateTime(dateUtc);
                 } else if (form[1].CompareTo("UTC2") == 0) {
                     //  3時間単位で時間を変える
+                    mDateTimeInterval = 3 * 60;
                     dateUtc = dateUtc.Add(new TimeSpan(3 * mDateTimeInc, 0, 0));
-                    dateTime = new DateTime(dateUtc.Year, dateUtc.Month, dateUtc.Day, dateUtc.Hour / 3 * 3, 0, 0);
+                    dateTime = ylib.roundDateTimeMin(dateUtc, 180);
                 } else if (ylib.IsNumberString(form[1])) {
                     //  {yyyyMMddHHmmss_n}
-                    int interval = ylib.intParse(form[2]);
-                    dateTime = new DateTime(dateJpn.Year, dateJpn.Month, dateJpn.Day, dateJpn.Hour, dateJpn.Minute / interval * interval, 0);
+                    mDateTimeInterval = ylib.intParse(form[2]);
+                    dateTime = ylib.roundDateTimeMin(dateJpn, mDateTimeInterval);
                 }
             } else if (form.Length == 3) {
                 //  yyyyMMddHHmmss_UTCx_Interval
-                int interval = ylib.intParse(form[2]);
+                mDateTimeInterval = ylib.intParse(form[2]);
                 if (form[1].CompareTo("UTC") == 0) {
-                    dateTime = new DateTime(dateUtc.Year, dateUtc.Month, dateUtc.Day, dateUtc.Hour, dateUtc.Minute / interval * interval, 0);
+                    dateTime = ylib.roundDateTimeMin(dateUtc, mDateTimeInterval);
                 } else if (form[1].CompareTo("UTC0") == 0) {
-                    dateUtc = dateUtc.Add(new TimeSpan(0, interval * mDateTimeInc, 0));
-                    dateTime = new DateTime(dateUtc.Year, dateUtc.Month, dateUtc.Day, dateUtc.Hour, dateUtc.Minute / interval * interval, 0);
+                    dateUtc = dateUtc.Add(new TimeSpan(0, mDateTimeInterval * mDateTimeInc, 0));
+                    dateTime = ylib.roundDateTimeMin(dateUtc, mDateTimeInterval);
                 }
             } else if (form.Length == 4) {
                 //  yyyyMMddHHmmss_UTCx_Interval_Delay
-                int interval = ylib.intParse(form[2]);
+                mDateTimeInterval = ylib.intParse(form[2]);
                 int delay = ylib.intParse(form[3]);
                 if (form[1].CompareTo("UTC") == 0) {
                     dateUtc = dateUtc.Add(new TimeSpan(0, -delay, 0));
-                    dateTime = new DateTime(dateUtc.Year, dateUtc.Month, dateUtc.Day, dateUtc.Hour, dateUtc.Minute / interval * interval, 0);
+                    dateTime = ylib.roundDateTimeMin(dateUtc, mDateTimeInterval);
                 } else if (form[1].CompareTo("UTC0") == 0) {
                     dateUtc = dateUtc.Add(new TimeSpan(0, -delay, 0));
-                    dateUtc = dateUtc.Add(new TimeSpan(0, interval * mDateTimeInc, 0));
-                    dateTime = new DateTime(dateUtc.Year, dateUtc.Month, dateUtc.Day, dateUtc.Hour, dateUtc.Minute / interval * interval, 0);
+                    dateUtc = dateUtc.Add(new TimeSpan(0, mDateTimeInterval * mDateTimeInc, 0));
+                    dateTime = ylib.roundDateTimeMin(dateUtc, mDateTimeInterval);
                 }
             } else {
                 //  10分単位の時間
-                dateTime = new DateTime(dateJpn.Year, dateJpn.Month, dateJpn.Day, dateJpn.Hour, dateJpn.Minute / 10 * 10, 0);
+                mDateTimeInterval = 10;
+                dateTime = dateJpn.Add(new TimeSpan(0, mDateTimeInterval * mDateTimeInc, 0));
+                dateTime = ylib.roundDateTimeMin(dateTime, mDateTimeInterval);
             }
             //  地図に表示する日時データ(日本時間に変換)
             DateTime dateTimeJpn = (0 <= form[1].IndexOf("UTC")) ? dateTime.Add(new TimeSpan(9, 0, 0)) : dateTime;
@@ -718,18 +724,19 @@ namespace MapApp
             string folder = Path.GetDirectoryName(downloadPath);    //  フォルダ名
 
             //  オンラインの時はファイル登録を一度削除する
-            if (autoOnline == true && mImageFileSet.Contains(url))
+            bool imageFIleset = mImageFileSet.Contains(url);
+            if (autoOnline == true && imageFIleset)
                 mImageFileSet.Remove(url);
 
             //  ファイルがなければダウンロードする
             if (!File.Exists(downloadPath) || autoOnline == true) {
                 //  Web上にないファイルはダウンロードに行かない
-                if (autoOnline != false || !mImageFileSet.Contains(url)) {
+                if (autoOnline == true || !imageFIleset) {
                     Directory.CreateDirectory(folder);
                     //System.Diagnostics.Debug.WriteLine($"getDownLoadFile: {url} {downloadPath}");
                     if (!ylib.webFileDownload(url, downloadPath)) {
                         if (ylib.getError()) {
-                            System.Diagnostics.Debug.WriteLine($"Error getDownLoadFile: {url} {ylib.getErrorMessage()}");
+                            System.Diagnostics.Debug.WriteLine($"Error getDownLoadFile: FileSet[{imageFIleset}] Online[{autoOnline}] {url} {ylib.getErrorMessage()}");
                         }
                         //  Web上にないファイルを登録
                         mImageFileSet.Add(url);

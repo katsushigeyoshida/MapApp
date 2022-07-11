@@ -12,7 +12,8 @@ namespace MapApp
         private Dictionary<string, MapData> mMapAreaList = new Dictionary<string, MapData>();    //  地図画面保存リスト
         private string mFilePath;
         public static string[] mPositionListFormat = new string[] { //  文字配列に変換するときのタイトル
-            "title", "DataID", "DataIDName", "ZoomLevel", "StartX", "StartY", "ColCount", "Extention", "MapUrl", "TileOrder"
+            "title", "DataID", "DataIDName", "ZoomLevel", "StartX", "StartY", "ColCount", "Extention",
+            "MapUrl", "TileOrder"
         };
 
 
@@ -102,6 +103,7 @@ namespace MapApp
             data[7] = mapData.mExt;
             data[8] = mapData.mMapUrl;
             data[9] = mapData.mTileOrder;
+
             return data;
         }
 
@@ -121,6 +123,7 @@ namespace MapApp
             mapData.mExt = data[7];
             mapData.mMapUrl = data[8];
             mapData.mTileOrder = data[9];
+
             return mapData;
         }
 

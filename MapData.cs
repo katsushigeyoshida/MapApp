@@ -61,11 +61,13 @@ namespace MapApp
         public Size mView = new Size(1000, 1000);       //  表示するViewの大きさ
         public int mUseCol = 0;                         //  使用した列数
         public int mUseRow = 0;                         //  使用した行数
-        public const int mMaxZoom = 18;
+        public const int mMaxZoom = 18;                 //  最大ズームレベル
         public int mElevatorDataNo = 0;                 //  使用標高データのNo
+
         public string mBaseDataIDName = "";             //  重ね合わせBase地図ID
         public System.Drawing.Color[] mTransportColors; //  重ねるデータの透過色
         public bool mBaseMapOver = false;               //  ベースマップの重ねる順番で上になる
+
         public MapData mBaseMap = null;                 //  重ね合わせるベースの地図
         public DateTime[] mChangeMapDateTime;           //  地図を切り替えた時の時間
         public string[] mDateTimeForm = {               //  地図切替時間をURLとPATHに設定するフォーム
@@ -198,13 +200,23 @@ namespace MapApp
                     dateTime = ylib.roundDateTimeMin(dateJpn, mDateTimeInterval);
                 }
             } else if (form.Length == 3) {
-                //  yyyyMMddHHmmss_UTCx_Interval
+                //  yyyyMMddHHmmss_UTCx_Interval(delay)
                 mDateTimeInterval = ylib.intParse(form[2]);
+                int delay = ylib.intParse(form[2]);
                 if (form[1].CompareTo("UTC") == 0) {
                     dateTime = ylib.roundDateTimeMin(dateUtc, mDateTimeInterval);
                 } else if (form[1].CompareTo("UTC0") == 0) {
                     dateUtc = dateUtc.Add(new TimeSpan(0, mDateTimeInterval * mDateTimeInc, 0));
                     dateTime = ylib.roundDateTimeMin(dateUtc, mDateTimeInterval);
+                } else if (form[1].CompareTo("UTC1") == 0) {
+                    dateUtc = dateUtc.Add(new TimeSpan(0, -delay, 0));
+                    dateTime = roundDateTime(dateUtc);
+                } else if (form[1].CompareTo("UTC2") == 0) {
+                    //  3時間単位で時間を変える
+                    mDateTimeInterval = 3 * 60;
+                    dateUtc = dateUtc.Add(new TimeSpan(0, -delay, 0));
+                    dateUtc = dateUtc.Add(new TimeSpan(3 * mDateTimeInc, 0, 0));
+                    dateTime = ylib.roundDateTimeMin(dateUtc, 180);
                 }
             } else if (form.Length == 4) {
                 //  yyyyMMddHHmmss_UTCx_Interval_Delay
@@ -266,7 +278,8 @@ namespace MapApp
             mDataIdName = MapInfoData.mMapData[mDataId][1];         //  データID
             mExt = MapInfoData.mMapData[mDataId][2];                //  データファイルの拡張子
             mTileOrder = MapInfoData.mMapData[mDataId][8];          //  {z}/{x}/{y}以外のタイル座標順 → ヘルプ参照先URL
-            mElevatorDataNo = getElevatorDataNo(MapInfoData.mMapData[mDataId][10]); //  標高データ
+            mElevatorDataNo = getElevatorDataNo(MapInfoData.mMapData[mDataId][10]); //
+                                                                                    //  
             mBaseDataIDName = MapInfoData.mMapData[mDataId][11];    //  重ね合わせのベースマップID
             if (0 <= mBaseDataIDName.Length && mDataIdName.CompareTo(mBaseDataIDName) != 0)
                 mBaseMap = new MapData(mBaseDataIDName);
@@ -317,6 +330,9 @@ namespace MapApp
             mapData.mRowCount = mRowCount;
             mapData.mCellSize = mCellSize;
             mapData.mView = new Size(mView.Width, mView.Height);
+            mapData.mBaseDataIDName = mBaseDataIDName;
+            mapData.mTransportColors = mTransportColors;
+            mapData.mBaseMapOver = mBaseMapOver;
             return mapData;
         }
 

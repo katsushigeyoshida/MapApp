@@ -130,6 +130,7 @@ namespace MapApp
                 setParametor();
                 mMapData.setDateTime();
                 setAddTimeSelectData();
+                CbAddTime.SelectedIndex = 0;
                 mapDisp(true);
             }
         }
@@ -261,16 +262,39 @@ namespace MapApp
         private void CbDataID_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             if (mCombboxEnable && getParametor()) {
-                if (MapInfoData.mMapData[mMapData.mDataId][9].Length == 0) {
-                    BtMapsGSI.Content = "国土地理院";
-                } else {
-                    BtMapsGSI.Content = MapInfoData.mMapData[mMapData.mDataId][8];
-                }
                 //  地図取得時間
                 mMapData.setDateTime();
-                setAddTimeSelectData();
-
+                if (mMapData.isDateTimeData()) {
+                    setAddTimeSelectData();
+                    CbAddTime.SelectedIndex = 0;
+                }
+                //  再表示
                 mapDisp(true);
+            }
+        }
+
+        /// <summary>
+        /// [位置情報リスト]変更コンボボックス
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void CbPositionList_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (mCombboxEnable && 0 <= CbPositionList.SelectedIndex) {
+                MapData mapData = mAreaDataList.getData(CbPositionList.Items[CbPositionList.SelectedIndex].ToString()).Copy();
+
+                //  地図情報の設定
+                setDispParametor(mapData.mDataId, mapData.mZoom, mapData.mColCount);
+                //  座標情報の設定
+                mMapData.mStart = mapData.mStart;
+
+                //  地図取得時間
+                mMapData.setDateTime();
+                if (mMapData.isDateTimeData())
+                    setAddTimeSelectData();
+                //  再表示
+                mapDisp(true);
+                setParametor();
             }
         }
 
@@ -296,21 +320,6 @@ namespace MapApp
         {
             if (mCombboxEnable && getParametor())
                 mapDisp(true);
-        }
-
-        /// <summary>
-        /// [位置情報リスト]変更コンボボックス
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void CbPositionList_SelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
-            if (mCombboxEnable && 0 <= CbPositionList.SelectedIndex) {
-                mMapData = mAreaDataList.getData(CbPositionList.Items[CbPositionList.SelectedIndex].ToString()).Copy();
-                mMapData.mDataIdName = MapInfoData.mMapData[mMapData.mDataId][1];
-                mapDisp(true);
-                setParametor();
-            }
         }
 
         /// <summary>
@@ -549,7 +558,13 @@ namespace MapApp
         private void BtPrevTime_Click(object sender, RoutedEventArgs e)
         {
             mMapData.mDateTimeInc--;
-            CbAddTime.SelectedIndex = mMapData.mDateTimeInc;
+            if (0 <= mMapData.mDateTimeInc && mMapData.mDateTimeInc < CbAddTime.Items.Count) {
+                CbAddTime.SelectedIndex = mMapData.mDateTimeInc;
+            } else {
+                CbAddTime.SelectedIndex = 0;
+                refresh(true);
+            }
+
         }
 
         /// <summary>
@@ -560,7 +575,11 @@ namespace MapApp
         private void BtNextTime_Click(object sender, RoutedEventArgs e)
         {
             mMapData.mDateTimeInc++;
-            CbAddTime.SelectedIndex = mMapData.mDateTimeInc;
+            if (0 <= mMapData.mDateTimeInc && mMapData.mDateTimeInc < CbAddTime.Items.Count) {
+                CbAddTime.SelectedIndex = mMapData.mDateTimeInc;
+            } else {
+                refresh(true);
+            }
         }
 
         /// <summary>
@@ -779,6 +798,7 @@ namespace MapApp
             }
         }
 
+        //  マウスの位置
         private Point mLastMovePoint = new Point(0, 0);
         private Point mLeftPressPoint = new Point(0, 0);
         private Point mRightPressPoint = new Point(0, 0);
@@ -799,6 +819,8 @@ namespace MapApp
             mLastMovePoint = ydraw.cnvScreen2World(pos);
             //  緯度経度表示
             Point cp = mMapData.screen2Coordinates(mLastMovePoint);
+            //  Map座標(Tile No)
+            Point mp = mMapData.screen2Map(mLastMovePoint);
             //  標高取得
             double ele = mMapData.getMapElavtor(mMapData.screen2Map(mLastMovePoint), ChkAutoOnLine.IsChecked);
             //  色の凡例表示
@@ -809,7 +831,7 @@ namespace MapApp
             }
             //  ステータスバーに表示
             TbCordinate.Text = "(" + cp.Y.ToString("#0.######") + "," + cp.X.ToString("#0.######") + ") 標高 "
-                + ele.ToString("#,###") + " m " + colorLegendTitle;
+                + ele.ToString("#,###") + " m TileNo[" + (int)mp.X + "," + (int)mp.Y + "] " + colorLegendTitle;
         }
 
         /// <summary>
@@ -984,12 +1006,32 @@ namespace MapApp
             if (CbDataID.SelectedIndex < 0 || CbZoom.SelectedIndex < 0 ||
                 CbSize.SelectedIndex < 0)
                 return false;
+            return setDispParametor(CbDataID.SelectedIndex, CbZoom.SelectedIndex, ylib.intParse(CbSize.Items[CbSize.SelectedIndex].ToString()));
+        }
+
+        /// <summary>
+        /// 画像データのパラメータの設定
+        /// </summary>
+        /// <param name="mapIndex">MAP No</param>
+        /// <param name="zoomIndex">Zoom Level</param>
+        /// <param name="colCount">列数</param>
+        /// <returns></returns>
+        private bool setDispParametor(int mapIndex, int zoomIndex, int colCount)
+        {
             //  地図情報の設定
-            mMapData.setMapInfoData(CbDataID.SelectedIndex);
+            if (mapIndex != mMapData.mDataId) {
+                mMapData.setMapInfoData(mapIndex);
+                if (MapInfoData.mMapData[mMapData.mDataId][9].Length == 0) {
+                    BtMapsGSI.Content = "国土地理院";
+                } else {
+                    BtMapsGSI.Content = MapInfoData.mMapData[mMapData.mDataId][8];
+                }
+            }
             //  座標情報の設定
-            mMapData.mZoom = int.Parse(mZoomName[CbZoom.SelectedIndex]);
-            mMapData.mColCount = ylib.intParse(CbSize.Items[CbSize.SelectedIndex].ToString());
+            mMapData.mZoom = int.Parse(mZoomName[zoomIndex]);
+            mMapData.mColCount = colCount;
             mMapData.normarized();
+
             return true;
         }
 
@@ -1000,8 +1042,6 @@ namespace MapApp
         {
             mCombboxEnable = false;
             mMapData.normarized();
-            TbX.Text = mMapData.mStart.X.ToString("#,###");
-            TbY.Text = mMapData.mStart.Y.ToString("#,###");
             CbDataID.SelectedIndex = mMapData.mDataId;
             CbZoom.SelectedIndex = mMapData.mZoom;
             int colIndex = mColCountName.FindIndex<string>(mMapData.mColCount.ToString());
@@ -1058,7 +1098,7 @@ namespace MapApp
                     timeString = addtime.ToString() + "分後";
                 CbAddTime.Items.Add(timeString);
             }
-            CbAddTime.SelectedIndex = 0;
+            //CbAddTime.SelectedIndex = 0;
         }
 
 
@@ -1197,7 +1237,7 @@ namespace MapApp
             //  枠線
             ydraw.setThickness(2);
             ydraw.setFillColor(null);
-            ydraw.drawRectangle(new Rect(new Size(mWidth, mHeight)), 0);
+            ydraw.drawRectangle(new Rect(new Point(2,1), new Size(mWidth - 4, mHeight - 2)), 0);
 
             //  中心線
             drawCenterCross();

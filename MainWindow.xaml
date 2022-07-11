@@ -22,10 +22,6 @@
             </ComboBox>
             <TextBlock Text="ズームレベル" />
             <ComboBox Name="CbZoom" Width="40" Focusable="False" SelectionChanged="CbZoom_SelectionChanged" />
-            <TextBlock Text="X=" />
-            <TextBlock x:Name="TbX" Width="45" />
-            <TextBlock Text="Y=" />
-            <TextBlock x:Name="TbY" Width="45" />
             <TextBlock Text="画像列数" />
             <ComboBox Name="CbSize" Width="50" Focusable="False" SelectionChanged="CbSize_SelectionChanged" />
             <CheckBox x:Name="ChkAutoOnLine" Content="自動オフライン" IsThreeState="True" Click="ChkAutoOnLine_Click" 

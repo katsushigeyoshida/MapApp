@@ -76,7 +76,7 @@ namespace MapApp
             "yyyyMMddHHmmss_UTC1", "yyyyMMddHHmmss_UTC2"//  天気分布予報用
         };
         public List<DateTime> mDispMapDateTime = new List<DateTime>();  //  画面表示時間(日本時間)
-        private DateTime mDispMapPreDateTime = DateTime.MinValue;
+        public DateTime mDispMapPreDateTime = DateTime.MinValue;
         public int mDateTimeInc = 0;                    //  表示時間の増加数
         public int mDateTimeInterval = 0;               //  日時追加のインターバル時間(分)
 
@@ -123,14 +123,14 @@ namespace MapApp
         /// <summary>
         ///  取得時間設定 (雨雲レーダーに合わせ5分おきに設定)
         /// </summary>
-        public void setDateTime()
+        public void setDateTime(bool forth = false)
         {
             mMapUrl2 = mMapUrl;
             mDateTimeInterval = 0;
             mDispMapDateTime.Clear();
             if (isDateTimeData()) {
                 setDateTime2(mMapUrl);
-                if (0 < mDateTimeFolder.Length && mDispMapDateTime[0] != mDispMapPreDateTime) {
+                if (forth || (0 < mDateTimeFolder.Length && mDispMapDateTime[0] != mDispMapPreDateTime)) {
                     //  過去データを削除
                     removeMapData(false);
                     mDispMapPreDateTime = mDispMapDateTime[0];

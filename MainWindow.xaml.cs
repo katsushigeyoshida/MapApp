@@ -84,14 +84,11 @@ namespace MapApp
             loadMapData(mMapDataListPath);
 
             //  前回値取得
-            mMapData.mDataId = Properties.Settings.Default.MapAppDataNum;
+            mMapData.setMapInfoData(Properties.Settings.Default.MapAppDataNum);
             mMapData.mZoom = Properties.Settings.Default.MapAppZoom;
             mMapData.mStart.X = Properties.Settings.Default.MapAppX;
             mMapData.mStart.Y = Properties.Settings.Default.MapAppY;
             mMapData.mColCount = Properties.Settings.Default.MapAppSize;
-            mMapData.mDataIdName = MapInfoData.mMapData[mMapData.mDataId][1];
-            mMapData.mExt = MapInfoData.mMapData[mMapData.mDataId][2];
-            mMapData.mMapUrl = MapInfoData.mMapData[mMapData.mDataId][7];
             mMapData.normarized();
             var markSort = Properties.Settings.Default.MarkListSort;
             mMapMarkList.mSizeRate = Properties.Settings.Default.MarkSizeRate;
@@ -128,9 +125,11 @@ namespace MapApp
         {
             if (getParametor()) {
                 setParametor();
-                mMapData.setDateTime();
-                setAddTimeSelectData();
-                CbAddTime.SelectedIndex = 0;
+                mMapData.setDateTime(true);         //  地図取得時間
+                if (mMapData.isDateTimeData()) {
+                    setAddTimeSelectData();
+                    CbAddTime.SelectedIndex = 0;
+                }
                 mapDisp(true);
             }
         }
@@ -183,7 +182,12 @@ namespace MapApp
                 return;
             }
             //  地図の表示
-            mapDisp(false);
+            mMapData.setDateTime();             //  地図取得時間
+            if (mMapData.isDateTimeData()) {
+                setAddTimeSelectData();
+                CbAddTime.SelectedIndex = 0;
+            }
+            mapDisp(true);
             //  ウィンドウの大きさに合わせてコントロールの幅を変更する
             double dx = mWindowWidth - mPrevWindowWidth;
             //コントロール.Width += dx;
@@ -262,8 +266,7 @@ namespace MapApp
         private void CbDataID_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             if (mCombboxEnable && getParametor()) {
-                //  地図取得時間
-                mMapData.setDateTime();
+                mMapData.setDateTime();             //  地図取得時間
                 if (mMapData.isDateTimeData()) {
                     setAddTimeSelectData();
                     CbAddTime.SelectedIndex = 0;
@@ -288,10 +291,10 @@ namespace MapApp
                 //  座標情報の設定
                 mMapData.mStart = mapData.mStart;
 
-                //  地図取得時間
-                mMapData.setDateTime();
-                if (mMapData.isDateTimeData())
+                mMapData.setDateTime();                 //  地図取得時間
+                if (mMapData.isDateTimeData()) {
                     setAddTimeSelectData();
+                }
                 //  再表示
                 mapDisp(true);
                 setParametor();
@@ -540,7 +543,7 @@ namespace MapApp
         }
 
         /// <summary>
-        /// 気象庁の天気図予報を現在時間設定
+        /// [■]ボタン 気象庁の天気図予報を現在時間設定
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
@@ -551,7 +554,7 @@ namespace MapApp
         }
 
         /// <summary>
-        /// 気象庁の天気図予報を一つ戻す
+        /// [◀]ボタン 気象庁の天気図予報を一つ戻す
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
@@ -568,7 +571,7 @@ namespace MapApp
         }
 
         /// <summary>
-        /// 気象庁の天気図予報を一つ進める
+        /// [▶]ボタン 気象庁の天気図予報を一つ進める
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
@@ -583,7 +586,7 @@ namespace MapApp
         }
 
         /// <summary>
-        /// 天気予報図などのの日時データを含む地図の予報時間の選択
+        /// [時間]選択 天気予報図などのの日時データを含む地図の予報時間の選択
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
@@ -648,6 +651,7 @@ namespace MapApp
                         for (int i = 0; i < dlg.mDatas.Length && i < MapInfoData.mMapData[CbDataID.SelectedIndex].Length; i++)
                             MapInfoData.mMapData[CbDataID.SelectedIndex][i] = dlg.mDatas[i];
                         setMapData();
+                        mMapData.mDataId = -1;              //  データを更新させるため仮設定
                         CbDataID.SelectedIndex = dataIdNo;  //  再表示させる
                     }
                 }
@@ -871,7 +875,8 @@ namespace MapApp
                 pos = ydraw.cnvScreen2World(pos);
                 double dx = mLeftPressPoint.X - pos.X;
                 double dy = mLeftPressPoint.Y - pos.Y;
-                setMove(dx / mMapData.mCellSize, dy / mMapData.mCellSize);
+                if (dx < mWidth && dy < mHeight)
+                    setMove(dx / mMapData.mCellSize, dy / mMapData.mCellSize);
                 mMapMoveMode = false;
             }
         }

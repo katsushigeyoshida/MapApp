@@ -1,0 +1,59 @@
+﻿<Window x:Class="MapApp.YamaRecoList"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:MapApp"
+        mc:Ignorable="d"
+        Title="YamaReco 山データ" Height="400" Width="800" Loaded="Window_Loaded" Closing="Window_Closing" LayoutUpdated="Window_LayoutUpdated">
+    <Grid>
+        <Label Content="分類" Width="40" Height="25" VerticalAlignment="Top" HorizontalAlignment="Left" />
+        <ComboBox Name="CbCategory" Height="25" Margin="60,0,240,0" VerticalAlignment="Top" SelectionChanged="CbCategory_SelectionChanged"
+                  ToolTip="山の分類名で表示を絞り込む、マウスの右ボタンで分類に対するメニューが表示される。">
+            <ComboBox.ContextMenu>
+                <ContextMenu>
+                    <MenuItem Name="CbCategoryOpenMenu" Header="Webデータを開く" Click="CbCategoryContextMenu_Click" />
+                    <MenuItem Name="CbGetMapListMenu" Header="山データの取得" Click="CbCategoryContextMenu_Click" />
+                </ContextMenu>
+            </ComboBox.ContextMenu>
+        </ComboBox>
+        <Label Content="取得No" Margin="0,0,190,0" Width="50" Height="25" VerticalAlignment="Top" HorizontalAlignment="Right" />
+        <TextBox x:Name="TbDataStart" Width="45" Height="25" Margin="0,0,140,0" TextAlignment="Right" HorizontalAlignment="Right" VerticalAlignment="Top" />
+        <Label Content="～" Margin="0,0,120,0" Width="20" Height="25" VerticalAlignment="Top" HorizontalAlignment="Right" />
+        <TextBox x:Name="TbDataEnd" Width="45" Height="25" Margin="0,0,80,0" TextAlignment="Right" HorizontalAlignment="Right" VerticalAlignment="Top" />
+        <Button x:Name="BtDataRequest" Content="データ取得" Width="80" Height="25" Margin="0,0,0,0" HorizontalAlignment="Right" VerticalAlignment="Top" Click="BtDataRequest_Click"
+                ToolTip="取得Noの山データをWebからダウンロードしてリストに追加する"/>
+        <Label Content="検索" Width="40" Height="25" Margin="0,25,0,0" VerticalAlignment="Top" HorizontalAlignment="Left" />
+        <TextBox x:Name="TbSearchWord" Height="25" Margin="60,25,240,0" VerticalAlignment="Top" 
+                 ToolTip="リスト内の文字列を検索するための検索文字列"/>
+        <Button x:Name="BtNextSearch" Content="次検索" Width="80" Height="25" Margin="0,25,160,0" HorizontalAlignment="Right" VerticalAlignment="Top" Click="BtNextSearch_Click"
+                ToolTip="検索文字列を全項目から下方向に検索する" />
+        <Button x:Name="BtPrevSearch" Content="前検索" Width="80" Height="25" Margin="0,25,80,0" HorizontalAlignment="Right" VerticalAlignment="Top" Click="BtPrevSearch_Click"
+                ToolTip="検索文字列を全項目から上方向に検索する"/>
+        <Button x:Name="BtSearch" Content="検索" Width="80" Height="25" Margin="0,25,0,0" HorizontalAlignment="Right" VerticalAlignment="Top" Click="BtSearch_Click"
+                ToolTip="検索文字列を検索して該当する行だけを表示する"/>
+        <DataGrid Name="DgDataList" Margin="0,50,0,30" IsReadOnly="True" Sorting="DgDataList_Sorting" MouseDoubleClick="DgDataList_MouseDoubleClick" >
+            <DataGrid.ContextMenu>
+                <ContextMenu>
+                    <MenuItem Name="DgMoveMenu" Header="地図位置へ移動" Click="DgMenu_Click" />
+                    <MenuItem Name="DgDispMenu" Header="詳細表示" Click="DgMenu_Click" />
+                    <MenuItem Name="DgOpenMenu" Header="Webデータを開く" Click="DgMenu_Click" />
+                    <MenuItem Name="DgMarkMenu" Header="マーク追加" Click="DgMenu_Click" />
+                    <MenuItem Name="DgRemoveMenu" Header="削除" Click="DgMenu_Click" />
+                </ContextMenu>
+            </DataGrid.ContextMenu>
+        </DataGrid>
+        <StatusBar Height="30" VerticalAlignment="Bottom" >
+            <Label Name="LbDataCount" Content="データ数 0" />
+            <Label Name="LbGetDataProgress" Content="進捗状態" />
+            <ProgressBar x:Name="PbGetInfoData" Height="10" Width="100" ValueChanged="PbGetInfoData_ValueChanged" />
+            <Label Name="LbGetDataCount" Content="0/0" />
+            <StatusBarItem HorizontalContentAlignment="Right" >
+                <Button x:Name="BtHelp" Width="25" Height="22" Click="BtHelp_Click" 
+                        ToolTip="ヘルプの表示">
+                    <Path Data="M6,7 A 4.5,4 0 1 0 1,4 M6,7 6,11 M6,12 6,15" Stroke="Blue" StrokeThickness="3" />
+                </Button>
+            </StatusBarItem>
+        </StatusBar>
+    </Grid>
+</Window>

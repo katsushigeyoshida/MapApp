@@ -286,9 +286,17 @@ namespace MapApp
                         //System.Diagnostics.Debug.WriteLine($"GpsFileData: draw: データ表示 {mTitle}");
                         Point sp = mapData.coordinates2Screen(mLocData[0]);
                         for (int i = 1; i < mLocData.Count; i++) {
-                            Point ep = mapData.coordinates2Screen(mLocData[i]);
-                            ydraw.drawLine(sp, ep);
-                            sp = ep;
+                            if (mLocData[i].X != 0 && mLocData[i].Y != 0) {
+                                Point ep = mapData.coordinates2Screen(mLocData[i]);
+                                double dis = ylib.coordinateDistance(mLocData[i-1], mLocData[i]);
+                                if (dis > 1.0) {
+                                    //  エラーデータ ? 区間距離が1km以上を除外
+                                    System.Diagnostics.Debug.WriteLine($"{dis.ToString("#.###")}km {mLocData[i - 1].X} {mLocData[i - 1].Y} - {mLocData[i].X} {mLocData[i].Y}");
+                                } else {
+                                    ydraw.drawLine(sp, ep);
+                                    sp = ep;
+                                }
+                            }
                         }
                     }
                 }

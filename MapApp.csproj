@@ -24,6 +24,7 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <Prefer32Bit>true</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -77,6 +78,10 @@
       <DependentUpon>WikiList.xaml</DependentUpon>
     </Compile>
     <Compile Include="WikiList\WikiUrlList.cs" />
+    <Compile Include="YamaRecoList\YamaRecoData.cs" />
+    <Compile Include="YamaRecoList\YamaRecoList.xaml.cs">
+      <DependentUpon>YamaRecoList.xaml</DependentUpon>
+    </Compile>
     <Page Include="Map3D\Map3DView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -129,6 +134,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="WikiList\WikiList.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="YamaRecoList\YamaRecoList.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -197,5 +206,6 @@
     <Resource Include="Image\Map3DImage.png" />
     <Resource Include="Image\WikiListImage.png" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

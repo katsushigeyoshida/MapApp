@@ -1,6 +1,7 @@
 ﻿# MapApp
 ## 国土地理院地図を表示するアプリ
-
+### (地形図から天気図まで表示)
+<br>
 国土地理院のタイル画像を表示するために作成したアプリソフトですがその他のさまざまな地図データも表示する。
 
 ![MainWindow画像](Image/MainImage.png)
@@ -54,14 +55,25 @@ Wikipediaの一覧ページとその個別ページから一覧リストを作�
 <img src="Image/WikiListImage.png" width="90%">  
 一覧リストからその地図位置への移動や座標からリストの検索ができる。  
 
-**6.三次元表示機能**  
+**6.YamaRecoのデータ参照**  
+  YamaRedcoはs\登山者向けのWebサイトで山に関するデータが多数登録されている。  
+  これらの情報を取り込んで一覧リストにし検索や位置座標から地図に位置を表示するなどをおこなう。  
+<img src="Image/YamaRecoWebData.png" width="40%"><img src="Image/YamaRecoDetailData.png" width="48%">  
+YamRecoの山データの一覧リスト
+<img src="Image/YamaRecoList.png" width="90%">  
+
+**7.三次元表示機能**  
 　国土地理院の標高データを利用して地図の表示エリアを三次元表示する。  
 <img src="Image/Map3DImage.png" width="80%">  
-八ヶ岳  
-<img src="Image/ヒマラヤ周辺.png" width="80%">  
+八ヶ岳の三次元表示  
+
+<img src="Image/ヒマラヤ周辺.png" width="80%">
+
 ヒマラヤ(Outdoors map)  
+
 <img src="Image/ヒマラヤ周辺3D.png" width="80%">  
-ヒマラヤ(3D)
+
+ヒマラヤの三次元表示
 
 
 ### ■実行環境

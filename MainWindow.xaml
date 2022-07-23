@@ -60,7 +60,7 @@
                 </Button>
             </StatusBarItem>
         </StatusBar>
-        <StackPanel x:Name="SpLeftPanel" DockPanel.Dock="Left" Width="145" Margin="0,0,0,0" >
+        <StackPanel x:Name="SpLeftPanel" DockPanel.Dock="Left" Width="150" Margin="0,0,0,0" >
             <StatusBar Margin="0,0,0,0" >
                 <TextBlock Text="縮尺 "/>
                 <TextBlock x:Name="TbScale" Text="1 / 10000"/>
@@ -107,6 +107,7 @@
             </StatusBar>
             <StatusBar HorizontalAlignment="Left" Margin="0,0,10,0">
                 <Button x:Name="BtWikiList" Content=" Wikiリスト " Click="BtWikiList_Click" />
+                <Button x:Name="BtYamaRecoList" Content="ヤマレコリスト " Click="BtYamaRecoList_Click"  />
             </StatusBar>
             <StatusBar HorizontalAlignment="Left" Margin="0,0,10,0">
                 <Button x:Name="BtMap3DView" Content=" ３Ｄ表示 " Click="BtMap3DView_Click" />
@@ -122,12 +123,12 @@
                 <ContextMenu Name="CvMenu">
                     <MenuItem Name="ImageCopyMenu" Header="地図画像コピー" Click="CvImageCopyMenu_Click"  />
                     <MenuItem Name="TextCopyMenu" Header="座標のコピー" Click="CordinateCopyMenu_Click"  />
-                    <!--<MenuItem Name="CordinateCopyMenu" Header="補正前座標コピー" Click="CordinateCopyMenu_Click"  />-->
                     <MenuItem Name="AddMarkMenu" Header="マークの追加" Click="MarkMenu_Click"  />
                     <MenuItem Name="EditMarkMenu" Header="マークの編集" Click="MarkMenu_Click" />
                     <MenuItem Name="ReferenceMarkMenu" Header="マークの参照" Click="MarkMenu_Click" />
                     <MenuItem Name="DeleteMarkMenu" Header="マークの削除" Click="MarkMenu_Click" />
                     <MenuItem Name="WikiListSearchMenu" Header="Wikiリスト検索" Click="WikiMenu_Click" />
+                    <MenuItem Name="YamaRecoSearchMenu" Header="ヤマレコリスト検索" Click="YamaRecoMenu_Click" />
                     <MenuItem Name="MeasureMenu" Header="距離測定開始" Click="MeasureMenu_Click" />
                     <MenuItem Name="UndoMeasureMenu" Header="距離測定一つ戻る" Visibility="Hidden" Click="MeasureMenu_Click" />
                 </ContextMenu>

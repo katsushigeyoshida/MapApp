@@ -58,6 +58,7 @@ namespace MapApp
         private MarkListDialg mMarkListDialog;                  //  位置情報登録ダイヤログ
         private GpsListDialog mGpsListDialog;                   //  GPSファイルの管理ダイヤログ
         private WikiList mWikiListDialog;                       //  Wikipedia検索ダイヤログ
+        private YamaRecoList mYamaRecoList;                     //  YamaRecoの検索ダイヤログ
         private Map3DView mMap3DView;                           //  地図の3次元表示
         private Task mTaskGpsLoad;                              //  GPSデータリスト読込タスク
 
@@ -162,6 +163,8 @@ namespace MapApp
                 mWikiListDialog.Close();
             if (mMap3DView != null)
                 mMap3DView.Close();
+            if (mYamaRecoList != null)
+                mYamaRecoList.Close();
 
             WindowFormSave();
         }
@@ -181,15 +184,11 @@ namespace MapApp
             } else {
                 return;
             }
-            //  地図の表示
-            mMapData.setDateTime();             //  地図取得時間
-            if (mMapData.isDateTimeData()) {
-                setAddTimeSelectData();
-                CbAddTime.SelectedIndex = 0;
-            }
-            mapDisp(true);
+            //  地図の再表示
+            refresh(false);
+
             //  ウィンドウの大きさに合わせてコントロールの幅を変更する
-            double dx = mWindowWidth - mPrevWindowWidth;
+            //double dx = mWindowWidth - mPrevWindowWidth;
             //コントロール.Width += dx;
 
             mWindowState = this.WindowState;
@@ -514,6 +513,19 @@ namespace MapApp
         }
 
         /// <summary>
+        /// [ヤマレコリスト]ボタン
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void BtYamaRecoList_Click(object sender, RoutedEventArgs e)
+        {
+            mYamaRecoList = new YamaRecoList();
+            mYamaRecoList.mMarkList = mMapMarkList;
+            mYamaRecoList.mMainWindow = this;
+            mYamaRecoList.Show();
+        }
+
+        /// <summary>
         /// [3D表示]ボタン
         /// </summary>
         /// <param name="sender"></param>
@@ -769,8 +781,24 @@ namespace MapApp
             mWikiListDialog = new WikiList();
             mWikiListDialog.Topmost = true;
             mWikiListDialog.mMainWindow = this;
-            mWikiListDialog.mCoordinate = coordinate + " 20km以内";
+            mWikiListDialog.mCoordinate = coordinate + " 10km以内";
             mWikiListDialog.Show();
+        }
+
+        /// <summary>
+        /// [ヤマレコリスト]ボタン
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void YamaRecoMenu_Click(object sender, RoutedEventArgs e)
+        {
+            Point cp = mMapData.screen2Coordinates(mRightPressPoint);
+            string coordinate = "北緯" + cp.Y + "度東経" + cp.X + "度";
+
+            mYamaRecoList = new YamaRecoList();
+            mYamaRecoList.mMainWindow = this;
+            mYamaRecoList.mCoordinate = coordinate + " 10km以内";
+            mYamaRecoList.Show();
         }
 
         /// <summary>
@@ -997,7 +1025,7 @@ namespace MapApp
                     mOnLine = true;
                     mMapData.setDateTime();
                 }
-                mapDisp(true);
+                mapDisp(onLine);
                 mOnLine = tmpOnLine;
             }
         }

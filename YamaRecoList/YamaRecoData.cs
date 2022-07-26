@@ -20,11 +20,12 @@ namespace MapApp
         public string mSplitWord = " : ";              //  分類データの分轄ワード
 
         public string[] mDataTitle = {
-            "山名", "標高", "座標", "種別", "概要", "URL", "分類", "登山口", "山小屋"
+            "山名", "標高", "座標", "種別", "概要", "URL", "分類", "登山口", "山小屋", "付近の山"
         };
         public List<string[]> mDataList = new List<string[]>();         //  山データリスト
         public List<string[]> mCategoryList = new List<string[]>();     //  分類データリスト(分類名, URL))
-        public List<string[]> mCategoryMapList = new List<string[]>();  //  分類ごとの山名、URLリスト
+        public List<string[]> mCategoryMapList = new List<string[]>();  //  分類ごとの(URL,山名)リスト
+        public List<string[]> mDetailUrlList = new List<string[]>();    //  詳細データの(URL,項目)リスト
 
         private YLib ylib = new YLib();
 
@@ -92,6 +93,69 @@ namespace MapApp
         }
 
         /// <summary>
+        /// 詳細データリストから山データリストを抽出する
+        /// </summary>
+        /// <param name="listData">詳細データリスト(URL,山名他)</param>
+        /// <returns>山データリスト</returns>
+        public List<string[]> extractListdata(List<string[]> listData)
+        {
+            List<string[]> yamaListdata = new List<string[]>();
+            for (int i = 0; i < listData.Count; i++) {
+                int n = mDataList.FindIndex(p => p[titleNo("URL")].CompareTo(listData[i][0]) == 0);
+                if (0 <= n)
+                    yamaListdata.Add(mDataList[n]);
+            }
+
+            return yamaListdata;
+        }
+
+        /// <summary>
+        /// 山データから周辺情報データ(登山口,山小屋)をリスト化(URL,山名)
+        /// </summary>
+        /// <param name="yamaData">山データ</param>
+        /// <returns>周辺情報データリスト(URL,山名)</returns>
+        public List<string[]> getDetailUrlList(string[] yamaData)
+        {
+            List<string[]> listData = new List<string[]>();
+            string[] buf = new string[2];
+            buf[0] = yamaData[titleNo("URL")];
+            buf[1] = yamaData[titleNo("山名")];
+            listData.Add(buf);
+            string[] text = yamaData[titleNo("登山口")].ToString().Split(',');
+            for (int j = 0; j < text.Length; j++) {
+                buf = new string[2];
+                int n = text[j].IndexOf(mSplitWord);
+                if (0 < n) {
+                    buf[1] = text[j].Substring(0, n).Trim();                    //  山名(登山口,山小屋)
+                    buf[0] = text[j].Substring(n + mSplitWord.Length).Trim();   //  URL
+                    listData.Add(buf);
+                }
+            }
+            text = yamaData[titleNo("山小屋")].ToString().Split(',');
+            for (int j = 0; j < text.Length; j++) {
+                buf = new string[2];
+                int n = text[j].IndexOf(mSplitWord);
+                if (0 < n) {
+                    buf[1] = text[j].Substring(0, n).Trim();                    //  山名(登山口,山小屋)
+                    buf[0] = text[j].Substring(n + mSplitWord.Length).Trim();   //  URL
+                    listData.Add(buf);
+                }
+            }
+            text = yamaData[titleNo("付近の山")].ToString().Split(',');
+            for (int j = 0; j < text.Length; j++) {
+                buf = new string[2];
+                int n = text[j].IndexOf(mSplitWord);
+                if (0 < n) {
+                    buf[1] = text[j].Substring(0, n).Trim();                    //  山名(付近の山)
+                    buf[0] = text[j].Substring(n + mSplitWord.Length).Trim();   //  URL
+                    listData.Add(buf);
+                }
+            }
+
+            return listData;
+        }
+
+        /// <summary>
         /// URLのWebデータの読込
         /// </summary>
         /// <param name="url">URL</param>
@@ -120,7 +184,7 @@ namespace MapApp
         /// <returns>データ配列</returns>
         private string[] getListData(string html, string url)
         {
-            string[] data = new string[9];
+            string[] data = new string[mDataTitle.Length];
             string bodyData, title;
             //  head データ
             (string tagPara, string headData, string nextSrc) = ylib.getHtmlTagData(html, "head");
@@ -171,6 +235,13 @@ namespace MapApp
                 buf.Add(hut[1] + mSplitWord + hut[0]);
             }
             data[titleNo("山小屋")] = string.Join(",", buf);
+            //  付近の山
+            List<string[]> nearMount = getNearMountain(bodyData);
+            buf = new List<string>();
+            foreach (string[] near in nearMount) {
+                buf.Add(near[1] + mSplitWord + near[0]);
+            }
+            data[titleNo("付近の山")] = string.Join(",", buf);
 
             return data;
         }
@@ -266,10 +337,33 @@ namespace MapApp
         }
 
         /// <summary>
-        /// [分類]山のカテゴリリストの取得
+        /// 付近の山
         /// </summary>
         /// <param name="html"></param>
         /// <returns></returns>
+        private List<string[]> getNearMountain(string html)
+        {
+            List<string[]> listData = new List<string[]>();
+            string tagPara, tagData, nextHtml;
+            nextHtml = ylib.getHtmlTagSrc(html, "div", "class", "box neighbor");
+            do {
+                (tagPara, tagData, nextHtml) = ylib.getHtmlTagData(nextHtml, "a");
+                if (0 < tagData.Length) {
+                    string[] buf = new string[2];
+                    buf[0] = ylib.stripHtmlParaData(tagPara, "href");
+                    buf[1] = tagData;
+                    listData.Add(buf);
+                }
+            } while (0 < nextHtml.Length && 0 < tagData.Length);
+
+            return listData;
+        }
+
+        /// <summary>
+        /// [分類]山のカテゴリリストの取得
+        /// </summary>
+        /// <param name="html">山名リストHTMLソース</param>
+        /// <returns>(URL,山名)</returns>
         private List<string[]> getMapList(string html)
         {
             List<string[]> dataList = new List<string[]>();
@@ -281,8 +375,8 @@ namespace MapApp
                     (tagPara, tagData, nextHtml2) = ylib.getHtmlTagData(tagData, "a");
                     if (0 < tagData.Length) {
                         string[] paraData = new string[2];
-                        paraData[0] = ylib.stripHtmlParaData(tagPara, "href");
-                        paraData[1] = tagData;
+                        paraData[0] = ylib.stripHtmlParaData(tagPara, "href");  //  URL
+                        paraData[1] = tagData;                                  //  山名
                         dataList.Add(paraData);
                     }
                 }

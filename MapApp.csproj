@@ -78,10 +78,12 @@
       <DependentUpon>WikiList.xaml</DependentUpon>
     </Compile>
     <Compile Include="WikiList\WikiUrlList.cs" />
+    <Compile Include="YamaRecoList\GuideRouteData.cs" />
     <Compile Include="YamaRecoList\YamaRecoData.cs" />
     <Compile Include="YamaRecoList\YamaRecoList.xaml.cs">
       <DependentUpon>YamaRecoList.xaml</DependentUpon>
     </Compile>
+    <Compile Include="YamaRecoList\YamaRouteData.cs" />
     <Page Include="Map3D\Map3DView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>

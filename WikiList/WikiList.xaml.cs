@@ -274,11 +274,12 @@ namespace MapApp
         {
             if (0 < TbSearch.Text.Length) {
                 mGetInfoDataAbort = false;      //  中断フラグ
-                int urlListIndex = mWikiUrlList.mUrlList.FindIndex(p => p[0].CompareTo(CbTitle.Items[CbTitle.SelectedIndex]) == 0);
-                string fileName = CbTitle.SelectedIndex <= 0 ? "" : mWikiUrlList.mUrlList[urlListIndex][0];
+                string fileName = "";
+                if (0 < CbTitle.SelectedIndex) {
+                    int urlListIndex = mWikiUrlList.mUrlList.FindIndex(p => p[0].CompareTo(CbTitle.Items[CbTitle.SelectedIndex]) == 0);
+                    fileName = CbTitle.SelectedIndex <= 0 ? "" : mWikiUrlList.mUrlList[urlListIndex][0];
+                }
                 getSearchFileWikiData(TbSearch.Text, mDataFolder, fileName);
-                //mWikiDataList.getSearchAllWikiData(TbSearch.Text, mDataFolder, fileName);
-                //getSearchFileTextTermnate();
             }
         }
 

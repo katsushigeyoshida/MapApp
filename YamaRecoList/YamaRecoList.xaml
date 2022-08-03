@@ -7,8 +7,11 @@
         mc:Ignorable="d"
         Title="YamaReco 山データ" Height="400" Width="800" Loaded="Window_Loaded" Closing="Window_Closing" LayoutUpdated="Window_LayoutUpdated">
     <Grid>
-        <Label Content="分類" Width="40" Height="25" VerticalAlignment="Top" HorizontalAlignment="Left" />
-        <ComboBox Name="CbCategory" Height="25" Margin="60,0,240,0" VerticalAlignment="Top" SelectionChanged="CbCategory_SelectionChanged"
+        <Label Content="ジャンル" Width="50" Height="25" VerticalAlignment="Top" HorizontalAlignment="Left" />
+        <ComboBox Name="CbGenre" Width="150" Height="25" Margin="60,0,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" SelectionChanged="CbGenre_SelectionChanged"
+                  ToolTip="リストに表示するデータの切替" />
+        <Label Content="分類" Width="40" Height="25" Margin="220,0,0,0" VerticalAlignment="Top" HorizontalAlignment="Left" />
+        <ComboBox Name="CbCategory" Height="25" Margin="260,0,240,0" VerticalAlignment="Top" SelectionChanged="CbCategory_SelectionChanged"
                   ToolTip="山の分類名で表示を絞り込む、マウスの右ボタンで分類に対するメニューが表示される。">
             <ComboBox.ContextMenu>
                 <ContextMenu>
@@ -18,9 +21,11 @@
             </ComboBox.ContextMenu>
         </ComboBox>
         <Label Content="取得No" Margin="0,0,190,0" Width="50" Height="25" VerticalAlignment="Top" HorizontalAlignment="Right" />
-        <TextBox x:Name="TbDataStart" Width="45" Height="25" Margin="0,0,140,0" TextAlignment="Right" HorizontalAlignment="Right" VerticalAlignment="Top" />
+        <TextBox x:Name="TbDataStart" Width="45" Height="25" Margin="0,0,140,0" TextAlignment="Right" HorizontalAlignment="Right" VerticalAlignment="Top" 
+                 ToolTip="データ取得の開始Noを指定する"/>
         <Label Content="～" Margin="0,0,120,0" Width="20" Height="25" VerticalAlignment="Top" HorizontalAlignment="Right" />
-        <TextBox x:Name="TbDataEnd" Width="45" Height="25" Margin="0,0,80,0" TextAlignment="Right" HorizontalAlignment="Right" VerticalAlignment="Top" />
+        <TextBox x:Name="TbDataEnd" Width="45" Height="25" Margin="0,0,80,0" TextAlignment="Right" HorizontalAlignment="Right" VerticalAlignment="Top"
+                 ToolTip="データ取得の終了Noを指定する"/>
         <Button x:Name="BtDataRequest" Content="データ取得" Width="80" Height="25" Margin="0,0,0,0" HorizontalAlignment="Right" VerticalAlignment="Top" Click="BtDataRequest_Click"
                 ToolTip="取得Noの山データをWebからダウンロードしてリストに追加する"/>
         <Label Content="検索" Width="40" Height="25" Margin="0,25,0,0" VerticalAlignment="Top" HorizontalAlignment="Left" />
@@ -40,6 +45,8 @@
                     <MenuItem Name="DgOpenMenu" Header="Webデータを開く" Click="DgMenu_Click" />
                     <MenuItem Name="DgMarkMenu" Header="マーク追加" Click="DgMenu_Click" />
                     <MenuItem Name="DgDetailMenu" Header="周辺情報抽出" Click="DgMenu_Click" />
+                    <MenuItem Name="DgRouteMenu" Header="登山ルート情報抽出" Click="DgMenu_Click" />
+                    <MenuItem Name="DgGuideMenu" Header="おすすめルート情報抽出" Click="DgMenu_Click" />
                     <MenuItem Name="DgRemoveMenu" Header="削除" Click="DgMenu_Click" />
                 </ContextMenu>
             </DataGrid.ContextMenu>
@@ -48,7 +55,8 @@
         <Label Name="LbGetDataProgress" Content="進捗状態"  Width="60" Margin="100,0,0,0" HorizontalAlignment="Left" Height="30" VerticalAlignment="Bottom" />
         <ProgressBar x:Name="PbGetInfoData" Height="10" Width="100" ValueChanged="PbGetInfoData_ValueChanged" Margin="160,0,0,10" HorizontalAlignment="Left" VerticalAlignment="Bottom" />
         <Label Name="LbGetDataCount" Content="0/0" Width="100" Margin="280,0,0,0" HorizontalAlignment="Left" Height="30" VerticalAlignment="Bottom"/>
-        <Button x:Name="BtRefresh" Width="25" Height="22" Margin="0,354,40,5" HorizontalAlignment="Right" VerticalAlignment="Bottom" Click="BtRefresh_Click" >
+        <Button x:Name="BtRefresh" Width="25" Height="22" Margin="0,354,40,5" HorizontalAlignment="Right" VerticalAlignment="Bottom" Click="BtRefresh_Click"
+                ToolTip="フィルタをリセットして画面を再表示する">
             <Path Data="M4,1 A10,10 0 0 0 4,15 M4,15 L1,14 M6,1 A10,10 0 0 1 6,15 M6,1 L9,2" Stroke="DarkGreen" StrokeThickness="2" Stretch="Fill" Height="16" Width="16" />
         </Button>
         <Button x:Name="BtHelp" Width="25" Height="22" Margin="0,354,5,5" HorizontalAlignment="Right"  Click="BtHelp_Click" VerticalAlignment="Bottom" 

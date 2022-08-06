@@ -127,7 +127,7 @@ namespace MapApp
             //  前回のWindowの位置とサイズを復元する(登録項目をPropeties.settingsに登録して使用する)
             Properties.Settings.Default.Reload();
             if (Properties.Settings.Default.YamaRecoListWidth < 100 ||
-        Properties.Settings.Default.YamaRecoListHeight < 100 ||
+                   Properties.Settings.Default.YamaRecoListHeight < 100 ||
                 SystemParameters.WorkArea.Height < Properties.Settings.Default.YamaRecoListHeight) {
                 Properties.Settings.Default.YamaRecoListWidth = mWindowWidth;
                 Properties.Settings.Default.YamaRecoListHeight = mWindowHeight;
@@ -277,8 +277,7 @@ namespace MapApp
         {
             if (0 <= CbCategory.SelectedIndex && mGenreMode == GENREMODE.yamadata) {
                 List<string[]> listData = mYamaData.getFilterongDataLsit(
-                    CbCategory.SelectedIndex <= 0 ? "" : CbCategory.Items[CbCategory.SelectedIndex].ToString(),
-                    TbSearchWord.Text);
+                    CbCategory.SelectedIndex <= 0 ? "" : CbCategory.Items[CbCategory.SelectedIndex].ToString());
                 setData(listData, mDispCol, mDetailCol);
             }
         }
@@ -308,7 +307,6 @@ namespace MapApp
             if (DgDataList.SelectedIndex < 0)
                 return;
 
-            //int col = mDataTitle.FindIndex(p => p.CompareTo("URL") == 0);
             int col = findListHeaderCol("URL");
             string url = ((string[])DgDataList.Items[DgDataList.SelectedIndex])[col];
 
@@ -738,49 +736,51 @@ namespace MapApp
         }
 
         /// <summary>
-        /// 選択されたURLデータリストを各データに追加する()DataGridに追加)
+        /// 選択されたURLデータリストを各データに追加する(DataGridに追加)
         /// </summary>
-        /// <param name="selectdata"></param>
+        /// <param name="selectdata">周辺データURLリスト</param>
         private void setSelectData(List<string[]> selectdata)
         {
-            GENREMODE genreMode = genreOfUrl(selectdata[0][0]);
-            switch (genreMode) {
-                case GENREMODE.yamadata: {
-                        //  周辺情報データからの山データリスト取得時
-                        mGenreMode = GENREMODE.yamadata;
-                        mGenreChangeEnabled = false;
-                        CbGenre.SelectedIndex = 0;
-                        setDataList(false);
-                        List<string[]> yamaDataList = mYamaData.extractListdata(selectdata);
-                        if (0 < yamaDataList.Count) {
-                            setData(yamaDataList, mDispCol, mDetailCol);
+            if (0 < selectdata.Count) {
+                GENREMODE genreMode = genreOfUrl(selectdata[0][0]);
+                switch (genreMode) {
+                    case GENREMODE.yamadata: {
+                            //  周辺情報データからの山データリスト取得時
+                            mGenreMode = GENREMODE.yamadata;
+                            mGenreChangeEnabled = false;
+                            CbGenre.SelectedIndex = 0;
+                            setDataList(false);
+                            List<string[]> yamaDataList = mYamaData.extractListdata(selectdata);
+                            if (0 < yamaDataList.Count) {
+                                setData(yamaDataList, mDispCol, mDetailCol);
+                            }
                         }
-                    }
-                    break;
-                case GENREMODE.route: {
-                        //  登山ルートデータから登山ルートデータを取得
-                        mGenreMode = GENREMODE.route;
-                        mGenreChangeEnabled = false;
-                        CbGenre.SelectedIndex = 1;
-                        setDataList(false);
-                        List<string[]> routeDataList = mRouteData.extractListdata(selectdata);
-                        if (0 < routeDataList.Count) {
-                            setData(routeDataList, mDispCol, mDetailCol);
+                        break;
+                    case GENREMODE.route: {
+                            //  登山ルートデータから登山ルートデータを取得
+                            mGenreMode = GENREMODE.route;
+                            mGenreChangeEnabled = false;
+                            CbGenre.SelectedIndex = 1;
+                            setDataList(false);
+                            List<string[]> routeDataList = mRouteData.extractListdata(selectdata);
+                            if (0 < routeDataList.Count) {
+                                setData(routeDataList, mDispCol, mDetailCol);
+                            }
                         }
-                    }
-                    break;
-                case GENREMODE.guide: {
-                        //  おすすめルートデータからおすすめルートデータを取得
-                        mGenreMode = GENREMODE.guide;
-                        mGenreChangeEnabled = false;
-                        CbGenre.SelectedIndex = 2;
-                        setDataList(false);
-                        List<string[]> guideDataList = mGuideRouteData.extractListdata(selectdata);
-                        if (0 < guideDataList.Count) {
-                            setData(guideDataList, mDispCol, mDetailCol);
+                        break;
+                    case GENREMODE.guide: {
+                            //  おすすめルートデータからおすすめルートデータを取得
+                            mGenreMode = GENREMODE.guide;
+                            mGenreChangeEnabled = false;
+                            CbGenre.SelectedIndex = 2;
+                            setDataList(false);
+                            List<string[]> guideDataList = mGuideRouteData.extractListdata(selectdata);
+                            if (0 < guideDataList.Count) {
+                                setData(guideDataList, mDispCol, mDetailCol);
+                            }
                         }
-                    }
-                    break;
+                        break;
+                }
             }
         }
 
@@ -965,5 +965,6 @@ namespace MapApp
             dlg.mEditText = buf;
             dlg.ShowDialog();
         }
+
     }
 }

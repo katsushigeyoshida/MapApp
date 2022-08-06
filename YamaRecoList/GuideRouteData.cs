@@ -201,10 +201,12 @@ namespace MapApp
         public List<string[]> extractListdata(List<string[]> listData)
         {
             List<string[]> guideListdata = new List<string[]>();
-            for (int i = 0; i < listData.Count; i++) {
-                int n = mDataList.FindIndex(p => p[titleNo("URL")].CompareTo(listData[i][0]) == 0);
-                if (0 <= n)
-                    guideListdata.Add(mDataList[n]);
+            if (0 < mDataList.Count) {
+                for (int i = 0; i < listData.Count; i++) {
+                    int n = mDataList.FindIndex(p => p[titleNo("URL")].CompareTo(listData[i][0]) == 0);
+                    if (0 <= n)
+                        guideListdata.Add(mDataList[n]);
+                }
             }
 
             return guideListdata;

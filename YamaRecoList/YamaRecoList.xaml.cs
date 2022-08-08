@@ -747,37 +747,37 @@ namespace MapApp
                     case GENREMODE.yamadata: {
                             //  周辺情報データからの山データリスト取得時
                             mGenreMode = GENREMODE.yamadata;
-                            mGenreChangeEnabled = false;
-                            CbGenre.SelectedIndex = 0;
                             setDataList(false);
                             List<string[]> yamaDataList = mYamaData.extractListdata(selectdata);
                             if (0 < yamaDataList.Count) {
                                 setData(yamaDataList, mDispCol, mDetailCol);
                             }
+                            mGenreChangeEnabled = false;
+                            CbGenre.SelectedIndex = 0;
                         }
                         break;
                     case GENREMODE.route: {
                             //  登山ルートデータから登山ルートデータを取得
                             mGenreMode = GENREMODE.route;
-                            mGenreChangeEnabled = false;
-                            CbGenre.SelectedIndex = 1;
                             setDataList(false);
                             List<string[]> routeDataList = mRouteData.extractListdata(selectdata);
                             if (0 < routeDataList.Count) {
                                 setData(routeDataList, mDispCol, mDetailCol);
                             }
+                            mGenreChangeEnabled = false;
+                            CbGenre.SelectedIndex = 1;
                         }
                         break;
                     case GENREMODE.guide: {
                             //  おすすめルートデータからおすすめルートデータを取得
                             mGenreMode = GENREMODE.guide;
-                            mGenreChangeEnabled = false;
-                            CbGenre.SelectedIndex = 2;
                             setDataList(false);
                             List<string[]> guideDataList = mGuideRouteData.extractListdata(selectdata);
                             if (0 < guideDataList.Count) {
                                 setData(guideDataList, mDispCol, mDetailCol);
                             }
+                            mGenreChangeEnabled = false;
+                            CbGenre.SelectedIndex = 2;
                         }
                         break;
                 }

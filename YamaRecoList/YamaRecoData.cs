@@ -205,16 +205,18 @@ namespace MapApp
         public void setCategoryList()
         {
             mCategoryList.Clear();
-            foreach (var data in mDataList) {
-                string[] category = data[titleNo("分類")].Split(mSeparatorChar);     //  分類
-                foreach (var item in category) {
-                    string[] itemData = new string[2];
-                    int n = item.IndexOf(mSplitWord);
-                    if (0 < n) {
-                        itemData[0] = item.Substring(0, n).Trim();
-                        itemData[1] = item.Substring(n + mSplitWord.Length).Trim();
-                        if (0 < itemData.Length && 0 > mCategoryList.FindIndex(p => p[0].CompareTo(itemData[0]) == 0)) {
-                            mCategoryList.Add(itemData);
+            if (mDataList != null && 0 < mDataList.Count) {
+                foreach (var data in mDataList) {
+                    string[] category = data[titleNo("分類")].Split(mSeparatorChar);     //  分類
+                    foreach (var item in category) {
+                        string[] itemData = new string[2];
+                        int n = item.IndexOf(mSplitWord);
+                        if (0 < n) {
+                            itemData[0] = item.Substring(0, n).Trim();
+                            itemData[1] = item.Substring(n + mSplitWord.Length).Trim();
+                            if (0 < itemData.Length && 0 > mCategoryList.FindIndex(p => p[0].CompareTo(itemData[0]) == 0)) {
+                                mCategoryList.Add(itemData);
+                            }
                         }
                     }
                 }
@@ -229,7 +231,7 @@ namespace MapApp
         public List<string[]> extractListdata(List<string[]> listData)
         {
             List<string[]> yamaListdata = new List<string[]>();
-            if (0 < mDataList.Count) {
+            if (mDataList != null && 0 < mDataList.Count) {
                 for (int i = 0; i < listData.Count; i++) {
                     int n = mDataList.FindIndex(p => p[titleNo("URL")].CompareTo(listData[i][0]) == 0);
                     if (0 <= n)

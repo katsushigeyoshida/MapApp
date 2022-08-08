@@ -201,7 +201,7 @@ namespace MapApp
         public List<string[]> extractListdata(List<string[]> listData)
         {
             List<string[]> guideListdata = new List<string[]>();
-            if (0 < mDataList.Count) {
+            if (mDataList != null && 0 < mDataList.Count) {
                 for (int i = 0; i < listData.Count; i++) {
                     int n = mDataList.FindIndex(p => p[titleNo("URL")].CompareTo(listData[i][0]) == 0);
                     if (0 <= n)
@@ -222,17 +222,18 @@ namespace MapApp
         {
             //  HTMLソースからデータの抽出
             List<string[]> listData = getListData(html);
+            string[] data = Enumerable.Repeat<string>("", mDataTitle.Length).ToArray();
 
             //  タイトルに合わせたデータ配列に置換える
-            string[] data = Enumerable.Repeat<string>("", mDataTitle.Length).ToArray();
-            for (int i = 0; i < mDataTitle.Count(); i++) {
-                int n = listData.FindIndex(p => p[0].CompareTo(mDataTitle[i]) == 0);
-                if (0 <= n)
-                    data[i] = listData[n][1];
-                else if (mDataTitle[i].CompareTo("URL") == 0)
-                    data[i] = url;
+            if (mDataList != null && 0 <= mDataList.Count) {
+                for (int i = 0; i < mDataTitle.Count(); i++) {
+                    int n = listData.FindIndex(p => p[0].CompareTo(mDataTitle[i]) == 0);
+                    if (0 <= n)
+                        data[i] = listData[n][1];
+                    else if (mDataTitle[i].CompareTo("URL") == 0)
+                        data[i] = url;
+                }
             }
-
             return data;
         }
 

@@ -194,7 +194,7 @@ namespace MapApp
         public List<string[]> extractListdata(List<string[]> listData)
         {
             List<string[]> routeListdata = new List<string[]>();
-            if (0 < mDataList.Count) {
+            if (mDataList != null && 0 <= mDataList.Count) {
                 for (int i = 0; i < listData.Count; i++) {
                     int n = mDataList.FindIndex(p => p[titleNo("URL")].CompareTo(listData[i][0]) == 0);
                     if (0 <= n)

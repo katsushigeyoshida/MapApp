@@ -1154,6 +1154,7 @@ namespace MapApp
             if (!windowSet())
                 return;
 
+            mMapData.mScreen = new Size(CvMapData.ActualWidth, CvMapData.ActualHeight);
             mMapData.setViewSize(mWidth, mHeight);
 
             //  盤をグラフィックボタンで作成

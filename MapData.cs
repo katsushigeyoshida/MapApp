@@ -59,6 +59,7 @@ namespace MapApp
         private int mMaxColCount = 30;                  //  表示できる最大列数
         public double mCellSize = 256;                  //  タイル画像の大きさ(一辺の長さ)
         public Size mView = new Size(1000, 1000);       //  表示するViewの大きさ
+        public Size mScreen = new Size(1000, 1000);     //  表示するウィンドのスクリーンサイズ
         public int mUseCol = 0;                         //  使用した列数
         public int mUseRow = 0;                         //  使用した行数
         public const int mMaxZoom = 18;                 //  最大ズームレベル
@@ -935,6 +936,22 @@ namespace MapApp
         }
 
         /// <summary>
+        /// 表示領域の大きさをkmで取得
+        /// </summary>
+        /// <returns>表示領域の大きさ(km x km)</returns>
+        public Size getAreaSize()
+        {
+            Size size = new Size();
+            Point ps = map2Coordinates(mStart);
+            Point pw = map2Coordinates(new Point(mStart.X + mColCount, mStart.Y));
+            Point ph = map2Coordinates(new Point(mStart.X, mStart.Y + (mColCount * mView.Height / mView.Width)));
+            size.Width = ylib.coordinateDistance(ps, pw);
+            size.Height= ylib.coordinateDistance(ps, ph);
+            return size;
+        }
+
+
+        /// <summary>
         /// 中心座標(BasMap)の取得
         /// </summary>
         /// <returns></returns>
@@ -1127,6 +1144,16 @@ namespace MapApp
             Point cpe = map2Coordinates(mpe);
             return ylib.coordinateDistance(cps, cpe);
         }
+
+        /// <summary>
+        /// Windowのスクリーンサイズを求める
+        /// </summary>
+        /// <returns></returns>
+        public Size getScreenSize()
+        {
+            return mView;
+        }
+
 
         /// <summary>
         /// 色凡例のコメントを返す

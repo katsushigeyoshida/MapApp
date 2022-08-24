@@ -39,9 +39,9 @@ namespace MapApp
             "なし", "2", "3", "4", "5", "7", "10", "15", "20", "25", "30", "40",
             "50", "60", "80", "100", "200", "300", "500", "1000", "2000", "3000"
         };
-        private List<double> mElevetor = new List<double>();    //  標高
-        private List<double> mDistance = new List<double>();    //  累積距離
-        private List<double> mSpeed = new List<double>();       //  速度
+        private List<double> mElevetor = new List<double>();    //  標高(m)
+        private List<double> mDistance = new List<double>();    //  累積距離(km)
+        private List<double> mSpeed = new List<double>();       //  速度(km/h)
 
         public string mGraphFilePath;
         private GpxReader mGpxReader;
@@ -331,18 +331,19 @@ namespace MapApp
         /// </summary>
         private void setGraphArea()
         {
+            (double ymin, double ymax) = getMinMaxYvalue();
             if (CbGrphYType.SelectedIndex == 0) {
                 //  標高
                 mArea.Y = 0;
-                mArea.Height = mGpxReader.mGpsInfoData.mMaxElevator;
+                mArea.Height = ymax;
             } else if (CbGrphYType.SelectedIndex == 1) {
                 //  標高差
-                mArea.Y = mGpxReader.mGpsInfoData.mMinElevator;
-                mArea.Height = mGpxReader.mGpsInfoData.mMaxElevator - mArea.Y;
+                mArea.Y = ymin;
+                mArea.Height = ymax - ymin; 
             } else if (CbGrphYType.SelectedIndex == 2) {
                 //  速度
-                mArea.Y = mSpeed.Min(p => p);
-                mArea.Height = mSpeed.Max(p => p) -  mArea.Y;
+                mArea.Y = 0;
+                mArea.Height = ymax - ymin;
             }
             if (CbGrphXType.SelectedIndex == 0) {
                 //  距離
@@ -397,6 +398,22 @@ namespace MapApp
         }
 
         /// <summary>
+        /// 表示グラフの種類に縦軸データのmin,maxを求める
+        /// </summary>
+        /// <returns>(min.max)</returns>
+        private (double, double) getMinMaxYvalue()
+        {
+            double max = double.MinValue;
+            double min = double.MaxValue;
+            for (int i = 1; i < mGpxReader.mListGpsData.Count; i++) {
+                double v = getYvalue(i);
+                max = Math.Max(max, v);
+                min = Math.Min(min, v);
+            }
+            return (min, max);
+        }
+
+        /// <summary>
         /// 縦軸のデータ値
         /// </summary>
         /// <param name="i"></param>
@@ -406,19 +423,19 @@ namespace MapApp
             int moveAveNo = 1;
             if (0 <= CbMoveAverage.SelectedIndex)
                 moveAveNo = ylib.intParse(CbMoveAverage.Items[CbMoveAverage.SelectedIndex].ToString());
-            if (CbGrphYType.SelectedIndex == 0) {           //  標高
+            if (CbGrphYType.SelectedIndex == 0) {           //  標高(m)
                 if (CbMoveAverage.SelectedIndex == 0) {
                     return mElevetor[i];
                 } else {
                     return ylib.movingAverage(mElevetor, i, moveAveNo, true);
                 }
-            } else if (CbGrphYType.SelectedIndex == 1) {    //  標高さ
+            } else if (CbGrphYType.SelectedIndex == 1) {    //  標高さ(m)
                 if (CbMoveAverage.SelectedIndex == 0) {
                     return mElevetor[i];
                 } else {
                     return ylib.movingAverage(mElevetor, i, moveAveNo, true);
                 }
-            } else if (CbGrphYType.SelectedIndex == 2) {    //  速度
+            } else if (CbGrphYType.SelectedIndex == 2) {    //  速度(km/h)
                 if (CbMoveAverage.SelectedIndex == 0) {
                     return mSpeed[i];
                 } else {
@@ -451,11 +468,12 @@ namespace MapApp
         /// <summary>
         /// グラフ用のgpxデータの読込
         /// </summary>
-        /// <param name="graphFilePath"></param>
+        /// <param name="graphFilePath">GPXファイルパス</param>
         private void loadData(string graphFilePath)
         {
             //  ファイルデータの読込
             mGpxReader = new GpxReader(graphFilePath, GpxReader.DATATYPE.gpxData);
+            mGpxReader.dataChk();
             //  距離と速度を求める
             double sumDis = 0;
             mElevetor.Add(mGpxReader.mListGpsData[0].mElevator);
@@ -463,13 +481,9 @@ namespace MapApp
             mSpeed.Add(0);
             for (int i = 1; i < mGpxReader.mListGpsData.Count; i++) {
                 mElevetor.Add(mGpxReader.mListGpsData[i].mElevator);
-                double dis = ylib.coordinateDistance(
-                    mGpxReader.mListGpsData[i - 1].mLongitude, mGpxReader.mListGpsData[i - 1].mLatitude,
-                    mGpxReader.mListGpsData[i].mLongitude, mGpxReader.mListGpsData[i].mLatitude);
-                sumDis += dis;
+                sumDis += mGpxReader.mListGpsData[i - 1].distance(mGpxReader.mListGpsData[i]);
                 mDistance.Add(sumDis);
-                double lap = mGpxReader.mListGpsData[i].mDateTime.Subtract(mGpxReader.mListGpsData[i - 1].mDateTime).TotalHours;
-                mSpeed.Add(dis / lap);
+                mSpeed.Add(mGpxReader.mListGpsData[i - 1].speed(mGpxReader.mListGpsData[i]));
             }
         }
     }

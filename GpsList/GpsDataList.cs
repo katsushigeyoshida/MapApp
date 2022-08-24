@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Windows;
+using System.Xml.Linq;
 using WpfLib;
 
 namespace MapApp
@@ -147,7 +148,8 @@ namespace MapApp
     public class GpsFileData
     {
         private List<Point> mLocData = new List<Point>();   //  座標リスト
-        private Rect mLocArea;                  //  トレースエリア
+        private Rect mLocArea;                  //  トレースエリア(BaseMap)
+        private double mGpsDispRate = 10.0;     //  GPSトレースの間引き割合
         //public List<GpsData> mGpsDataList;
         public string mTitle = "";              //  タイトル
         public string mGroup = "";              //  グループ
@@ -182,7 +184,7 @@ namespace MapApp
         /// <summary>
         /// パラメータを文字配列データに変換する
         /// </summary>
-        /// <returns></returns>
+        /// <returns>GPXリストのデータ</returns>
         public string[] getStringData()
         {
             string[] data = new string[mFormatTitle.Length];
@@ -210,7 +212,7 @@ namespace MapApp
         /// <summary>
         /// 文字配列データでパラメータを設定する
         /// </summary>
-        /// <param name="data"></param>
+        /// <param name="data">GPXリストのデータ</param>
         public void setStringData(string[] data)
         {
             mTitle = data[0];
@@ -236,19 +238,22 @@ namespace MapApp
         /// <summary>
         /// 指定したGPXファイルを読み込んでトレース座標データと領域を設定する
         /// </summary>
-        /// <param name="path"></param>
+        /// <param name="path">GPXファイルパス</param>
         public bool setFilePath(string path)
         {
             mFilePath = path;
             GpxReader gpsReader = new GpxReader(path, GpxReader.DATATYPE.gpxSimpleData);
             if (gpsReader.mListGpsPointData.Count == 0)
                 return false;
+            gpsReader.dataChk();                                    //  エラーデータチェック
+
             mLocData = gpsReader.mListGpsPointData;
             mDistance = gpsReader.mGpsInfoData.mDistance;
             mMinElevation = gpsReader.mGpsInfoData.mMinElevator;
             mMaxElevation = gpsReader.mGpsInfoData.mMaxElevator;
             mFirstTime = gpsReader.mGpsInfoData.mFirstTime;
             mLastTime = gpsReader.mGpsInfoData.mLastTime;
+            //  データ領域をBaseMapに変換
             Point sp = MapData.coordinates2BaseMap(gpsReader.mGpsInfoData.mArea.TopLeft);
             Point ep = MapData.coordinates2BaseMap(gpsReader.mGpsInfoData.mArea.BottomRight);
             mLocArea = new Rect(sp, ep);
@@ -258,8 +263,9 @@ namespace MapApp
         /// <summary>
         /// トレースを表示する
         /// </summary>
-        /// <param name="ydraw"></param>
-        /// <param name="mapData"></param>
+        /// <param name="ydraw">描画Lib</param>
+        /// <param name="mapData">MapData</param>
+        /// <param name="filterGroup">グループのフィルタ文字</param>
         public void draw(YGButton ydraw, MapData mapData, string filterGroup)
         {
             if (mVisible && (filterGroup.Length < 1 || filterGroup.CompareTo(mGroup) == 0)) {
@@ -279,29 +285,43 @@ namespace MapApp
                     //  正規表示
                     if (mLocData.Count == 0 || mLocArea.Width == 0.0 || mLocArea.Height == 0.0) {
                         //  データがロードされていない
-                        System.Diagnostics.Debug.WriteLine($"GpsFileData: draw: データロード {mTitle}");
+                        //System.Diagnostics.Debug.WriteLine($"GpsFileData: draw: データロード {mTitle}");
                         setFilePath(mFilePath);
                     }
                     if (1 < mLocData.Count && insideChk(mapData.getArea(), mLocArea)) {
+                        int skipCount = skipLocCount(mapData.getArea(), mapData.mScreen);   //  データの間引き数
+                        //System.Diagnostics.Debug.WriteLine($"SkipCount: {skipCount} {mLocData.Count} {mLocData.Count/skipCount}");
                         //System.Diagnostics.Debug.WriteLine($"GpsFileData: draw: データ表示 {mTitle}");
                         Point sp = mapData.coordinates2Screen(mLocData[0]);
-                        for (int i = 1; i < mLocData.Count; i++) {
+                        Point ep = new Point();
+                        int i = 1;
+                        for( ; i < mLocData.Count; i += skipCount) {
                             if (mLocData[i].X != 0 && mLocData[i].Y != 0) {
-                                Point ep = mapData.coordinates2Screen(mLocData[i]);
-                                double dis = ylib.coordinateDistance(mLocData[i-1], mLocData[i]);
-                                if (dis > 1.0) {
-                                    //  エラーデータ ? 区間距離が1km以上を除外
-                                    System.Diagnostics.Debug.WriteLine($"{dis.ToString("#.###")}km {mLocData[i - 1].X} {mLocData[i - 1].Y} - {mLocData[i].X} {mLocData[i].Y}");
-                                } else {
-                                    ydraw.drawLine(sp, ep);
-                                    sp = ep;
-                                }
+                                ep = mapData.coordinates2Screen(mLocData[i]);
+                                ydraw.drawLine(sp, ep);
+                                sp = ep;
                             }
+                        }
+                        if (i < mLocData.Count - 1) {
+                            ep = mapData.coordinates2Screen(mLocData[mLocData.Count - 1]);
+                            ydraw.drawLine(sp, ep);
                         }
                     }
                 }
             }
+        }
 
+        /// <summary>
+        /// 表示領域の大きさに合わせてGPSデータの間引き数を求める
+        /// </summary>
+        /// <param name="dispArea">表示領域</param>
+        /// <param name="windowSize">Windowサイズ</param>
+        /// <returns>間引き数</returns>
+        private int skipLocCount(Rect dispArea, Size windowSize)
+        {
+            double sizeRate = Math.Max(mLocArea.Width / dispArea.Width, mLocArea.Height / dispArea.Height);
+            //System.Diagnostics.Debug.WriteLine($"sizeRate: {sizeRate} {(int)windowSize.Width} {mGpsDispRate}");
+            return Math.Max((int)(mLocData.Count / (windowSize.Width * sizeRate) * mGpsDispRate), 1);
         }
 
         /// <summary>

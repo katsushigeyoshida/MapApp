@@ -555,11 +555,11 @@ namespace MapApp
         {
             //  マークデータ設定
             MapMark mapMark = new MapMark();
-            mapMark.mTitle = listData[0];
-            Point coordinate = ylib.cnvCoordinate(listData[2]);
+            mapMark.mTitle = listData[titleNo("山名")];
+            Point coordinate = ylib.cnvCoordinate(listData[titleNo("座標")]);
             mapMark.mLocation = MapData.coordinates2BaseMap(coordinate);
-            mapMark.mLink = listData[5];
-            mapMark.mComment = listData[3];
+            mapMark.mLink = listData[titleNo("URL")];
+            mapMark.mComment = listData[titleNo("概要")];
  
             //  マークデータをダイヤログに表示
             MarkInput markInput = new MarkInput();

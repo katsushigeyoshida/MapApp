@@ -10,13 +10,14 @@
         <Label Content="ジャンル" Width="50" Height="25" VerticalAlignment="Top" HorizontalAlignment="Left" />
         <ComboBox Name="CbGenre" Width="150" Height="25" Margin="60,0,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" SelectionChanged="CbGenre_SelectionChanged"
                   ToolTip="リストに表示するデータの切替" />
-        <Label Content="分類" Width="40" Height="25" Margin="220,0,0,0" VerticalAlignment="Top" HorizontalAlignment="Left" />
-        <ComboBox Name="CbCategory" Height="25" Margin="260,0,240,0" VerticalAlignment="Top" SelectionChanged="CbCategory_SelectionChanged"
+        <Label Content="山リスト" Width="50" Height="25" Margin="220,0,0,0" VerticalAlignment="Top" HorizontalAlignment="Left" />
+        <ComboBox Name="CbCategory" Height="25" Margin="270,0,240,0" VerticalAlignment="Top" SelectionChanged="CbCategory_SelectionChanged"
                   ToolTip="山の分類名で表示を絞り込む、マウスの右ボタンで分類に対するメニューが表示される。">
             <ComboBox.ContextMenu>
                 <ContextMenu>
                     <MenuItem Name="CbCategoryOpenMenu" Header="Webデータを開く" Click="CbCategoryContextMenu_Click" />
                     <MenuItem Name="CbGetMapListMenu" Header="山データの取得" Click="CbCategoryContextMenu_Click" />
+                    <MenuItem Name="CbGetListFilterMenu" Header="リストフィルタ設定" Click="CbCategoryContextMenu_Click" />
                 </ContextMenu>
             </ComboBox.ContextMenu>
         </ComboBox>

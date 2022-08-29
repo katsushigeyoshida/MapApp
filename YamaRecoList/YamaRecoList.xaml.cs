@@ -43,6 +43,7 @@ namespace MapApp
         private bool[] mDispCol;                                    //  表示カラムフラグ
         private bool[] mNumVal;                                     //  数値データ判定
         private bool[] mDetailCol;                                  //  詳細データ簡略表示
+        private int[] mColWidth;                                    //  カラムの幅
         private List<string[]> mDataList;                           //  山/ルートデータ
         private List<string[]> mDetailUrlList;                      //   詳細データの(URL,項目)リスト
         private List<string[]> mSelectListData = new List<string[]>();   //  周辺データのURLリスト
@@ -357,26 +358,39 @@ namespace MapApp
         private void CbCategoryContextMenu_Click(object sender, RoutedEventArgs e)
         {
             MenuItem menuItem = (MenuItem)e.Source;
-            if (CbCategory.SelectedIndex <= 0 || mGenreMode != GENREMODE.yamadata)
-                return;
-            if (menuItem.Name.CompareTo("CbCategoryOpenMenu") == 0) {
-                //  開く
-                string title = CbCategory.Items[CbCategory.SelectedIndex].ToString();
-                string[] url = mYamaData.mCategoryList.Find(p => p[0].CompareTo(title) == 0);
-                if (url.Length == 2)
-                    ylib.openUrl(url[1]);
-            } else if (menuItem.Name.CompareTo("CbGetMapListMenu") == 0) {
-                //  分類リストからデータ取得
-                string title = CbCategory.Items[CbCategory.SelectedIndex].ToString();
-                string[] url = mYamaData.mCategoryList.Find(p => p[0].CompareTo(title) == 0);
-                if (url.Length == 2 && 0 < url[1].Length) {
-                    mYamaData.getCategoryMapList(url[1]);
-                    if (0 < mYamaData.mCategoryMapList.Count)
-                        getMapListDownloadData(mYamaData.mCategoryMapList);
+            if (menuItem.Name.CompareTo("CbGetListFilterMenu") == 0) {
+                //  山リストのフィルタ設定
+                InputBox dialog = new InputBox();
+                dialog.mMainWindow = this;
+                dialog.Title = "山リストフィルタ設定";
+                var result = dialog.ShowDialog();
+                if (result == true) {
+                    mYamaData.mYamaListFilter = dialog.mEditText;
+                    mYamaData.setCategoryList();
+                    setCategoryList(mYamaData.mCategoryList);
+                }
+            } else {
+                if (CbCategory.SelectedIndex <= 0 || mGenreMode != GENREMODE.yamadata)
+                    return;
+                if (menuItem.Name.CompareTo("CbCategoryOpenMenu") == 0) {
+                    //  開く
+                    string title = CbCategory.Items[CbCategory.SelectedIndex].ToString();
+                    string[] url = mYamaData.mCategoryList.Find(p => p[0].CompareTo(title) == 0);
+                    if (url.Length == 2)
+                        ylib.openUrl(url[1]);
+                } else if (menuItem.Name.CompareTo("CbGetMapListMenu") == 0) {
+                    //  分類リストからデータ取得
+                    string title = CbCategory.Items[CbCategory.SelectedIndex].ToString();
+                    string[] url = mYamaData.mCategoryList.Find(p => p[0].CompareTo(title) == 0);
+                    if (url.Length == 2 && 0 < url[1].Length) {
+                        mYamaData.getCategoryMapList(url[1]);
+                        if (0 < mYamaData.mCategoryMapList.Count)
+                            getMapListDownloadData(mYamaData.mCategoryMapList);
+                    }
                 }
             }
         }
-        
+
         /// <summary>
         /// [プログレスバー] 終了処理
         /// </summary>
@@ -451,6 +465,7 @@ namespace MapApp
                 mDataTitle = mYamaData.mDataTitle;
                 mDataList = mYamaData.mDataList;
                 mDispCol = mYamaData.mDispCol;
+                mColWidth = mYamaData.mColWidth;
                 mNumVal = mYamaData.mNumVal;
                 mDetailCol = mYamaData.mDetailCol; 
                 mDetailUrlList = mYamaData.mDetailUrlList;
@@ -463,6 +478,7 @@ namespace MapApp
                 mDataTitle = mRouteData.mDataTitle;
                 mDataList = mRouteData.mDataList;
                 mDispCol = mRouteData.mDispCol;
+                mColWidth = mRouteData.mColWidth;
                 mNumVal = mRouteData.mNumVal;
                 mDetailCol = mRouteData.mDetailCol;
                 mDetailUrlList = mRouteData.mDetailUrlList;
@@ -475,6 +491,7 @@ namespace MapApp
                 mDataTitle = mGuideRouteData.mDataTitle;
                 mDataList = mGuideRouteData.mDataList;
                 mDispCol = mGuideRouteData.mDispCol;
+                mColWidth = mGuideRouteData.mColWidth;
                 mNumVal = mGuideRouteData.mNumVal;
                 mDetailCol = mGuideRouteData.mDetailCol;
                 mDetailUrlList = mGuideRouteData.mDetailUrlList;
@@ -485,7 +502,7 @@ namespace MapApp
                 DgGuideMenu.IsEnabled = false;
             }
 
-            setTitle(mDataTitle, mDispCol);
+            setTitle(mDataTitle, mDispCol, mColWidth);
 
             if (dataSet) {
                 if (mDataList != null && 0 < mDataList.Count) {
@@ -710,7 +727,7 @@ namespace MapApp
         {
             if (mDownloadMode == DOWNLOADMODE.normal) {
                 //  通常時
-                setTitle(mRouteData.mDataTitle, mDispCol);
+                setTitle(mRouteData.mDataTitle, mDispCol, mColWidth);
                 if (mRouteData.mDataList != null) {
                     setData(mRouteData.mDataList, mDispCol, mDetailCol);
                 }
@@ -726,7 +743,7 @@ namespace MapApp
         {
             if (mDownloadMode == DOWNLOADMODE.normal) {
                 //  通常時
-                setTitle(mGuideRouteData.mDataTitle, mDispCol);
+                setTitle(mGuideRouteData.mDataTitle, mDispCol, mColWidth);
                 if (mGuideRouteData.mDataList != null) {
                     setData(mGuideRouteData.mDataList, mDispCol, mDetailCol);
                 }
@@ -848,7 +865,8 @@ namespace MapApp
         /// </summary>
         /// <param name="title">タイトル配列</param>
         /// <param name="dispCol">表示列配列</param>
-        private void setTitle(string[] title, bool[] dispCol)
+        /// <param name="colWidth">列幅配列</param>
+        private void setTitle(string[] title, bool[] dispCol, int[] colWidth)
         {
             DgDataList.Columns.Clear();
             for (int i = 0; i < title.Length; i++) {
@@ -856,6 +874,8 @@ namespace MapApp
                     var column = new DataGridTextColumn();
                     column.Header = title[i];
                     column.Binding = new Binding($"[{i}]");
+                    if (0 <= colWidth[i])
+                        column.Width = colWidth[i];
                     DgDataList.Columns.Add(column);
                 }
             }
@@ -865,7 +885,8 @@ namespace MapApp
         /// DataGridにデータを設定
         /// </summary>
         /// <param name="dataList">データリスト</param>
-        /// <param name="dispSize">一つのセルに表示する文字数</param>
+        /// <param name="dispCol">表示列リスト</param>
+        /// <param name="detailCol">詳細表示列リスト</param>
         private void setData(List<string[]> dataList, bool[] dispCol, bool[] detailCol)
         {
             string splitWord = mYamaData.mSplitWord;

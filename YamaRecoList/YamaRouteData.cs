@@ -26,6 +26,11 @@ namespace MapApp
             "合計距離", "最高点の標高",   "最低点の標高", "累積標高（上り）", "累積標高（下り）",
             "アクセス", "ルート詳細",     "URL"
         };
+        public int[] mColWidth = {
+            -1,          -1,     -1,      -1,             -1,               -1,                     -1,
+            -1,          -1,              -1,             -1,               -1,
+            300,         300,             -1
+        };
         public bool[] mDispCol = {                                      //  表示カラムフラグ
             true,        true,   true,     true,           true,             true,                 true,
             true,        true,             true,           true,             true,
@@ -164,7 +169,7 @@ namespace MapApp
                     string[] buf = new string[dispSize];
                     for (int j = 0; j < buf.Length; j++) {
                         if (mDispCol[j])
-                            buf[j] = mDataList[i][j].Substring(0, Math.Min(mDataList[i][j].Length, 100));
+                            buf[j] = mDataList[i][j];
                     }
                     dataList.Add(buf);
                 }

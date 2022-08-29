@@ -29,6 +29,13 @@ namespace MapApp
             "アドバイス",   "サブコース",     "エスケープルート","入浴",             "おすすめ周辺情報",
             "登る山／通過する場所",   "URL"
         };
+        public int[] mColWidth = {
+            -1,             -1,                 -1,               -1,                  200,
+            -1,             300,                300,              -1,                  -1,
+            300,            200,                200,              200,                 300,
+            300,            300,                200,              300,                 300,
+            300,                       -1
+        };
         public readonly bool[] mDispCol = {                             //  表示カラムフラグ
             true,           true,               true,            true,               true,
             true,           true,               true,            true,               true,
@@ -170,7 +177,7 @@ namespace MapApp
                     string[] buf = new string[dispSize];
                     for (int j = 0; j < buf.Length; j++) {
                         if (mDispCol[j])
-                            buf[j] = mDataList[i][j].Substring(0, Math.Min(mDataList[i][j].Length, 100));
+                            buf[j] = mDataList[i][j];
                     }
                     dataList.Add(buf);
                 }

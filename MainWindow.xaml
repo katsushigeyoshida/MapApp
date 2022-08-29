@@ -10,7 +10,8 @@
     <DockPanel LastChildFill="True" >
         <StatusBar Name="SbTopStatusBar" DockPanel.Dock="Top" VerticalAlignment="Top">
             <TextBlock Text="地図名" />
-            <ComboBox Name="CbDataID" Width="120" Focusable="False" SelectionChanged="CbDataID_SelectionChanged" >
+            <ComboBox Name="CbDataID" Width="120" Focusable="False" SelectionChanged="CbDataID_SelectionChanged"
+                      ToolTip="地図データを切り替える">
                 <ComboBox.ContextMenu>
                     <ContextMenu>
                         <MenuItem Name="DataIDAddMenu" Header="データの追加" Click="DataIDMenu_Click" />
@@ -21,12 +22,15 @@
                 </ComboBox.ContextMenu>
             </ComboBox>
             <TextBlock Text="ズームレベル" />
-            <ComboBox Name="CbZoom" Width="40" Focusable="False" SelectionChanged="CbZoom_SelectionChanged" />
+            <ComboBox Name="CbZoom" Width="40" Focusable="False" SelectionChanged="CbZoom_SelectionChanged"
+                      ToolTip="地図のズームレベルを設定する"/>
             <TextBlock Text="画像列数" />
-            <ComboBox Name="CbSize" Width="50" Focusable="False" SelectionChanged="CbSize_SelectionChanged" />
+            <ComboBox Name="CbSize" Width="50" Focusable="False" SelectionChanged="CbSize_SelectionChanged"
+                      ToolTip="地図の横方向の画像数を設定する"/>
             <CheckBox x:Name="ChkAutoOnLine" Content="自動オフライン" IsThreeState="True" Click="ChkAutoOnLine_Click" 
                       ToolTip="地図のロード状態の設定と表示" />
-            <Button x:Name="BtMapsGSI" Content="国土地理院" Click="BtMapsGSI_Click" />
+            <Button x:Name="BtMapsGSI" Content="国土地理院" Click="BtMapsGSI_Click"
+                    ToolTip="表示している地図の関連ホームページを開く"/>
             <Button x:Name="BtPrevTime" Click="BtPrevTime_Click" ToolTip="予想時間を戻す&#13;範囲外では非表示になる" >
                 <Path Fill="DarkGreen" Margin="3" Width="15" Height="15" Data="M 4,0 L 2,2 L 4,4 Z M 2,0 L 0,2 L2,4 Z" Stretch="Fill" StrokeLineJoin="Round"/>
             </Button>
@@ -92,25 +96,33 @@
                 </Button>
             </StatusBar>
             <TextBlock Text=" 画面登録 " HorizontalAlignment="Left"/>
-            <ComboBox Name="CbPositionList" Focusable="False" SelectionChanged="CbPositionList_SelectionChanged" />
+            <ComboBox Name="CbPositionList" Focusable="False" SelectionChanged="CbPositionList_SelectionChanged"
+                      ToolTip="登録した地図画面を呼び出す"/>
             <StatusBar HorizontalAlignment="Center">
-                <Button x:Name="BtDataRegist" Content="登録"  Width="40" Click="BtDataRegist_Click" />
-                <Button x:Name="BtDataDelete" Content="削除"  Width="40" Click="BtDataDelete_Click"/>
+                <Button x:Name="BtDataRegist" Content="登録"  Width="40" Click="BtDataRegist_Click"
+                        ToolTip="地図画面の状態を登録する"/>
+                <Button x:Name="BtDataDelete" Content="削除"  Width="40" Click="BtDataDelete_Click"
+                        ToolTip="現在選択されている登録画面を削除する"/>
             </StatusBar>
             <StatusBar>
-                <Button x:Name="BtMarkEdit" Content="マークリスト" Click="BtMarkEdit_Click" />
+                <Button x:Name="BtMarkEdit" Content="マークリスト" Click="BtMarkEdit_Click"
+                        ToolTip="マークの一覧リストを表示する"/>
                 <CheckBox x:Name="ChkMarkDisp" Content="マーク表示" Click="ChkMarkDisp_Click" />
             </StatusBar>
             <StatusBar>
-                <Button x:Name="BtGpsList" Content=" GPSリスト " Click="BtGpsList_Click" />
+                <Button x:Name="BtGpsList" Content=" GPSリスト " Click="BtGpsList_Click"
+                        ToolTip="GPXファイルの登録リストを表示する"/>
                 <CheckBox x:Name="ChkGpsDisp" Content="GPS軌跡" Click="ChkGpsDisp_Click" />
             </StatusBar>
             <StatusBar HorizontalAlignment="Left" Margin="0,0,10,0">
-                <Button x:Name="BtWikiList" Content=" Wikiリスト " Click="BtWikiList_Click" />
-                <Button x:Name="BtYamaRecoList" Content="ヤマレコリスト " Click="BtYamaRecoList_Click"  />
+                <Button x:Name="BtWikiList" Content=" Wikiリスト " Click="BtWikiList_Click"
+                        ToolTip="Wikipediaの参照リストを開く"/>
+                <Button x:Name="BtYamaRecoList" Content="ヤマレコリスト " Click="BtYamaRecoList_Click"
+                        ToolTip="ヤマレコのデータ参照リスを開く"/>
             </StatusBar>
             <StatusBar HorizontalAlignment="Left" Margin="0,0,10,0">
-                <Button x:Name="BtMap3DView" Content=" ３Ｄ表示 " Click="BtMap3DView_Click" />
+                <Button x:Name="BtMap3DView" Content=" ３Ｄ表示 " Click="BtMap3DView_Click"
+                        ToolTip="表示されている地図領域を3D表示をおこなう"/>
             </StatusBar>
             <TextBlock Text="■地図の説明" Margin="10,0,0,0" />
             <TextBlock x:Name="TbDataId" TextWrapping="Wrap" Margin="5,0,0,0" />

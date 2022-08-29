@@ -21,10 +21,14 @@ namespace MapApp
         private string mYamaRecoUrl = "https://www.yamareco.com/modules/yamainfo/ptinfo.php?ptid=";
         public string mSplitWord = " : ";                               //  分類データの分轄ワード
         public char mSeparatorChar = '\t';                              //  項目分轄char
-
+        public string mYamaListFilter = "";
         public string[] mDataTitle = {                                  //  データのタイトル
             "山名", "標高", "座標", "種別", "概要", "分類", "登山口", "山小屋", "付近の山",
             "登山ルート", "おすすめルート", "URL"
+        };
+        public int[] mColWidth = {
+            -1,     -1,      -1,     200,    300,    200,    200,      200,     300,
+            300,           300,           -1
         };
         public bool[] mDispCol = {                                      //  表示カラムフラグ
             true,    true,   true,   true,   true,   true,   true,     true,      true,
@@ -177,7 +181,7 @@ namespace MapApp
                     string[] buf = new string[dispSize];
                     for (int j = 0; j < buf.Length; j++) {
                         if (mDispCol[j])
-                            buf[j] = mDataList[i][j].Substring(0, Math.Min(mDataList[i][j].Length, 100));
+                            buf[j] = mDataList[i][j];
                     }
                     dataList.Add(buf);
                 }
@@ -201,6 +205,7 @@ namespace MapApp
 
         /// <summary>
         /// 分類データをデータリストから抽出してリスト化する
+        /// mYamaListFilter でフィルタを設定
         /// </summary>
         public void setCategoryList()
         {
@@ -212,9 +217,10 @@ namespace MapApp
                         string[] itemData = new string[2];
                         int n = item.IndexOf(mSplitWord);
                         if (0 < n) {
-                            itemData[0] = item.Substring(0, n).Trim();
-                            itemData[1] = item.Substring(n + mSplitWord.Length).Trim();
-                            if (0 < itemData.Length && 0 > mCategoryList.FindIndex(p => p[0].CompareTo(itemData[0]) == 0)) {
+                            itemData[0] = item.Substring(0, n).Trim();                      //  タイトル
+                            itemData[1] = item.Substring(n + mSplitWord.Length).Trim();     //  URL
+                            if (0 < itemData.Length && (mYamaListFilter.Length == 0 || 0 <= itemData[0].IndexOf(mYamaListFilter)) &&
+                                0 > mCategoryList.FindIndex(p => p[0].CompareTo(itemData[0]) == 0)) {
                                 mCategoryList.Add(itemData);
                             }
                         }
@@ -554,7 +560,7 @@ namespace MapApp
                         if (0 < tagData.Length) {
                             string[] paraData = new string[2];
                             paraData[0] = ylib.stripHtmlParaData(tagPara, "href");
-                            paraData[1] = tagData;
+                            paraData[1] = ylib.cnvHtmlSpecialCode(tagData);
                             dataList.Add(paraData);
                         }
                     } while (0 < nextHtml.Length && 0 < tagData.Length);
@@ -579,13 +585,14 @@ namespace MapApp
                 if (0 < tagData.Length) {
                     string[] buf = new string[2];
                     buf[0] = ylib.stripHtmlParaData(tagPara, "href");
-                    buf[1] = tagData;
+                    buf[1] = ylib.cnvHtmlSpecialCode(tagData);
                     listData.Add(buf);
                 }
             } while (0 < nextHtml.Length && 0 < tagData.Length);
 
             return listData;
         }
+
         /// <summary>
         /// 山データの登山ルート抽出
         /// </summary>

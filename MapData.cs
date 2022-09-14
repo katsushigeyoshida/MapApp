@@ -52,8 +52,8 @@ namespace MapApp
         public string mWebUrl = MapInfoData.mHelpUrl;   //  地図データ提供先URL
 
         public int mDataId = 0;                         //  地図データの種別
-        public int mZoom = 0;                           //  ズームレベル
-        public Point mStart = new Point(0, 0);          //  表示開始位置(MAP座標(タイル画像単位))
+        public int mZoom = 5;                           //  ズームレベル
+        public Point mStart = new Point(26, 11);        //  表示開始位置(MAP座標(タイル画像単位))
         public int mColCount = 4;                       //  表示するタイル画像の列数
         public int mRowCount = 4;                       //  表示するタイル画像の行数
         private int mMaxColCount = 30;                  //  表示できる最大列数

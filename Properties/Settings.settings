@@ -18,13 +18,13 @@
       <Value Profile="(Default)">std</Value>
     </Setting>
     <Setting Name="MapAppZoom" Type="System.Int32" Scope="User">
-      <Value Profile="(Default)">2</Value>
+      <Value Profile="(Default)">5</Value>
     </Setting>
     <Setting Name="MapAppX" Type="System.Double" Scope="User">
-      <Value Profile="(Default)">0</Value>
+      <Value Profile="(Default)">26</Value>
     </Setting>
     <Setting Name="MapAppY" Type="System.Double" Scope="User">
-      <Value Profile="(Default)">0</Value>
+      <Value Profile="(Default)">11</Value>
     </Setting>
     <Setting Name="MapAppSize" Type="System.Int32" Scope="User">
       <Value Profile="(Default)">4</Value>

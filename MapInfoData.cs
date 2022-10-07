@@ -12,8 +12,6 @@ namespace MapApp
     {
         public static string mHelpUrl = "https://maps.gsi.go.jp/development/ichiran.html";    //  地理院タイルのヘルプ
         public static string mGsiUrl = "https://cyberjapandata.gsi.go.jp/xyz/";     //  国土地理院データ参照先
-        //public static string mHelpOsmUrl = "https://openstreetmap.jp/";             // オープンストリートマップの参照先
-        //public static string mHelpSeamlessV2Url = "https://gbank.gsj.jp/owscontents/contents/seamlessv2_detail.html";
 
         public static int[] mZoomScale = {         //  ズームレベルごとの縮尺値逆数
             591657528, 295828764,147914382, 73957191, 36978595, 18489298, 9244649, 4622324, 2311162,
@@ -26,45 +24,33 @@ namespace MapApp
             "標高データID","BaseMapID", "透過色", "BaseMap上位"
         };
 
-        //  20万分の1日本シームレス地質図V2 Web API 凡例取得サービス
-        //  https://gbank.gsj.jp/seamless/v2/api/1.2.1/     2020年6月9日
-        public static string mLegendSeamless_V2 = "https://gbank.gsj.jp/seamless/v2/api/1.2.1/legend.csv";
-
         //  標高データ(https://maps.gsi.go.jp/development/ichiran.html#dem)
         //  256x256ピクセルの標高タイル画像に相当するデータが256行x256個の標高値を表すカンマ区切りの
         //  数値データとして格納されている。標高値が存在しない画素に相当するところはeが入っている
         public static List<string[]> mMapElevatorData = new List<string[]> {
             new string[] {
-                "標高タイルデータ(1/2.5万地形等高線)", //  タイトル
-                "dem",                          //  [0]データID(DEM10B:Z14,10x10m,精度5m)
-                "txt",                          //  [1]ファイル拡張子
-                "標高数値データ",               //  [2]地図の種類
-                "1-14",                         //  [3]有効なズームレベル 1～14
-                "日本全国",                     //  [4]データの整備範囲
-                "データソース:基板地図情報数値標高モデル、測量方法:1/2.5万地形等高線、標高点格子間隔:約10m四方", //  [5]データの概要
-                "",                             //  [6]データ参照先URL(地理院地図はデフォルトを使用)
-                "",                             //  [7]タイル座標順(指定のない時は{z}/{x}/{y})
-                "",                             //  [8]ヘルプ参照先URL
-                "",                             //  [10]標高データID
-                "",                             //  [11]BaseMapID
-                "",                             //  [12]重ねるデータの透過色
-                "",                             //  [13]BaseMapが上の場合 (true)
+                "標高タイルデータ(1/2.5万地形等高線)", //  [0]タイトル
+                "dem",                                  //  [1]データID(DEM10B:Z14,10x10m,精度5m)
+                "txt",                                  //  [2]ファイル拡張子
+                "標高数値データ",                      //  [3]地図の種類
+                "1-14",                                 //  [4]有効なズームレベル 1～14
+                "日本全国",                             //  [5]データの整備範囲
+                "データソース:基板地図情報数値標高モデル、測量方法:1/2.5万地形等高線、標高点格子間隔:約10m四方", //  [6]データの概要
+                "https://cyberjapandata.gsi.go.jp/xyz/dem/{z}/{x}/{y}.txt",   //  [7]データ参照先URL(地理院地図はデフォルトを使用)
+                "国土地理院",                            //  [8]参照先名
+                "https://maps.gsi.go.jp/development/ichiran.html",//  [9]ヘルプ参照先URL
             },
             new string[] {
-                "標高タイルデータ",             //  タイトル
-                "dem5a",                        //  データID(DEM5A:Z15,5x5m,精度0.3m)
-                "txt",                          //  ファイル拡張子
-                "標高数値データ",               //  地図の種類
-                "1-15",                         //  有効なズームレベル 1～15
-                "島嶼部や一部を除く日本全国",   //  データの整備範囲
+                "標高タイルデータ",             //  [0]タイトル
+                "dem5a",                        //  [1]データID(DEM5A:Z15,5x5m,精度0.3m)
+                "txt",                          //  [2]ファイル拡張子
+                "標高数値データ",               //  [3]地図の種類
+                "1-15",                         //  [4]有効なズームレベル 1～15
+                "島嶼部や一部を除く日本全国",   //  [5]データの整備範囲
                 "データソース:基板地図情報数値標高モデル、測量方法:航空レーザー測量、標高点格子間隔:約5m四方", //  データの概要
-                "",                             //  参照先URL(地理院地図はデフォルトを使用)
-                "",                             //  タイル座標順(指定のない時は{z}/{x}/{y})
-                "",                             //  ヘルプ参照先URL
-                "",                             //  [10]標高データID
-                "",                             //  [11]BaseMapID
-                "",                             //  [12]重ねるデータの透過色
-                "",                             //  [13]BaseMapが上の場合 (true)
+                "https://cyberjapandata.gsi.go.jp/xyz/dem5a/{z}/{x}/{y}.txt",   //  [7]データ参照先URL(地理院地図はデフォルトを使用)
+                "国土地理院",                   //  [8]参照先名
+                "https://maps.gsi.go.jp/development/ichiran.html",//  [9]ヘルプ参照先URL
             },
             new string[] {
                 "標高タイルデータ(都市周辺など)",//  タイトル
@@ -74,13 +60,9 @@ namespace MapApp
                 "1-15",                         //  有効なズームレベル 1～15
                 "都市周辺など",                 //  データの整備範囲
                 "データソース:基板地図情報数値標高モデル(都市周辺など)、測量方法:写真測量(地上画素寸法20cm)、標高点格子間隔:約5m四方", //  データの概要
-                "",                             //  参照先URL(地理院地図はデフォルトを使用)
-                "",                             //  タイル座標順(指定のない時は{z}/{x}/{y})
-                "",                             //  ヘルプ参照先URL
-                "",                             //  [10]標高データID
-                "",                             //  [11]BaseMapID
-                "",                             //  [12]重ねるデータの透過色
-                "",                             //  [13]BaseMapが上の場合 (true)
+                "https://cyberjapandata.gsi.go.jp/xyz/dem5b/{z}/{x}/{y}.txt",   //  [7]データ参照先URL(地理院地図はデフォルトを使用)
+                "国土地理院",                   //  [8]参照先名
+                "https://maps.gsi.go.jp/development/ichiran.html",//  [9]ヘルプ参照先URL
             },
             new string[] {
                 "標高タイルデータ(一部の島嶼など)",//  タイトル
@@ -90,13 +72,9 @@ namespace MapApp
                 "1-15",                         //  有効なズームレベル 1～15
                 "一部の島嶼など",               //  データの整備範囲
                 "データソース:基板地図情報数値標高モデル(一部の島嶼など)、測量方法:写真測量(地上画素寸法40cm)、標高点格子間隔:約5m四方", //  データの概要
-                "",                             //  参照先URL(地理院地図はデフォルトを使用)
-                "",                             //  タイル座標順(指定のない時は{z}/{x}/{y})
-                "",                             //  ヘルプ参照先URL
-                "",                             //  [10]標高データID
-                "",                             //  [11]BaseMapID
-                "",                             //  [12]重ねるデータの透過色
-                "",                             //  [13]BaseMapが上の場合 (true)
+                "https://cyberjapandata.gsi.go.jp/xyz/dem5c/{z}/{x}/{y}.txt",   //  [7]データ参照先URL(地理院地図はデフォルトを使用)
+                "国土地理院",                   //  [8]参照先名
+                "https://maps.gsi.go.jp/development/ichiran.html",//  [9]ヘルプ参照先URL
             },
             new string[] {
                 "標高タイルデータ地球地図全球版標高第2版)",//  タイトル
@@ -106,13 +84,9 @@ namespace MapApp
                 "0-8",                          //  有効なズームレベル 0～8
                 "地球地図全球版",               //  データの整備範囲
                 "データソース:	地球地図全球版標高第2版を線形的に平滑化することによって得られた値", //  データの概要
-                "",                             //  参照先URL(地理院地図はデフォルトを使用)
-                "",                             //  タイル座標順(指定のない時は{z}/{x}/{y})
-                "",                             //  ヘルプ参照先URL
-                "",                             //  [10]標高データID
-                "",                             //  [11]BaseMapID
-                "",                             //  [12]重ねるデータの透過色
-                "",                             //  [13]BaseMapが上の場合 (true)
+                "https://cyberjapandata.gsi.go.jp/xyz/demgm/{z}/{x}/{y}.txt",   //  [7]データ参照先URL(地理院地図はデフォルトを使用)
+                "国土地理院",                   //  [8]参照先名
+                "https://maps.gsi.go.jp/development/ichiran.html",//  [9]ヘルプ参照先URL
             },
         };
 
@@ -362,15 +336,15 @@ namespace MapApp
                 "",                             //  [13]BaseMapが上の場合 (true)
             },
             new string[] {
-                "磁気図(2020.0年値)",
-                "jikizu2020_chijiki_h",
-                "png",
-                "17.磁気図(jikizu2020_chijiki_h)",
-                "6-8",
-                "日本全国",
+                "磁気図(2020.0年値)",           //  [0]タイトル
+                "jikizu2020_chijiki_h",         //  [1]データID
+                "png",                          //  [2]ファイル拡張子
+                "17.磁気図(jikizu2020_chijiki_h)", //  [3]地図の種類
+                "6-8",                          //  [4]有効なズームレベル
+                "日本全国",                     //  [5]データの整備範囲
                 "時期の偏角、伏角、全磁力、水平分力、鉛直分力を示したもの",
                 "https://cyberjapandata.gsi.go.jp/xyz/jikizu2020_chijiki_h/{z}/{x}/{y}.png",//  [7]タイルデータ参照先URL(タイル座標順{(z}/{x}/{y})を含む)(指定のない時は地理院地図)
-                "国土地理院",                    //  [8]参照先名
+                "国土地理院",                   //  [8]参照先名
                 "https://maps.gsi.go.jp/development/ichiran.html",//  [9]ヘルプ参照先URL
                 "dem",                          //  [10]標高データID
                 "",                             //  [11]BaseMapID(重ね合わせ時のBASE地図ID)
@@ -406,8 +380,8 @@ namespace MapApp
                 "産業技術総合研究所地質調査総合センターが提供する日本全国統一の凡例を用いた地質図をタイル化したものです。" +
                 "産総研地質調査総合センターウェブサイト利用規約に従って利用できる", //  [6]データの概要
                 "https://gbank.gsj.jp/seamless/v2/api/1.2.1/tiles/{z}/{y}/{x}.png", //  [7]タイルデータ参照先URL
-                "地震ハザードステーション",     //  [8]参照先名
-                "https://www.j-shis.bosai.go.jp/landslidemap",   //  [9]ヘルプ参照先URL
+                "地質調査総合センター",           //  [8]参照先名
+                "https://www.gsj.jp/HomePageJP.html",   //  [9]ヘルプ参照先URL
                 "dem",                          //  [10]標高データID
                 "std",                          //  [11]BaseMapID(重ね合わせ時のBASE地図ID)
                 "FFFFFF",                       //  [12]重ねるデータの透過色

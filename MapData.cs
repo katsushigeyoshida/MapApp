@@ -1,8 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Shapes;
 using WpfLib;
+using Path = System.IO.Path;
 
 namespace MapApp
 {
@@ -43,13 +46,13 @@ namespace MapApp
         public string mBaseFolder = "Map";              //  保存先フォルダ
 
         public string mMapUrl = MapInfoData.mGsiUrl;    //  地図データURL(ディフォルトは地理院地図)
-        private string mMapUrl2 = "";                   //  日時データ置き換え後のURL(z,x,yの置換え用)
+        private string mWebMapUrl = "";                 //  日時データ置き換え後のURL(z,x,yの置換え用)
         private string mDateTimeFolder = "";            //  日時データ用のフォルダ名
 
         public string mDataIdName = "std";              //  データ種別名(std...)
         public string mExt = "png";                     //  タイル画像の拡張子
         public string mTileOrder = "";                  //  タイルデータの座標順(していない時は{z}/{x}/{y})
-        public string mWebUrl = MapInfoData.mHelpUrl;   //  地図データ提供先URL
+        public string mWebHelpUrl = MapInfoData.mHelpUrl;   //  地図データ提供先URL
 
         public int mDataId = 0;                         //  地図データの種別
         public int mZoom = 5;                           //  ズームレベル
@@ -71,6 +74,13 @@ namespace MapApp
 
         public MapData mBaseMap = null;                 //  重ね合わせるベースの地図
         public DateTime[] mChangeMapDateTime;           //  地図を切り替えた時の時間
+
+        //  時間指定URLのフォーマット　{format_type_interval_deley}
+        //  {yyyyMMddHHmmss}            日本時間表示 5分単位
+        //  {yyyyMMddHHmmss_UTC_n_m}    世界時間表示 n分単位、m分遅延 データ取得(n省略５分単位、m省略０分)
+        //  {yyyyMMddHHmmss_UTC0_n_m}   世界時間表示 n分単位、m分遅延 予想データ取得(n省略1５分単位、m省略０分)
+        //  {yyyyMMddHHmmss_UTC1_m}     世界時間表示 日本時間の5,11,17時にデータ取得
+        //  {yyyyMMddHHmmss_UTC2_m}     世界時間表示 ３時間おきにデータ取得
         public string[] mDateTimeForm = {               //  地図切替時間をURLとPATHに設定するフォーム
             "yyyyMMddHHmmss", 
             "yyyyMMddHHmmss_UTC", "yyyyMMddHHmmss_UTC0",//  雨雲レーダー用
@@ -109,7 +119,7 @@ namespace MapApp
             mDataIdName = mapData.mDataIdName;
             mExt = mapData.mExt;
             mTileOrder = mapData.mTileOrder;
-            mWebUrl = mapData.mMapUrl;
+            mWebHelpUrl = mapData.mWebHelpUrl;
             mZoom = mapData.mZoom;
             mStart =  new Point(mapData.mStart.X, mapData.mStart.Y);
             mColCount = mapData.mColCount;
@@ -124,29 +134,31 @@ namespace MapApp
         /// <summary>
         ///  取得時間設定 (雨雲レーダーに合わせ5分おきに設定)
         /// </summary>
+        /// <param name="forth">過去データ強制削除</param>
         public void setDateTime(bool forth = false)
         {
-            mMapUrl2 = mMapUrl;
+            mWebMapUrl = mMapUrl;
             mDateTimeInterval = 0;
             mDispMapDateTime.Clear();
             if (isDateTimeData()) {
-                setDateTime2(mMapUrl);
+                mWebMapUrl = replaceDateTime(mMapUrl);
                 if (forth || (0 < mDateTimeFolder.Length && mDispMapDateTime[0] != mDispMapPreDateTime)) {
                     //  過去データを削除
-                    removeMapData(false);
+                    removeMapData();
                     mDispMapPreDateTime = mDispMapDateTime[0];
                 }
             } else {
                 mDateTimeFolder = "";
             }
-            return;
         }
 
         /// <summary>
         /// 日時形式の変換文字列の入った地図URLで日時データの置き換えをする
         /// </summary>
         /// <param name="mapUrl">日時置換えURL</param>
-        public void setDateTime2(string mapUrl)
+        /// <returns>変換後のWebアドレス</returns>
+        /// 
+        public string replaceDateTime(string mapUrl)
         {
             List<string[]> transData = new List<string[]>();
             mDispMapDateTime.Clear();
@@ -162,7 +174,8 @@ namespace MapApp
                 }
             }
             foreach (string[] data in transData)
-                mMapUrl2 = mMapUrl2.Replace(data[0], data[1]);
+                mapUrl = mapUrl.Replace(data[0], data[1]);
+            return mapUrl;
         }
 
         /// <summary>
@@ -279,24 +292,14 @@ namespace MapApp
             mDataIdName = MapInfoData.mMapData[mDataId][1];         //  データID
             mExt = MapInfoData.mMapData[mDataId][2];                //  データファイルの拡張子
             mTileOrder = MapInfoData.mMapData[mDataId][8];          //  {z}/{x}/{y}以外のタイル座標順 → ヘルプ参照先URL
-            mElevatorDataNo = getElevatorDataNo(MapInfoData.mMapData[mDataId][10]); //
+            //mElevatorDataNo = getElevatorDataNo(MapInfoData.mMapData[mDataId][10]); //
+            mElevatorDataNo = MapInfoData.getElevatorDataNo(MapInfoData.getMapDataId(mDataId));
                                                                                     //  
             mBaseDataIDName = MapInfoData.mMapData[mDataId][11];    //  重ね合わせのベースマップID
             if (0 <= mBaseDataIDName.Length && mDataIdName.CompareTo(mBaseDataIDName) != 0)
                 mBaseMap = new MapData(mBaseDataIDName);
-            //  透過色の設定
-            if (0 < MapInfoData.mMapData[mDataId][12].Length) {
-                string[] stringColors = MapInfoData.mMapData[mDataId][12].Split(',');
-                mTransportColors = new System.Drawing.Color[stringColors.Length];
-                for (int i = 0; i < stringColors.Length; i++) {
-                    mTransportColors[i] = ylib.hexString2Color(stringColors[i]);
-                }
-            } else {
-                //  設定が空の時
-                mTransportColors = new System.Drawing.Color[1];
-                mTransportColors[0] = System.Drawing.Color.White;
-            }
-            mBaseMapOver = MapInfoData.mMapData[mDataId][13].ToLower().CompareTo("true") == 0;  //  BaseMapの上下
+            mTransportColors = MapInfoData.getMapOverlapTransparent(mDataId);   //  透過色の設定
+            mBaseMapOver = MapInfoData.getMapMergeOverlap(mDataId);
 
             loadLegendData();                                       //  凡例データ読込
         }
@@ -324,7 +327,7 @@ namespace MapApp
             mapData.mDataIdName = mDataIdName;
             mapData.mExt = mExt;
             mapData.mTileOrder = mTileOrder;
-            mapData.mWebUrl = mWebUrl;
+            mapData.mWebHelpUrl = mWebHelpUrl;
             mapData.mZoom = mZoom;
             mapData.mStart = new Point(mStart.X, mStart.Y);
             mapData.mColCount = mColCount;
@@ -387,7 +390,7 @@ namespace MapApp
         /// <returns>Webアドレス</returns>
         public string getElevatorWebAddress(double x, double y)
         {
-            int elevatorZoom = getMaxZoom(MapInfoData.mMapElevatorData[mElevatorDataNo][4]);  //  標高データの最大ズーム値
+            int elevatorZoom = MapInfoData.getElevatorMaxZoom(mElevatorDataNo);
             Point pos = new Point(x, y);
             if (elevatorZoom < mZoom) {
                 //  標高データはズームレベル15(DEM5)までなのでそれ以上は15のデータを取得
@@ -395,8 +398,7 @@ namespace MapApp
             } else {
                 elevatorZoom = mZoom;
             }
-            return MapInfoData.mGsiUrl + MapInfoData.mMapElevatorData[mElevatorDataNo][1] + "/" + elevatorZoom +
-                "/" + (int)pos.X + "/" + (int)pos.Y + "." + MapInfoData.mMapElevatorData[mElevatorDataNo][2];
+            return MapInfoData.getElevatorWebAddress(elevatorZoom, (int)pos.X, (int)pos.Y, mElevatorDataNo);
         }
 
         /// <summary>
@@ -407,7 +409,7 @@ namespace MapApp
         /// <returns>ファイルパス</returns>
         public string downloadElevatorPath(double x, double y)
         {
-            int elevatorZoom = getMaxZoom(MapInfoData.mMapElevatorData[mElevatorDataNo][4]);  //  標高データの最大ズーム値
+            int elevatorZoom = MapInfoData.getElevatorMaxZoom(mElevatorDataNo);
             Point pos = new Point(x, y);
             if (elevatorZoom < mZoom) {
                 //  標高データはズームレベル15(DEM5)までなのでそれ以上は15のデータを取得
@@ -441,7 +443,7 @@ namespace MapApp
         /// <returns></returns>
         public Point cnvElevatorPos(Point mp)
         {
-            int elevatorZoomMax = getMaxZoom(MapInfoData.mMapElevatorData[mElevatorDataNo][4]);
+            int elevatorZoomMax = MapInfoData.getElevatorMaxZoom(mElevatorDataNo);
             if (elevatorZoomMax < mZoom) {
                 //  標高データはズームレベル15(DEM5)までなのでそれ以上は15のデータを取得
                 return cnvMapPostionZoom(elevatorZoomMax, mp);
@@ -605,29 +607,68 @@ namespace MapApp
         }
 
         /// <summary>
-        /// 地図データの削除
+        /// 地図データの削除(Task処理)
         /// <param name="msg">確認メッセージを出す</param>
         /// </summary>
-        public void removeMapData(bool msg = true)
+        public void removeMapDataTask(bool msg = true)
         {
             string path = Path.GetFullPath(getDownloadDataBaseFolder());
             if (!msg || MessageBox.Show(path + " を削除します", "確認", MessageBoxButton.YesNo) == MessageBoxResult.Yes) {
-                try {
+                Task.Run(() => {
+                    removeMapData();
+                });
+            }
+        }
+
+        /// <summary>
+        /// 地図データの削除
+        /// </summary>
+        /// <param name="path">データフォルダ名</param>
+        /// <returns>成否</returns>
+        public bool removeMapData()
+        {
+            try {
+                string path = Path.GetFullPath(getDownloadDataBaseFolder());
+                if (Directory.Exists(path)) {
+                    Directory.Delete(path, true);
+                    removeImageFileList();
+                }
+                if (isMergeData()) {
+                    //  重ね合わせデータ
+                    path = Path.GetFullPath(getDownloadDataBaseFolder(false));
                     if (Directory.Exists(path)) {
                         Directory.Delete(path, true);
                         removeImageFileList();
                     }
-                    if (isMergeData()) {
-                        //  重ね合わせデータ
-                        path = Path.GetFullPath(getDownloadDataBaseFolder(false));
-                        if (Directory.Exists(path)) {
-                            Directory.Delete(path, true);
-                            removeImageFileList();
-                        }
-                    }
-                } catch (Exception e) {
-                    System.Diagnostics.Debug.WriteLine(e.Message);
                 }
+            } catch (Exception e) {
+                System.Diagnostics.Debug.WriteLine(e.Message);
+                return false;
+            }
+            return true;
+        }
+
+        /// <summary>
+        /// 全地図データ削除(Task処理)
+        /// </summary>
+        /// <param name="msg">確認メッセージを出す</param>
+        public void removeAllMapDataTask(bool msg = true)
+        {
+            string mapFolder = Path.GetFullPath(mBaseFolder);
+            if (!msg || MessageBox.Show("全地図データを削除します", "確認", MessageBoxButton.YesNo) == MessageBoxResult.Yes) {
+                Task.Run(() => {
+                    try {
+                        List<string> dirList = ylib.getDirectories(mapFolder);
+                        foreach (var dirPath in dirList) {
+                            if (Directory.Exists(dirPath)) {
+                                Directory.Delete(dirPath, true);
+                            }
+                        }
+                        removeImageFileList(true);
+                    } catch (Exception e) {
+                        System.Diagnostics.Debug.WriteLine(e.Message);
+                    }
+                });
             }
         }
 
@@ -653,22 +694,26 @@ namespace MapApp
         /// <summary>
         /// ImageFileListから自分のURLを削除する
         /// </summary>
-        public void removeImageFileList()
+        public void removeImageFileList(bool allData = false)
         {
-            string url;
-            if (0 < mMapUrl.Length) {
-                url = mMapUrl.Substring(0, ylib.lastIndexCountOf(mMapUrl, "/", 3));
+            if (allData) {
+                mImageFileSet.Clear();
             } else {
-                url = MapInfoData.mGsiUrl + mDataIdName;
-            }
+                string url;
+                if (0 < mMapUrl.Length) {
+                    url = mMapUrl.Substring(0, ylib.lastIndexCountOf(mMapUrl, "/", 3));
+                } else {
+                    url = MapInfoData.mGsiUrl + mDataIdName;
+                }
 
-            var removeList = new List<string>();
-            foreach (var item in mImageFileSet) {
-                if (0 <= item.IndexOf(url))
-                    removeList.Add(item);
+                var removeList = new List<string>();
+                foreach (var item in mImageFileSet) {
+                    if (0 <= item.IndexOf(url))
+                        removeList.Add(item);
+                }
+                foreach (var item in removeList)
+                    mImageFileSet.Remove(item);
             }
-            foreach (var item in removeList)
-                mImageFileSet.Remove(item);
         }
 
         /// <summary>
@@ -681,7 +726,7 @@ namespace MapApp
         {
             if (0 < mMapUrl.Length) {
                 //  国土地理院地図以外
-                string url = mMapUrl2.Replace("{z}", mZoom.ToString());
+                string url = mWebMapUrl.Replace("{z}", mZoom.ToString());
                 url = url.Replace("{x}", x.ToString());
                 url = url.Replace("{y}", y.ToString());
                 return url;
@@ -750,7 +795,7 @@ namespace MapApp
                 //  Web上にないファイルはダウンロードに行かない
                 if (autoOnline == true || !imageFIleset) {
                     Directory.CreateDirectory(folder);
-                    //System.Diagnostics.Debug.WriteLine($"getDownLoadFile: {url} {downloadPath}");
+                    //System.Diagnostics.Debug.WriteLine($"getDownLoadFile: download {url} {downloadPath}");
                     if (!ylib.webFileDownload(url, downloadPath)) {
                         if (ylib.getError()) {
                             System.Diagnostics.Debug.WriteLine($"Error getDownLoadFile: FileSet[{imageFIleset}] Online[{autoOnline}] {url} {ylib.getErrorMessage()}");
@@ -774,8 +819,6 @@ namespace MapApp
         /// <param name="path">ファイルパス</param>
         public void saveImageFileSet(string path)
         {
-            if (mImageFileSet.Count == 0)
-                return;
             List<string[]> dataList = new List<string[]>();
             foreach (string value in mImageFileSet) {
                 string[] data = new string[1];

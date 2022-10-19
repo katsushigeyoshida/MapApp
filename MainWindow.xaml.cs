@@ -82,7 +82,7 @@ namespace MapApp
             ylib = new YLib();
 
             //  地図データの読み込み
-            loadMapData(mMapDataListPath);
+            MapInfoData.loadMapData(mMapDataListPath);
 
             //  前回値取得
             mMapData.setMapInfoData(Properties.Settings.Default.MapAppDataNum);
@@ -138,7 +138,7 @@ namespace MapApp
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
             //  地図情報の保存
-            saveMapData(mMapDataListPath);
+            MapInfoData.saveMapData(mMapDataListPath);
             mMapData.saveImageFileSet(mImageFileSetPath);
             mAreaDataList.saveData();
             mMapMarkList.saveFile();
@@ -679,8 +679,11 @@ namespace MapApp
             } else if (menuItem.Name.CompareTo("DataIDMapInitMenu") == 0) {
                 //  地図データの削除
                 if (0 <= dataIdNo) {
-                    mMapData.removeMapData();
+                    mMapData.removeMapDataTask(true);
                 }
+            } else if (menuItem.Name.CompareTo("DataIDMapAllInitMenu") == 0) {
+                //  全地図データの削除
+                mMapData.removeAllMapDataTask();
             }
         }
 
@@ -1432,37 +1435,6 @@ namespace MapApp
             CbDataID.Items.Clear();
             foreach (string[] data in MapInfoData.mMapData)
                 CbDataID.Items.Add(data[0]);
-        }
-
-        /// <summary>
-        /// 地図管理データをファイルに保存する
-        /// </summary>
-        /// <param name="path"></param>
-        private void saveMapData(string path)
-        {
-            if (MapInfoData.mMapData.Count <= 0)
-                return;
-            ylib.saveCsvData(path, MapInfoData.mMapDataFormat, MapInfoData.mMapData);
-        }
-
-        /// <summary>
-        /// 地図管理データをファイルから読み込む
-        /// </summary>
-        /// <param name="path"></param>
-        private void loadMapData(string path)
-        {
-            List<string[]> dataList = ylib.loadCsvData(path, MapInfoData.mMapDataFormat);
-            if (dataList == null)
-                return;
-
-            int bufSize = MapInfoData.mMapData[0].Length;
-            MapInfoData.mMapData.Clear();
-            foreach (string[] data in dataList) {
-                //  空の配列作成
-                string[] buf = Enumerable.Repeat<string>("", bufSize).ToArray();
-                Array.Copy(data, buf, buf.Length < data.Length ? buf.Length : data.Length);
-                MapInfoData.mMapData.Add(buf);
-            }
         }
 
         /// <summary>

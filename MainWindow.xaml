@@ -18,6 +18,7 @@
                         <MenuItem Name="DataIDEditMenu" Header="データの編集" Click="DataIDMenu_Click" />
                         <MenuItem Name="DataIDRemoveMenu" Header="データの削除" Click="DataIDMenu_Click" />
                         <MenuItem Name="DataIDMapInitMenu" Header="地図データの初期化" Click="DataIDMenu_Click" />
+                        <MenuItem Name="DataIDMapAllInitMenu" Header="全地図データの初期化" Click="DataIDMenu_Click" />
                     </ContextMenu>
                 </ComboBox.ContextMenu>
             </ComboBox>

@@ -1,4 +1,8 @@
-﻿using System.Collections.Generic;
+﻿using OpenTK.Audio.OpenAL;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using WpfLib;
 
 namespace MapApp
 {
@@ -388,5 +392,216 @@ namespace MapApp
                 "",                             //  [13]BaseMapが上の場合 (true)
             },
         };
+
+        public static int mDataId = 0;          //  使用する地図の種類
+        public static int mElevatorDataNo = 0;  //  使用する標高データの種類
+
+        private static YLib ylib = new YLib();
+
+        /// <summary>
+        /// 地図データのIDからデータNoを取得
+        /// </summary>
+        /// <param name="id">地図データのID名</param>
+        /// <returns>地図データNo(該当なしは -1)</returns>
+        public static int getMapDataNo(string id)
+        {
+            return mMapData.FindIndex(p => p[1].CompareTo(id) == 0);
+        }
+
+        /// <summary>
+        /// 地図データのWebアドレスを求める
+        /// </summary>
+        /// <param name="zoom">ズーム値</param>
+        /// <param name="x">X座標</param>
+        /// <param name="y">Y座標</param>
+        /// <returns>Webアドレス</returns>
+        public static string getMapWebAddress(int zoom, int x, int y, int dataId = -1)
+        {
+            dataId = (dataId < 0) ? mDataId : dataId;
+            var webUrl = mMapData[dataId][7];
+            webUrl = webUrl.Replace("{z}", zoom.ToString());
+            webUrl = webUrl.Replace("{x}", x.ToString());
+            webUrl = webUrl.Replace("{y}", y.ToString());
+            return webUrl;
+        }
+
+        /// <summary>
+        /// 地図データのデータIDを求める
+        /// </summary>
+        /// <returns>データID</returns>
+        public static string getMapDataId(int dataId = -1)
+        {
+            dataId = (dataId < 0) ? mDataId : dataId;
+            return mMapData[mDataId][1];
+        }
+
+        /// <summary>
+        /// 地図データの拡張子を求める
+        /// </summary>
+        /// <returns>拡張子</returns>
+        public static string getMapDataExt(int dataId = -1)
+        {
+            dataId = (dataId < 0) ? mDataId : dataId;
+            return mMapData[dataId][2];
+        }
+
+        /// <summary>
+        /// 地図データの重ね合わせ地図データのデータIDを求める
+        /// </summary>
+        /// <returns>データID</returns>
+        public static string getMapMergeDataId(int dataId = -1)
+        {
+            dataId = (dataId < 0) ? mDataId : dataId;
+            return mMapData[dataId][11];
+        }
+
+        /// <summary>
+        /// 重ね合わせるデータの透過色を取得
+        /// </summary>
+        /// <returns>透過色配列(RGB 0xRRGGBB)</returns>
+        public static System.Drawing.Color[] getMapOverlapTransparent(int dataId = -1)
+        {
+            dataId = (dataId < 0) ? mDataId : dataId;
+            System.Drawing.Color[] transportColors;
+            if (0 < mMapData[dataId][12].Length) {
+                string[] stringColors = MapInfoData.mMapData[dataId][12].Split(',');
+                transportColors = new System.Drawing.Color[stringColors.Length];
+                for (int i = 0; i < stringColors.Length; i++) {
+                    transportColors[i] = ylib.hexString2Color(stringColors[i]);
+                }
+            } else {
+                //  設定が空の時
+                transportColors = new System.Drawing.Color[1];
+                transportColors[0] = System.Drawing.Color.White;
+            }
+            return transportColors;
+        }
+
+        /// <summary>
+        /// 重ね合わせ地図データが上になるか
+        /// </summary>
+        /// <returns>上に重ねる(true)</returns>
+        public static bool getMapMergeOverlap(int dataId = -1)
+        {
+            dataId = (dataId < 0) ? mDataId : dataId;
+            return mMapData[dataId][13].ToLower().CompareTo("true") == 0;
+        }
+
+        /// <summary>
+        /// 標高データのID名からデータNoを取得
+        /// </summary>
+        /// <param name="id">ID名</param>
+        /// <returns>標高データNo</returns>
+        public static int getElevatorDataNo(string id)
+        {
+            var no = mMapElevatorData.FindIndex(p => p[1].CompareTo(id) == 0);
+            return no < 0 ? 0 : no;
+        }
+
+        /// <summary>
+        /// 標高データの最ID名を取得
+        /// </summary>
+        /// <returns>標高データのID名</returns>
+        public static string getElevatorDataId(int elevatorDataNo = -1)
+        {
+            elevatorDataNo = elevatorDataNo < 0 ? mElevatorDataNo : elevatorDataNo;
+            return mMapElevatorData[elevatorDataNo][1];
+        }
+
+        /// <summary>
+        /// 標高データの拡張子を取得
+        /// </summary>
+        /// <returns>拡張子</returns>
+        public static string getElevatorDataExt(int elevatorDataNo = -1)
+        {
+            elevatorDataNo = elevatorDataNo < 0 ? mElevatorDataNo : elevatorDataNo;
+            return mMapElevatorData[elevatorDataNo][2];
+        }
+
+        /// <summary>
+        /// 標高データのWebアドレスを取得
+        /// </summary>
+        /// <param name="zoom">ズーム値</param>
+        /// <param name="x">X座標</param>
+        /// <param name="y">Y座標</param>
+        /// <returns>Webアドレス</returns>
+        public static string getElevatorWebAddress(int zoom, int x, int y, int elevatorDataNo = -1)
+        {
+            elevatorDataNo = elevatorDataNo < 0 ? mElevatorDataNo : elevatorDataNo;
+            var webUrl = mMapElevatorData[elevatorDataNo][7];
+            webUrl = webUrl.Replace("{z}", zoom.ToString());
+            webUrl = webUrl.Replace("{x}", x.ToString());
+            webUrl = webUrl.Replace("{y}", y.ToString());
+            return webUrl;
+        }
+
+        /// <summary>
+        /// 標高データの最大ズーム値を取得
+        /// </summary>
+        /// <returns>最大ズーム値</returns>
+        public static int getElevatorMaxZoom(int elevatorDataNo = -1)
+        {
+            elevatorDataNo = elevatorDataNo < 0 ? mElevatorDataNo : elevatorDataNo;
+            return getMaxZoom(mMapElevatorData[elevatorDataNo][4], 15);
+        }
+
+
+        /// <summary>
+        /// ズーム値の文字列から最大ズーム値(最後の数値)を求める
+        /// </summary>
+        /// <param name="zoom">ズーム値の文字列</param>
+        /// <param name="defzoom">数値がない時の値</param>
+        /// <returns>ズーム値</returns>
+        public static int getMaxZoom(string zoom, int defzoom = 0)
+        {
+            string buf = "", buf2 = "";
+            zoom = zoom.Trim();
+            for (int i = 0; i < zoom.Length; i++) {
+                if (char.IsDigit(zoom[i])) {
+                    buf += zoom[i];
+                } else {
+                    buf2 = buf;
+                    buf = "";
+                }
+            }
+            if (0 < buf.Length)
+                return ylib.intParse(buf);
+            else if (0 < buf2.Length)
+                return ylib.intParse(buf2);
+            else
+                return defzoom;
+        }
+
+
+        /// <summary>
+        /// 地図管理データをファイルに保存する
+        /// </summary>
+        /// <param name="path"></param>
+        public static void saveMapData(string path)
+        {
+            if (mMapData.Count <= 0)
+                return;
+            ylib.saveCsvData(path, mMapDataFormat, mMapData);
+        }
+
+        /// <summary>
+        /// 地図管理データをファイルから読み込む
+        /// </summary>
+        /// <param name="path"></param>
+        public static void loadMapData(string path)
+        {
+            List<string[]> dataList = ylib.loadCsvData(path, mMapDataFormat);
+            if (dataList == null)
+                return;
+
+            int bufSize = mMapData[0].Length;
+            mMapData.Clear();
+            foreach (string[] data in dataList) {
+                //  空の配列作成
+                string[] buf = Enumerable.Repeat<string>("", bufSize).ToArray();
+                Array.Copy(data, buf, buf.Length < data.Length ? buf.Length : data.Length);
+                mMapData.Add(buf);
+            }
+        }
     }
 }

@@ -67,7 +67,7 @@ namespace MapApp
                 Point sp = mapData.baseMap2Screen(mPositionList[0]);
                 for (int i = 1; i < mPositionList.Count; i++) {
                     Point ep = mapData.baseMap2Screen(mPositionList[i]);
-                    ydraw.drawLine(sp, ep);
+                    ydraw.drawWLine(sp, ep);
                     sp = ep;
                 }
             }

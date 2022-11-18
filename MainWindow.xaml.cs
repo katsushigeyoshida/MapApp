@@ -1274,7 +1274,7 @@ namespace MapApp
             //  枠線
             ydraw.setThickness(2);
             ydraw.setFillColor(null);
-            ydraw.drawRectangle(new Rect(new Point(2,1), new Size(mWidth - 4, mHeight - 2)), 0);
+            ydraw.drawWRectangle(new Rect(new Point(2,1), new Size(mWidth - 4, mHeight - 2)), 0);
 
             //  中心線
             drawCenterCross();
@@ -1307,8 +1307,8 @@ namespace MapApp
             ydraw.setColor("Green");
             ydraw.setFillColor(null);
             Point ctr = mMapData.baseMap2Screen(mMapData.getCenter());
-            ydraw.drawLine(new Point(ctr.X + mCenterCrossSize / 2.0, ctr.Y), new Point(ctr.X - mCenterCrossSize / 2.0, ctr.Y));
-            ydraw.drawLine(new Point(ctr.X, ctr.Y + mCenterCrossSize / 2.0), new Point(ctr.X, ctr.Y - mCenterCrossSize / 2.0));
+            ydraw.drawWLine(new Point(ctr.X + mCenterCrossSize / 2.0, ctr.Y), new Point(ctr.X - mCenterCrossSize / 2.0, ctr.Y));
+            ydraw.drawWLine(new Point(ctr.X, ctr.Y + mCenterCrossSize / 2.0), new Point(ctr.X, ctr.Y - mCenterCrossSize / 2.0));
         }
 
         /// <summary>
@@ -1329,8 +1329,8 @@ namespace MapApp
             double ls = ylib.coordinateDistance(scp, ecp);
             double mls = ylib.floorStepSize(ls);
             ep.X = mMapData.mView.Width * (epx - l * mls / ls);
-            ydraw.drawLine(sp, ep);
-            ydraw.drawText(string.Format("{0:F2} km", mls), 
+            ydraw.drawWLine(sp, ep);
+            ydraw.drawWText(string.Format("{0:F2} km", mls), 
                 new Point(mMapData.mView.Width * (epx - l * mls / ls / 2.0), mMapData.mView.Height * epy), 0.0);
         }
 
@@ -1345,7 +1345,7 @@ namespace MapApp
             for (int i = 0; i < mMapData.mDispMapDateTime.Count(); i++) {
                 string dateTimeText = mMapData.mDispMapDateTime[i].ToString("yyyy年MM月dd日HH時mm分ss秒");
                 dateTimeText += " " + msg[i %  2];
-                ydraw.drawText(dateTimeText, new Point(10, 5 + size * i), 0.0);
+                ydraw.drawWText(dateTimeText, new Point(10, 5 + size * i), 0.0);
             }
         }
 

@@ -203,12 +203,12 @@ namespace MapApp
 
             //  縦軸の目盛り文字列の最大幅から左側マージンを求める
             for (double y = mArea.Y; y <= mArea.Y + mArea.Height; y += mStepYsize) {
-                Size size = ydraw.measureText(getYScaleValue(y));
+                Size size = ydraw.measureWText(getYScaleValue(y));
                 leftMargine = Math.Max(leftMargine, size.Width);
             }
             //  横軸の目盛り文字列の最大幅から下側マージンを求める
             for (double x = mArea.X; x <= mArea.X + mArea.Width; x += mStepXsize) {
-                Size size = ydraw.measureText(getXScaleValue(x));
+                Size size = ydraw.measureWText(getXScaleValue(x));
                 bottomMargine = Math.Max(bottomMargine, size.Width);
             }
             leftMargine += righMargine;
@@ -267,16 +267,16 @@ namespace MapApp
             ydraw.setColor(Brushes.Gray);
             for (double y = mArea.Top; y <= mArea.Bottom; y += mStepYsize) {
                 //  補助線
-                ydraw.drawLine(mArea.Left, y, mArea.Right, y);
+                ydraw.drawWLine(new Point(mArea.Left, y), new Point(mArea.Right, y));
                 //  目盛
-                ydraw.drawText(getYScaleValue(y), new Point(mArea.Left, y), 0,
+                ydraw.drawWText(getYScaleValue(y), new Point(mArea.Left, y), 0,
                     HorizontalAlignment.Right, VerticalAlignment.Center);
                 if (y == mArea.Top && y % mStepXsize != 0) {
                     y -= y % mStepYsize;
                 }
             }
             //  縦軸ののタイトル
-            ydraw.drawText(mYTitle[CbGrphYType.SelectedIndex],
+            ydraw.drawWText(mYTitle[CbGrphYType.SelectedIndex],
                 new Point(ydraw.mWorld.Left, mArea.Y + mArea.Height * 0.5),
                 -Math.PI / 2, HorizontalAlignment.Center, VerticalAlignment.Bottom);
 
@@ -285,27 +285,27 @@ namespace MapApp
             double textMargine = Math.Abs(3 / ydraw.world2screenYlength(1));
             for (double x = mArea.Left; x < mArea.Right; x += mStepXsize) {
                 //  指定ステップで補助線表示
-                ydraw.drawLine(x, mArea.Y, x, mArea.Y + mArea.Height);
+                ydraw.drawWLine(new Point(x, mArea.Y), new Point(x, mArea.Y + mArea.Height));
                 //  目盛表示
                 if (x < mArea.Right - mArea.Width * 0.05)
-                    ydraw.drawText(getXScaleValue(x), new Point(x, mArea.Y - textMargine),
+                    ydraw.drawWText(getXScaleValue(x), new Point(x, mArea.Y - textMargine),
                         -Math.PI / 2, HorizontalAlignment.Left, VerticalAlignment.Center);
                 if (x == mArea.Left && x % mStepXsize != 0)
                     x -= x % mStepXsize;
             }
-            ydraw.drawText(getXScaleValue(mArea.Right), 
+            ydraw.drawWText(getXScaleValue(mArea.Right),
                 new Point(mArea.Right, mArea.Y - textMargine),
                 -Math.PI / 2, HorizontalAlignment.Left, VerticalAlignment.Center);
 
             //  横軸タイトル
-            ydraw.drawText(mXTitle[CbGrphXType.SelectedIndex],
+            ydraw.drawWText(mXTitle[CbGrphXType.SelectedIndex],
                 new Point(mArea.X + mArea.Width / 2.0, ydraw.mWorld.Bottom), 0,
                 HorizontalAlignment.Center, VerticalAlignment.Bottom);
 
             //  グラフ枠の表示
             ydraw.setColor(Brushes.Black);
             ydraw.setFillColor(null);
-            ydraw.drawRectangle(mArea.X, mArea.Y + mArea.Height, mArea.Width, mArea.Height, 0);
+            ydraw.drawWRectangle(new Point(mArea.X, mArea.Y + mArea.Height), new Point(mArea.Width, mArea.Height), 0);
         }
 
         /// <summary>
@@ -315,14 +315,11 @@ namespace MapApp
         {
             ydraw.setColor(Brushes.Black);
             ydraw.setThickness(1);
-            double sx = getXvalue(0);
-            double sy = getYvalue(0);
+            Point sp = new Point(getXvalue(0), getYvalue(0));
             for (int i = 1; i < mGpxReader.mListGpsData.Count; i++) {
-                double ex = getXvalue(i);
-                double ey = getYvalue(i);
-                ydraw.drawLine(sx, sy, ex, ey);
-                sx = ex;
-                sy = ey;
+                Point ep = new Point(getXvalue(i), getYvalue(i));
+                ydraw.drawWLine(sp, ep);
+                sp = ep;
             }
         }
 

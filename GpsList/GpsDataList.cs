@@ -280,7 +280,7 @@ namespace MapApp
                 if (area.Width < 10.0 || area.Height < 10) {
                     //  簡易表示
                     //System.Diagnostics.Debug.WriteLine($"GpsFileData: draw: 簡易表示 {mTitle}");
-                    ydraw.drawRectangle(area, 0.0);
+                    ydraw.drawWRectangle(area, 0.0);
                 } else {
                     //  正規表示
                     if (mLocData.Count == 0 || mLocArea.Width == 0.0 || mLocArea.Height == 0.0) {
@@ -298,13 +298,13 @@ namespace MapApp
                         for( ; i < mLocData.Count; i += skipCount) {
                             if (mLocData[i].X != 0 && mLocData[i].Y != 0) {
                                 ep = mapData.coordinates2Screen(mLocData[i]);
-                                ydraw.drawLine(sp, ep);
+                                ydraw.drawWLine(sp, ep);
                                 sp = ep;
                             }
                         }
                         if (i < mLocData.Count - 1) {
                             ep = mapData.coordinates2Screen(mLocData[mLocData.Count - 1]);
-                            ydraw.drawLine(sp, ep);
+                            ydraw.drawWLine(sp, ep);
                         }
                     }
                 }

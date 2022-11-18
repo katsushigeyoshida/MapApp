@@ -122,7 +122,7 @@ namespace MapApp
             ydraw.setTextSize(mSize * mSizeRate * 2);
             Point pos = mapData.baseMap2Screen(mLocation);
             pos.Y += mSize * mSizeRate * 2 - 10 * mSizeRate;
-            ydraw.drawText(mTitle, pos, 0);
+            ydraw.drawWText(mTitle, pos, 0);
         }
 
         /// <summary>
@@ -150,7 +150,7 @@ namespace MapApp
             double sy = -ylib.doubleParse(data[1]) * mSize * mSizeRate + pos.Y;
             double ex =  ylib.doubleParse(data[2]) * mSize * mSizeRate + pos.X;
             double ey = -ylib.doubleParse(data[3]) * mSize * mSizeRate + pos.Y;
-            ydraw.drawLine(sx, sy, ex, ey);
+            ydraw.drawWLine(new Point(sx, sy), new Point(ex, ey));
         }
 
         /// <summary>
@@ -168,7 +168,7 @@ namespace MapApp
             double sy = -ylib.doubleParse(data[1]) * mSize * mSizeRate + pos.Y;
             double ex =  ylib.doubleParse(data[2]) * mSize * mSizeRate + pos.X;
             double ey = -ylib.doubleParse(data[3]) * mSize * mSizeRate + pos.Y;
-            ydraw.drawRectangle(new Point(sx,sy), new Point(ex, ey), 0.0);
+            ydraw.drawWRectangle(new Point(sx,sy), new Point(ex, ey), 0.0);
         }
 
         /// <summary>
@@ -181,14 +181,13 @@ namespace MapApp
         {
             string[] data = getParameter(command);
             Point pos = mapData.baseMap2Screen(mLocation);
-            double sx =  ylib.doubleParse(data[0]) * mSize * mSizeRate + pos.X;
-            double sy = -ylib.doubleParse(data[1]) * mSize * mSizeRate + pos.Y;
+            Point sp = new Point(ylib.doubleParse(data[0]) * mSize * mSizeRate + pos.X,
+                                -ylib.doubleParse(data[1]) * mSize * mSizeRate + pos.Y);
             for (int i = 2; i < data.Length; i += 2) {
-                double ex =  ylib.doubleParse(data[i]) * mSize * mSizeRate + pos.X;
-                double ey = -ylib.doubleParse(data[i+1]) * mSize * mSizeRate + pos.Y;
-                ydraw.drawLine(sx, sy, ex, ey);
-                sx = ex;
-                sy = ey;
+                Point ep = new Point(ylib.doubleParse(data[i]) * mSize * mSizeRate + pos.X,
+                                    -ylib.doubleParse(data[i+1]) * mSize * mSizeRate + pos.Y);
+                ydraw.drawWLine(sp, ep);
+                sp = ep;
             }
         }
 
@@ -208,7 +207,7 @@ namespace MapApp
             double r  =  ylib.doubleParse(data[2]) * mSize * mSizeRate;
             double sa =  ylib.doubleParse(data[3]) * Math.PI / 180;
             double ea =  ylib.doubleParse(data[4]) * Math.PI / 180;
-            ydraw.drawArc(cx, cy, r, sa, ea);
+            ydraw.drawWArc(new Point(cx, cy), r, sa, ea);
         }
 
         /// <summary>

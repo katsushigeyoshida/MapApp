@@ -42,7 +42,10 @@ namespace MapApp
         {
             InitializeComponent();
 
+            mWindowWidth = Width;
+            mWindowHeight = Height;
             WindowFormLoad();                       //  Windowの位置とサイズを復元
+
             mAppFolder = ylib.getAppFolderPath();   //  アプリフォルダ
             mDataFolder = Path.Combine(mAppFolder, "WikiData");
             mUrlListPath = Path.Combine(mAppFolder, "WikiDataUrlList.csv");
@@ -701,7 +704,6 @@ namespace MapApp
                     }
                 }
                 messageBox(buffer, "詳細表示");
-                //MessageBox.Show(buffer, "詳細表示");
             }
         }
 
@@ -719,7 +721,7 @@ namespace MapApp
             mapMark.mLink = wikiData.mUrl;
             mapMark.mComment = wikiData.mComment;
 
-            //  マークデータをダイヤ六表示
+            //  マークデータをダイヤログ表示
             MarkInput markInput = new MarkInput();
             markInput.mMapMark = mapMark;
             markInput.mMarkList = mMarkList;
@@ -769,7 +771,7 @@ namespace MapApp
         private void messageBox(string buf, string title)
         {
             InputBox dlg = new InputBox();
-            //dlg.mMainWindow = this;
+            //dlg.mMainWindow = this;          //  親Windowの中心に表示
             dlg.Title = title;
             dlg.mWindowSizeOutSet = true;
             dlg.mWindowWidth  = 500.0;

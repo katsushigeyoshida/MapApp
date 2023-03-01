@@ -1,5 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -60,7 +60,17 @@ namespace MapApp
         private WikiList mWikiListDialog;                       //  Wikipedia検索ダイヤログ
         private YamaRecoList mYamaRecoList;                     //  YamaRecoの検索ダイヤログ
         private Map3DView mMap3DView;                           //  地図の3次元表示
+        private PhotoList mPhotoList;
         private Task mTaskGpsLoad;                              //  GPSデータリスト読込タスク
+        private ImageView mImageView;                           //  写真データ表示ダイヤログ
+
+        //  マウスの位置
+        private Point mLastMovePoint = new Point(0, 0);
+        private Point mLeftPressPoint = new Point(0, 0);
+        private Point mRightPressPoint = new Point(0, 0);
+        private bool mMapMoveMode = false;
+        public bool mPhotoLoacMode = false;
+        public string mSetPhotLocFile = "";
 
         private YGButton ydraw;
         private YLib ylib;
@@ -165,6 +175,8 @@ namespace MapApp
                 mMap3DView.Close();
             if (mYamaRecoList != null)
                 mYamaRecoList.Close();
+            if (mPhotoList != null)
+                mPhotoList.Close();
 
             WindowFormSave();
         }
@@ -505,11 +517,13 @@ namespace MapApp
         /// <param name="e"></param>
         private void BtWikiList_Click(object sender, RoutedEventArgs e)
         {
-            mWikiListDialog = new WikiList();
-            //mWikiListDialog.Topmost = true;
-            mWikiListDialog.mMarkList = mMapMarkList;
-            mWikiListDialog.mMainWindow = this;
-            mWikiListDialog.Show();
+            if (mWikiListDialog == null || !mWikiListDialog.IsVisible) {
+                mWikiListDialog = new WikiList();
+                //mWikiListDialog.Topmost = true;
+                mWikiListDialog.mMarkList = mMapMarkList;
+                mWikiListDialog.mMainWindow = this;
+                mWikiListDialog.Show();
+            }
         }
 
         /// <summary>
@@ -519,10 +533,12 @@ namespace MapApp
         /// <param name="e"></param>
         private void BtYamaRecoList_Click(object sender, RoutedEventArgs e)
         {
-            mYamaRecoList = new YamaRecoList();
-            mYamaRecoList.mMarkList = mMapMarkList;
-            mYamaRecoList.mMainWindow = this;
-            mYamaRecoList.Show();
+            if (mYamaRecoList == null || !mYamaRecoList.IsVisible) {
+                mYamaRecoList = new YamaRecoList();
+                mYamaRecoList.mMarkList = mMapMarkList;
+                mYamaRecoList.mMainWindow = this;
+                mYamaRecoList.Show();
+            }
         }
 
         /// <summary>
@@ -535,6 +551,21 @@ namespace MapApp
             mMap3DView = new Map3DView();
             mMap3DView.mMapData = mMapData;
             mMap3DView.Show();
+        }
+
+        /// <summary>
+        /// [写真]ボタン
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void BtPhotoList_Click(object sender, RoutedEventArgs e)
+        {
+            if (mPhotoList == null || !mPhotoList.IsVisible) {
+                mPhotoList = new PhotoList();
+                mPhotoList.mMarkList = mMapMarkList;
+                mPhotoList.mMainWindow = this;
+                mPhotoList.Show();
+            }
         }
 
         /// <summary>
@@ -757,8 +788,12 @@ namespace MapApp
                 //  マーク参照
                 MapMark mapMark = mMapMarkList.getMark(mRightPressPoint, mMapData);
                 if (mapMark != null) {
-                    if (0 < mapMark.mLink.Length)
-                       System.Diagnostics.Process.Start(mapMark.mLink);
+                    if (0 < mapMark.mLink.Length) {
+                        if (Path.GetExtension(mapMark.mLink).ToLower().CompareTo(".jpg") == 0)
+                            dispPhotoData(mapMark.mLink);
+                        else
+                            System.Diagnostics.Process.Start(mapMark.mLink);
+                    }
                 }
             } else if (menuItem.Name.CompareTo("DeleteMarkMenu") == 0) {
                 //  マーク削除
@@ -833,12 +868,6 @@ namespace MapApp
             }
         }
 
-        //  マウスの位置
-        private Point mLastMovePoint = new Point(0, 0);
-        private Point mLeftPressPoint = new Point(0, 0);
-        private Point mRightPressPoint = new Point(0, 0);
-        private bool mMapMoveMode = false;
-
         /// <summary>
         /// [マウスの移動]
         /// </summary>
@@ -878,6 +907,12 @@ namespace MapApp
         {
             Point pos = screen2Canvas(e.GetPosition(this));
             //System.Diagnostics.Debug.WriteLine($"LeftButtonDown {pos.X} {pos.Y} {mMapMoveMode}");
+            if (mPhotoLoacMode) {
+                setPhotoLocation(mMapData.screen2BaseMap(ydraw.cnvScreen2World(pos)), mSetPhotLocFile);
+                mPhotoLoacMode = false;
+                mSetPhotLocFile = "";
+                return;
+            }
             if (!mMapMoveMode) {
                 //System.Diagnostics.Debug.WriteLine($"MoveStart {pos.X} {pos.Y}");
                 //  画面移動
@@ -1483,6 +1518,40 @@ namespace MapApp
                 }
             }
             return ydraw.GButtonGetImagePixcel(getId(imp.X, imp.Y), dx, dy);
+        }
+
+        /// <summary>
+        /// イメージファイルをダイヤログ表示
+        /// </summary>
+        /// <param name="path"></param>
+        private void dispPhotoData(string path)
+        {
+            if (mImageView != null) {
+                mImageView.Close();
+            }
+            mImageView = new ImageView();
+            //mImageView.mImageList = Photos.ConvertAll(p => p.path);
+            mImageView.mImagePath = path;
+            mImageView.Show();
+        }
+
+        /// <summary>
+        /// 写真ファイルに座標を設定する
+        /// </summary>
+        /// <param name="bp">BaseMap座標</param>
+        /// <param name="path">写真ファイルパス</param>
+        private void setPhotoLocation(Point bp, string path)
+        {
+            Point cp = MapData.baseMap2Coordinates(bp);
+            if (File.Exists(path)) {
+                ExifInfo exifInfo = new ExifInfo(path);
+                if (exifInfo.setExifGpsCoordinate(cp)) {
+                    exifInfo.save();
+                    MessageBox.Show("座標を設定しました");
+                    return;
+                }
+            }
+            MessageBox.Show("座標を設定できませんでした");
         }
     }
 }

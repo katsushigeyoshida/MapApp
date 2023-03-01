@@ -1,0 +1,51 @@
+﻿<Window x:Class="MapApp.PhotoList"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:MapApp"
+        mc:Ignorable="d"
+        Title="PhotoList" Height="450" Width="300" Closing="Window_Closing" Loaded="Window_Loaded">
+    <Grid>
+        <TextBlock Text="フォルダ" Width="40" Height="20" Margin="0,0,0,0" VerticalAlignment="Top" HorizontalAlignment="Left" />
+        <ComboBox Name="CbPhotoFolder" Height="20" Margin="40,0,0,0" VerticalAlignment="Top" SelectionChanged="CbPhotoFolder_SelectionChanged" MouseDoubleClick="CbPhotoFolder_MouseDoubleClick" >
+            <ComboBox.ContextMenu>
+                <ContextMenu>
+                    <MenuItem Name="CbPhotoFolderAddMenu" Header="追加" Click="CbPhotoFolderMenu_Click" />
+                    <MenuItem Name="CbPhotoFolderDelMenu" Header="削除" Click="CbPhotoFolderMenu_Click" />
+                    <MenuItem Name="CbPhotoFolderOpenMenu" Header="開く" Click="CbPhotoFolderMenu_Click" />
+                    <MenuItem Name="CbPhotoFolderPasteMenu" Header="貼付け" Click="CbPhotoFolderMenu_Click" />
+                </ContextMenu>
+            </ComboBox.ContextMenu>
+        </ComboBox>
+        <ListView Name="LvPhotoList" Margin="0,20,0,20" SelectionMode="Extended" ScrollViewer.HorizontalScrollBarVisibility="Disabled" d:ItemsSource="{d:SampleData ItemCount=5}" MouseDoubleClick="LvPhotoList_MouseDoubleClick" SelectionChanged="LvPhotoList_SelectionChanged" >
+            <ListView.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <WrapPanel/>
+                </ItemsPanelTemplate>
+            </ListView.ItemsPanel>
+            <ListView.ItemTemplate>
+                <DataTemplate>
+                    <Grid Width="80" Height="80">
+                        <TextBlock Text="{Binding title}"></TextBlock>
+                        <Image Width="80" Height="50" Source="{Binding image}" ></Image>
+                    </Grid>
+                </DataTemplate>
+            </ListView.ItemTemplate>
+            <ListView.ContextMenu>
+                <ContextMenu>
+                    <MenuItem Name="LvOpenMenu" Header="開く" Click="MenuItem_Click" />
+                    <MenuItem Name="LvDispMenu" Header="表示" Click="MenuItem_Click" />
+                    <MenuItem Name="LvMarkMenu" Header="マーク登録" Click="MenuItem_Click" />
+                    <MenuItem Name="LvCoordMenu" Header="座標登録" Click="MenuItem_Click" />
+                    <MenuItem Name="LvCoordLocMenu" Header="座標位置指定" Click="MenuItem_Click" />
+                    <MenuItem Name="LvGpsCoordMenu" Header="GPX座標追加" Click="MenuItem_Click" />
+                    <MenuItem Name="LvCommentMenu" Header="コメント登録" Click="MenuItem_Click" />
+                    <MenuItem Name="LvPropertyMenu" Header="属性表示" Click="MenuItem_Click" />
+                </ContextMenu>
+            </ListView.ContextMenu>
+        </ListView>
+        <ProgressBar x:Name="PbLoadPhoto" Width="60" Height="10" Margin="10,0,0,5" VerticalAlignment="Bottom" HorizontalAlignment="Left" />
+        <TextBlock x:Name="TbFolderInfo" Height="15" Margin="75,0,0,5" VerticalAlignment="Bottom" />
+    </Grid>
+</Window>

@@ -72,6 +72,9 @@
     <Compile Include="Map3D\Map3DView.xaml.cs">
       <DependentUpon>Map3DView.xaml</DependentUpon>
     </Compile>
+    <Compile Include="PhotoList\PhotoList.xaml.cs">
+      <DependentUpon>PhotoList.xaml</DependentUpon>
+    </Compile>
     <Compile Include="WikiList\WikiData.cs" />
     <Compile Include="WikiList\WikiDataList.cs" />
     <Compile Include="WikiList\WikiList.xaml.cs">
@@ -132,6 +135,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="MarkList\MarkListDialg.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="PhotoList\PhotoList.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

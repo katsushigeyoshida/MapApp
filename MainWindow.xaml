@@ -122,8 +122,10 @@
                         ToolTip="ヤマレコのデータ参照リスを開く"/>
             </StatusBar>
             <StatusBar HorizontalAlignment="Left" Margin="0,0,10,0">
-                <Button x:Name="BtMap3DView" Content=" ３Ｄ表示 " Click="BtMap3DView_Click"
+                <Button x:Name="BtMap3DView" Content=" ３Ｄ表示 " Width="59" Click="BtMap3DView_Click"
                         ToolTip="表示されている地図領域を3D表示をおこなう"/>
+                <Button x:Name="BtPhotoList" Content="フォト" Width="69" Click="BtPhotoList_Click"
+                        ToolTip="写真の一覧を表示して選択した写真の位置を中心にする"/>
             </StatusBar>
             <TextBlock Text="■地図の説明" Margin="10,0,0,0" />
             <TextBlock x:Name="TbDataId" TextWrapping="Wrap" Margin="5,0,0,0" />

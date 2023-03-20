@@ -1,13 +1,59 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Windows;
 using System.Windows.Media;
 using WpfLib;
 
 namespace MapApp
 {
+    /// <summary>
+    /// グラフ描画用データ
+    /// GPSリストに登録されたGPX,FITファイルデータのグラフ表示
+    /// 縦軸: 標高、標高差、速度
+    /// 横軸: 距離、経過時間、時刻
+    /// 移動平均の散布目数の設定
+    /// </summary>
+    class GpsGraphData
+    {
+        public DateTime mDateTime;      //  測定時間
+        public double mLap;             //  経過時間(s)
+        public Point mCoordinate;       //  座標(経度Longitude(deg),緯度Latitude(deg))
+        public double mElevator;        //  高度(m)
+        public double mDistance;        //  累積距離(km)
+        public double mSpeed;           //  速度(km/s)
+
+        /// <summary>
+        /// コンストラクタ
+        /// </summary>
+        /// <param name="gpsData">GPSデータ</param>
+        public GpsGraphData(GpsData gpsData) {
+            mDateTime = gpsData.mDateTime;
+            mLap = 0;
+            mCoordinate =new Point(gpsData.mLongitude, gpsData.mLatitude);
+            mElevator = gpsData.mElevator;
+            mDistance = 0;
+            mSpeed = 0;
+        }
+
+        /// <summary>
+        /// コンストラクタ
+        /// </summary>
+        /// <param name="gpsData">GPSデータ</param>
+        /// <param name="preData">前回値</param>
+        public GpsGraphData(GpsData gpsData, GpsGraphData preData)
+        {
+            mDateTime = gpsData.mDateTime;
+            double subTime = mDateTime.Subtract(preData.mDateTime).TotalSeconds;
+            mLap = preData.mLap + subTime;
+            mCoordinate = new Point(gpsData.mLongitude, gpsData.mLatitude);
+            mElevator = gpsData.mElevator;
+            double distance = YLib.CoordinateDistance(mCoordinate, preData.mCoordinate);
+            mDistance = preData.mDistance + distance;
+            mSpeed = distance / subTime * 3600;
+        }
+    }
+
     /// <summary>
     /// GpsGraph.xaml の相互作用ロジック
     /// </summary>
@@ -39,12 +85,10 @@ namespace MapApp
             "なし", "2", "3", "4", "5", "7", "10", "15", "20", "25", "30", "40",
             "50", "60", "80", "100", "200", "300", "500", "1000", "2000", "3000"
         };
-        private List<double> mElevetor = new List<double>();    //  標高(m)
-        private List<double> mDistance = new List<double>();    //  累積距離(km)
-        private List<double> mSpeed = new List<double>();       //  速度(km/h)
+        private List<GpsGraphData> mGraphData;
+        enum GRAPHDATATYPE { DateTime, Lap, Coordinate, Elevator, Distance, Speed };
 
         public string mGraphFilePath;
-        private GpxReader mGpxReader;
         private YWorldShapes ydraw;
         private YLib ylib = new YLib();
 
@@ -64,11 +108,6 @@ namespace MapApp
             CbGrphXType.ItemsSource = mGraphXType;
             CbGrphXType.SelectedIndex = 0;
             CbMoveAverage.ItemsSource = mMoveAverageNo;
-            //CbMoveAverage.Items.Clear();
-            //CbMoveAverage.Items.Add("なし");
-            //for (int i = 2; i <= 50; i++) {
-            //    CbMoveAverage.Items.Add(i.ToString());
-            //}
             CbMoveAverage.SelectedIndex = 0;
         }
 
@@ -164,7 +203,7 @@ namespace MapApp
         /// </summary>
         private void drawGraph()
         {
-            if (mGpxReader != null) {
+            if (mGraphData != null) {
                 initGraphArea();
                 setAxis();
                 drawData();
@@ -305,7 +344,7 @@ namespace MapApp
             //  グラフ枠の表示
             ydraw.setColor(Brushes.Black);
             ydraw.setFillColor(null);
-            ydraw.drawWRectangle(new Point(mArea.X, mArea.Y + mArea.Height), new Point(mArea.Width, mArea.Height), 0);
+            ydraw.drawWRectangle(new Point(mArea.Left, mArea.Top), new Point(mArea.Right, mArea.Bottom), 0);
         }
 
         /// <summary>
@@ -316,7 +355,7 @@ namespace MapApp
             ydraw.setColor(Brushes.Black);
             ydraw.setThickness(1);
             Point sp = new Point(getXvalue(0), getYvalue(0));
-            for (int i = 1; i < mGpxReader.mListGpsData.Count; i++) {
+            for (int i = 1; i < mGraphData.Count; i++) {
                 Point ep = new Point(getXvalue(i), getYvalue(i));
                 ydraw.drawWLine(sp, ep);
                 sp = ep;
@@ -329,6 +368,7 @@ namespace MapApp
         private void setGraphArea()
         {
             (double ymin, double ymax) = getMinMaxYvalue();
+            //  縦範囲
             if (CbGrphYType.SelectedIndex == 0) {
                 //  標高
                 mArea.Y = 0;
@@ -340,20 +380,21 @@ namespace MapApp
             } else if (CbGrphYType.SelectedIndex == 2) {
                 //  速度
                 mArea.Y = 0;
-                mArea.Height = ymax - ymin;
+                mArea.Height = ymax;
             }
+            //  横範囲
             if (CbGrphXType.SelectedIndex == 0) {
                 //  距離
-                mArea.X = 0;
-                mArea.Width = mGpxReader.mGpsInfoData.mDistance;
+                mArea.X = mGraphData[0].mDistance;
+                mArea.Width = mGraphData[mGraphData.Count - 1].mDistance - mArea.X;
             } else if (CbGrphXType.SelectedIndex == 1) {
                 //  経過時間(sec)
-                mArea.X = 0;
-                mArea.Width = mGpxReader.mGpsInfoData.mLastTime.Subtract(mGpxReader.mGpsInfoData.mFirstTime).TotalSeconds;
+                mArea.X = mGraphData[0].mLap;
+                mArea.Width = mGraphData[mGraphData.Count - 1].mLap - mArea.X;
             } else if (CbGrphXType.SelectedIndex == 2) {
                 // 時刻(Ticks = 1/10,000,000second)
-                mArea.X = mGpxReader.mGpsInfoData.mFirstTime.Ticks;
-                mArea.Width = mGpxReader.mGpsInfoData.mLastTime.Ticks - mGpxReader.mGpsInfoData.mFirstTime.Ticks;
+                mArea.X = mGraphData[0].mDateTime.Ticks;
+                mArea.Width = mGraphData[mGraphData.Count - 1].mDateTime.Ticks - mArea.X;
             }
         }
 
@@ -369,7 +410,7 @@ namespace MapApp
             } else if (CbGrphYType.SelectedIndex == 1) {    //  標高
                 return y.ToString("#,##0");
             } else if (CbGrphYType.SelectedIndex == 2) {    //  速度
-                return y.ToString("#,##0.#");
+                return y.ToString("#,##0.0");
             } else {
                 return y.ToString();
             }
@@ -402,7 +443,7 @@ namespace MapApp
         {
             double max = double.MinValue;
             double min = double.MaxValue;
-            for (int i = 1; i < mGpxReader.mListGpsData.Count; i++) {
+            for (int i = 1; i < mGraphData.Count; i++) {
                 double v = getYvalue(i);
                 max = Math.Max(max, v);
                 min = Math.Min(min, v);
@@ -422,25 +463,49 @@ namespace MapApp
                 moveAveNo = ylib.intParse(CbMoveAverage.Items[CbMoveAverage.SelectedIndex].ToString());
             if (CbGrphYType.SelectedIndex == 0) {           //  標高(m)
                 if (CbMoveAverage.SelectedIndex == 0) {
-                    return mElevetor[i];
+                    return mGraphData[i].mElevator;
                 } else {
-                    return ylib.movingAverage(mElevetor, i, moveAveNo, true);
+                    return movingAverage(mGraphData, GRAPHDATATYPE.Elevator, i, moveAveNo, true);
                 }
-            } else if (CbGrphYType.SelectedIndex == 1) {    //  標高さ(m)
+            } else if (CbGrphYType.SelectedIndex == 1) {    //  標高差(m)
                 if (CbMoveAverage.SelectedIndex == 0) {
-                    return mElevetor[i];
+                    return mGraphData[i].mElevator;
                 } else {
-                    return ylib.movingAverage(mElevetor, i, moveAveNo, true);
+                    return movingAverage(mGraphData, GRAPHDATATYPE.Elevator, i, moveAveNo, true);
                 }
             } else if (CbGrphYType.SelectedIndex == 2) {    //  速度(km/h)
                 if (CbMoveAverage.SelectedIndex == 0) {
-                    return mSpeed[i];
+                    return mGraphData[i].mSpeed;
                 } else {
-                    return ylib.movingAverage(mSpeed, i, moveAveNo, true);
+                    return movingAverage(mGraphData, GRAPHDATATYPE.Speed, i, moveAveNo, true);
                 }
             } else {
                 return 0;
             }
+        }
+
+        /// <summary>
+        /// 移動平均を求める
+        /// </summary>
+        /// <param name="data">データリスト</param>
+        /// <param name="pos">データ位置</param>
+        /// <param name="nearCount">平均値のデータ数</param>
+        /// <param name="center">移動平均の中心合わせ</param>
+        /// <returns>指定値の平均値</returns>
+        private double movingAverage(List<GpsGraphData> data, GRAPHDATATYPE type, int pos, int nearCount, bool center)
+        {
+            double sum = 0;
+            int count = 0;
+            int startCount = center ? nearCount / 2 : nearCount;
+            for (int i = Math.Max(0, pos - startCount); i < Math.Min(data.Count, pos + startCount); i++) {
+                if (type == GRAPHDATATYPE.Elevator) {
+                    sum += data[i].mElevator;
+                } else if (type == GRAPHDATATYPE.Speed) {
+                    sum += data[i].mSpeed;
+                }
+                count++;
+            }
+            return sum / count;
         }
 
         /// <summary>
@@ -452,11 +517,11 @@ namespace MapApp
         private double getXvalue(int i)
         {
             if (CbGrphXType.SelectedIndex == 0) {           //  距離
-                return mDistance[i];
-            } else if (CbGrphXType.SelectedIndex == 1) {    //  経過時間
-                return mGpxReader.mListGpsData[i].mDateTime.Subtract(mGpxReader.mGpsInfoData.mFirstTime).TotalSeconds;
-            } else if (CbGrphXType.SelectedIndex == 2) {    //  時刻
-                return mGpxReader.mListGpsData[i].mDateTime.Ticks;  //  1000万分の1秒単位
+                return mGraphData[i].mDistance;
+            } else if (CbGrphXType.SelectedIndex == 1) {    //  経過時間(s)
+                return mGraphData[i].mLap;
+            } else if (CbGrphXType.SelectedIndex == 2) {    //  時刻(Ticks)
+                return mGraphData[i].mDateTime.Ticks;       //  1000万分の1秒単位
             } else {
                 return 0;
             }
@@ -469,18 +534,29 @@ namespace MapApp
         private void loadData(string graphFilePath)
         {
             //  ファイルデータの読込
-            mGpxReader = new GpxReader(graphFilePath, GpxReader.DATATYPE.gpxData);
-            mGpxReader.dataChk();
-            //  距離と速度を求める
-            double sumDis = 0;
-            mElevetor.Add(mGpxReader.mListGpsData[0].mElevator);
-            mDistance.Add(sumDis);
-            mSpeed.Add(0);
-            for (int i = 1; i < mGpxReader.mListGpsData.Count; i++) {
-                mElevetor.Add(mGpxReader.mListGpsData[i].mElevator);
-                sumDis += mGpxReader.mListGpsData[i - 1].distance(mGpxReader.mListGpsData[i]);
-                mDistance.Add(sumDis);
-                mSpeed.Add(mGpxReader.mListGpsData[i - 1].speed(mGpxReader.mListGpsData[i]));
+            string ext = Path.GetExtension(graphFilePath);
+            List<GpsData> gpsListData;
+            if (ext.ToLower().CompareTo(".gpx") == 0) {
+                GpxReader gpxReader = new GpxReader(graphFilePath, GpxReader.DATATYPE.gpxData);
+                gpxReader.dataChk();
+                gpsListData = gpxReader.mListGpsData;
+            } else if (ext.ToLower().CompareTo(".fit") == 0) {
+                FitReader fitReader = new FitReader(graphFilePath);
+                fitReader.getDataRecordAll(FitReader.DATATYPE.gpxData);
+                fitReader.dataChk();
+                gpsListData = fitReader.mListGpsData;
+            } else {
+                return;
+            }
+            if (mGraphData == null)
+                mGraphData = new List<GpsGraphData> ();
+
+            if (0 <  gpsListData.Count) {
+                mGraphData.Add(new GpsGraphData(gpsListData[0]));
+                for (int i = 1; i < gpsListData.Count; i++) {
+                    GpsGraphData gpsGraphData = new GpsGraphData(gpsListData[i], mGraphData[i-1]);
+                    mGraphData.Add(gpsGraphData);
+                }
             }
         }
     }

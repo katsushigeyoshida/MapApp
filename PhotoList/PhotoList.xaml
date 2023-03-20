@@ -37,9 +37,9 @@
                     <MenuItem Name="LvOpenMenu" Header="開く" Click="MenuItem_Click" />
                     <MenuItem Name="LvDispMenu" Header="表示" Click="MenuItem_Click" />
                     <MenuItem Name="LvMarkMenu" Header="マーク登録" Click="MenuItem_Click" />
-                    <MenuItem Name="LvCoordMenu" Header="座標登録" Click="MenuItem_Click" />
+                    <MenuItem Name="LvCoordMenu" Header="座標入力" Click="MenuItem_Click" />
                     <MenuItem Name="LvCoordLocMenu" Header="座標位置指定" Click="MenuItem_Click" />
-                    <MenuItem Name="LvGpsCoordMenu" Header="GPX座標追加" Click="MenuItem_Click" />
+                    <MenuItem Name="LvGpsCoordMenu" Header="GPS座標追加" Click="MenuItem_Click" />
                     <MenuItem Name="LvCommentMenu" Header="コメント登録" Click="MenuItem_Click" />
                     <MenuItem Name="LvPropertyMenu" Header="属性表示" Click="MenuItem_Click" />
                 </ContextMenu>

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Windows;
 using WpfLib;
 
@@ -12,6 +13,7 @@ namespace MapApp
     public partial class GpsDataSet : Window
     {
         public GpsFileData mGpsFileData;                //  GpsFileData
+        public GpsInfoData mGpsInfoData;
         public string[] mGroups;                        //  グループリスト
         private string[] mLineThicknes = new string[] { //  トレース線の太さリスト
             "1", "2", "3", "4", "5" };
@@ -52,27 +54,37 @@ namespace MapApp
             }
         }
 
+        /// <summary>
+        /// GPS情報を文字列取り出す
+        /// </summary>
+        /// <returns></returns>
         private string getGpsDataDiscription()
         {
-            string buffer = "";
-            DateTime startTime = mGpsFileData.mFirstTime;
-            DateTime endTime = mGpsFileData.mLastTime;
-            TimeSpan spanTime = endTime - startTime;
-            buffer += "開始時間: " + startTime.ToString("yyyy/MM/dd HH:mm:ss") + " 終了時間: " + endTime.ToString("yyyy/MM/dd HH:mm:ss") +
-                " 経過時間: " + ((spanTime.TotalMinutes < 60.0 * 24.0) ? spanTime.ToString(@"hh\:mm\:ss") : spanTime.ToString(@"d\d\a\y\ hh\:mm\:ss"));
-            buffer += "\n移動距離: " + mGpsFileData.mDistance.ToString("#,##0.## km") + " 速度: " + (mGpsFileData.mDistance / spanTime.TotalHours).ToString("##0.# km/s");
-            buffer += "\n最大標高: " + mGpsFileData.mMaxElevation.ToString("#,##0 m") + " 最小標高: " + mGpsFileData.mMinElevation.ToString("#,##0 m") +
-                " 標高差: " + (mGpsFileData.mMaxElevation - mGpsFileData.mMinElevation).ToString("#,##0 m");
-
-            return buffer;
+            if (mGpsFileData != null)
+                return mGpsFileData.getGpsInfoData().toString();
+            if (mGpsInfoData != null)
+                return mGpsInfoData.toString();
+            return "";
         }
 
+        /// <summary>
+        /// GPSデータファイルから情報を取得
+        /// </summary>
+        /// <param name="path"></param>
         private void setGpsFileData(string path)
         {
-            if (mGpsFileData == null) {
+            string ext = Path.GetExtension(path);
+            if (ext.ToLower().CompareTo(".gpx") == 0) {
                 mGpsFileData = new GpsFileData(path);
+                mGpsInfoData = mGpsFileData.getGpsInfoData();
+            } else if (ext.ToLower().CompareTo(".fit") == 0) {
+                FitReader fitReader = new FitReader(path);
+                int count = fitReader.getDataRecordAll(FitReader.DATATYPE.gpxData);
+                mGpsInfoData = fitReader.getGpsInfoData();
+                mGpsFileData = new GpsFileData();
+                mGpsFileData.setGpsInfoData(mGpsInfoData);
             }
-         }
+        }
 
         private void Window_Closed(object sender, EventArgs e)
         {
@@ -87,7 +99,7 @@ namespace MapApp
         /// <param name="e"></param>
         private void BtOpen_Click(object sender, RoutedEventArgs e)
         {
-            string filePath = ylib.fileSelect("", "gpx");
+            string filePath = ylib.fileSelect("", "gpx,fit");
             if (0 < filePath.Length) {
                 TbFilePath.Text = filePath;
                 if (TbTitle.Text.Length == 0) {

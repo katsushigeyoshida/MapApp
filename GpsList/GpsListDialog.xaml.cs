@@ -22,6 +22,10 @@ namespace MapApp
 
     /// <summary>
     /// GpsListDialog.xaml の相互作用ロジック
+    /// 
+    /// GPX,FITデータファイルのリストを表示し操作する
+    /// 操作: 追加、編集、削除、移動、表示チェックボックスの設定解除
+    /// 
     /// </summary>
     public partial class GpsListDialog : Window
     {

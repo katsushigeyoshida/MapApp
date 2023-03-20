@@ -10,6 +10,9 @@ using WpfLib;
 
 namespace MapApp
 {
+    /// <summary>
+    /// 写真データをリストに登録するためのクラス
+    /// </summary>
     public class Photo
     {
         public string title { get; set; }
@@ -19,6 +22,11 @@ namespace MapApp
 
     /// <summary>
     /// PhotoList.xaml の相互作用ロジック
+    /// 写真データファイルの一覧表示と座標操作
+    /// フォルダ操作: フォルダ選択、追加、削除、開く、貼り付け
+    /// 写真操作: 地図位置表示(ダブルクリック)
+    ///           開く、表示、マーク登録、座標登録、座標位置指定、GPS座標追加、
+    ///           コメント登録、属性表示
     /// </summary>
     public partial class PhotoList : Window
     {
@@ -37,6 +45,7 @@ namespace MapApp
         private string mDataFolderListPath = "PhotoListFolders.csv";
         private string mGpxFolder = "";
         private GpxReader mGpxReader;
+        private FitReader mFitReader;
 
         private YLib ylib = new YLib();
         private ImageView mImageView;
@@ -361,11 +370,18 @@ namespace MapApp
         /// <param name="fileList">ファイルパスリスト</param>
         private void addGpsCoordinate(List<string> fileList)
         {
-            string gpxPath = ylib.fileSelect(mGpxFolder, "gpx");
+            string gpxPath = ylib.fileSelect(mGpxFolder, "gpx,fit");
             if (0 < gpxPath.Length) {
                 mGpxFolder = Path.GetDirectoryName(gpxPath);
-                loadGpxData(gpxPath);
+                loadGpsData(gpxPath);
+                if (mGpxReader == null && mFitReader == null)
+                    return;
                 int count = 0;
+
+                PbLoadPhoto.Minimum = 0;
+                PbLoadPhoto.Maximum = fileList.Count;
+                PbLoadPhoto.Value = 0;
+
                 foreach (string path in fileList) {
                     ExifInfo exifInfo = new ExifInfo(path);
                     string datetime = exifInfo.getDateTime();
@@ -373,28 +389,49 @@ namespace MapApp
                     string[] ta = datetime.Split(sp);
                     datetime = string.Format("{0}/{1}/{2} {3}:{4}:{5}", ta[0], ta[1], ta[2], ta[3], ta[4], ta[5]);
                     DateTime dt = DateTime.Parse(datetime);
-                    Point pos = mGpxReader.getCoordinate(dt);
+                    Point pos;
+                    if (mGpxReader != null) {
+                        pos = mGpxReader.getCoordinate(dt);
+                    } else if (mFitReader != null) {
+                        pos = mFitReader.getCoordinate(dt);
+                    } else {
+                        break;
+                    }
                     if (!pos.isEmpty()) {
                         if (exifInfo.setExifGpsCoordinate(pos)) {
                             exifInfo.save();
                             count++;
                         }
                     }
+                    PbLoadPhoto.Value++;
+                    ylib.DoEvents();
                 }
                 MessageBox.Show($"{count}/{fileList.Count}の座標を設定");
+                PbLoadPhoto.Value = 0;
             }
         }
 
         /// <summary>
-        /// GPXファイルを読み込む
+        /// GPSファイルを読み込む
         /// </summary>
         /// <param name="path"></param>
-        private void loadGpxData(string path)
+        private void loadGpsData(string path)
         {
-            mGpxReader = new GpxReader(path, GpxReader.DATATYPE.gpxData);
-            if (mGpxReader.mListGpsData.Count == 0)
-                return;
-            mGpxReader.dataChk();                                    //  エラーデータチェック
+            string ext = Path.GetExtension(path);
+            if (ext != null && ext.ToLower().CompareTo(".gpx") == 0) {
+                mGpxReader = new GpxReader(path, GpxReader.DATATYPE.gpxData);
+                if (mGpxReader.mListGpsData.Count == 0)
+                    return;
+                mGpxReader.dataChk();                                    //  エラーデータチェック
+                mFitReader = null;
+            } else if (ext != null && ext.ToLower().CompareTo(".fit") == 0) {
+                mFitReader = new FitReader(path);
+                mFitReader.getDataRecordAll(FitReader.DATATYPE.gpxData);
+                if (mFitReader.mListGpsData.Count == 0)
+                    return;
+                mFitReader.dataChk();
+                mGpxReader = null;
+            }
         }
 
         /// <summary>

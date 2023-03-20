@@ -236,16 +236,34 @@ namespace MapApp
         }
 
         /// <summary>
-        /// 指定したGPXファイルを読み込んでトレース座標データと領域を設定する
+        /// 指定したGPSファイルを読み込んでトレース座標データと領域を設定する
         /// </summary>
         /// <param name="path">GPXファイルパス</param>
         public bool setFilePath(string path)
         {
-            mFilePath = path;
-            GpxReader gpsReader = new GpxReader(path, GpxReader.DATATYPE.gpxSimpleData);
-            if (gpsReader.mListGpsPointData.Count == 0)
+            if (!File.Exists(path))
                 return false;
-            gpsReader.dataChk();                                    //  エラーデータチェック
+            mFilePath = path;
+            string ext = Path.GetExtension(path);
+            if (ext.ToLower().CompareTo(".gpx") == 0) {
+                return setGpxFilePath(path);
+            } else if (ext.ToLower().CompareTo(".fit") == 0) {
+                return setFitFilePath(path);
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// GPXファイルを読み込む
+        /// </summary>
+        /// <param name="path"></param>
+        /// <returns></returns>
+        private bool setGpxFilePath(string path)
+        {
+            GpxReader gpsReader = new GpxReader(path, GpxReader.DATATYPE.gpxSimpleData);
+            if (gpsReader.mListGpsPointData == null || gpsReader.mListGpsPointData.Count == 0)
+                return false;
+            gpsReader.dataChk();    //  エラーデータチェック
 
             mLocData = gpsReader.mListGpsPointData;
             mDistance = gpsReader.mGpsInfoData.mDistance;
@@ -258,6 +276,65 @@ namespace MapApp
             Point ep = MapData.coordinates2BaseMap(gpsReader.mGpsInfoData.mArea.BottomRight);
             mLocArea = new Rect(sp, ep);
             return true;
+        }
+
+        /// <summary>
+        /// FITファイルを読み込む
+        /// </summary>
+        /// <param name="path"></param>
+        /// <returns></returns>
+        private bool setFitFilePath(string path)
+        {
+            FitReader fitReader = new FitReader(path);
+            int count = fitReader.getDataRecordAll(FitReader.DATATYPE.gpxData);
+            if (count == 0)
+                return false;
+            fitReader.dataChk();    //  エラーデータチェック
+
+            mLocData = fitReader.mListGpsPointData;
+            mDistance = fitReader.mGpsInfoData.mDistance;
+            mMinElevation = fitReader.mGpsInfoData.mMinElevator;
+            mMaxElevation = fitReader.mGpsInfoData.mMaxElevator;
+            mFirstTime = fitReader.mGpsInfoData.mFirstTime;
+            mLastTime = fitReader.mGpsInfoData.mLastTime;
+            //  データ領域をBaseMapに変換
+            Point sp = MapData.coordinates2BaseMap(fitReader.mGpsInfoData.mArea.TopLeft);
+            Point ep = MapData.coordinates2BaseMap(fitReader.mGpsInfoData.mArea.BottomRight);
+            mLocArea = new Rect(sp, ep);
+            return true;
+        }
+
+        /// <summary>
+        /// GpsInfoData形式で取り出す
+        /// </summary>
+        /// <returns></returns>
+        public GpsInfoData getGpsInfoData()
+        {
+            GpsInfoData gpsInfoData = new GpsInfoData();
+            gpsInfoData.mDistance = mDistance;
+            gpsInfoData.mMinElevator = mMinElevation;
+            gpsInfoData.mMaxElevator = mMaxElevation;
+            gpsInfoData.mFirstTime = mFirstTime;
+            gpsInfoData.mLastTime = mLastTime;
+            Point sp = MapData.baseMap2Coordinates(mLocArea.TopLeft);
+            Point ep = MapData.baseMap2Coordinates(mLocArea.BottomRight);
+            gpsInfoData.mArea = new Rect(sp, ep);
+            return gpsInfoData;
+        }
+
+        /// <summary>
+        /// GpsInfoDataを設定する
+        /// </summary>
+        /// <param name="gpsInfoData"></param>
+        public void setGpsInfoData(GpsInfoData gpsInfoData) {
+            mDistance = gpsInfoData.mDistance;
+            mMinElevation = gpsInfoData.mMinElevator;
+            mMaxElevation = gpsInfoData.mMaxElevator;
+            mFirstTime = gpsInfoData.mFirstTime;
+            mLastTime = gpsInfoData.mLastTime;
+            Point sp = MapData.coordinates2BaseMap(gpsInfoData.mArea.TopLeft);
+            Point ep = MapData.coordinates2BaseMap(gpsInfoData.mArea.BottomRight);
+            mLocArea = new Rect(sp, ep);
         }
 
         /// <summary>

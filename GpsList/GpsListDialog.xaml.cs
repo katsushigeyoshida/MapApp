@@ -46,8 +46,8 @@ namespace MapApp
         {
             InitializeComponent();
 
-            mWindowWidth = this.Width;
-            mWindowHeight = this.Height;
+            mWindowWidth = Width;
+            mWindowHeight = Height;
             mPrevWindowWidth = mWindowWidth;
             mPrevWindowHeight = mWindowHeight;
             WindowFormLoad();       //  Windowの位置とサイズを復元
@@ -70,23 +70,23 @@ namespace MapApp
 
         private void Window_LayoutUpdated(object sender, EventArgs e)
         {
-            if (this.WindowState != mWindowState &&
-                this.WindowState == WindowState.Maximized) {
+            if (WindowState != mWindowState &&
+                WindowState == WindowState.Maximized) {
                 //  ウィンドウの最大化時
                 mWindowWidth = System.Windows.SystemParameters.WorkArea.Width;
                 mWindowHeight = System.Windows.SystemParameters.WorkArea.Height;
-            } else if (this.WindowState != mWindowState ||
-                mWindowWidth != this.Width ||
-                mWindowHeight != this.Height) {
+            } else if (WindowState != mWindowState ||
+                mWindowWidth != Width ||
+                mWindowHeight != Height) {
                 //  ウィンドウサイズが変わった時
-                mWindowWidth = this.Width;
-                mWindowHeight = this.Height;
+                mWindowWidth = Width;
+                mWindowHeight = Height;
             } else {
                 //  ウィンドウサイズが変わらない時は何もしない
-                mWindowState = this.WindowState;
+                mWindowState = WindowState;
                 return;
             }
-            mWindowState = this.WindowState;
+            mWindowState = WindowState;
             //  ウィンドウの大きさに合わせてコントロールの幅を変更する
             double dx = mWindowWidth - mPrevWindowWidth;
             double dy = mWindowHeight - mPrevWindowHeight;
@@ -109,10 +109,10 @@ namespace MapApp
                 Properties.Settings.Default.GpsListWidth = mWindowWidth;
                 Properties.Settings.Default.GpsListHeight = mWindowHeight;
             } else {
-                this.Top = Properties.Settings.Default.GpsListTop;
-                this.Left = Properties.Settings.Default.GpsListLeft;
-                this.Width = Properties.Settings.Default.GpsListWidth;
-                this.Height = Properties.Settings.Default.GpsListHeight;
+                Top = Properties.Settings.Default.GpsListTop;
+                Left = Properties.Settings.Default.GpsListLeft;
+                Width = Properties.Settings.Default.GpsListWidth;
+                Height = Properties.Settings.Default.GpsListHeight;
             }
         }
 
@@ -122,10 +122,10 @@ namespace MapApp
         private void WindowFormSave()
         {
             //  Windowの位置とサイズを保存(登録項目をPropeties.settingsに登録して使用する)
-            Properties.Settings.Default.GpsListTop = this.Top;
-            Properties.Settings.Default.GpsListLeft = this.Left;
-            Properties.Settings.Default.GpsListWidth = this.Width;
-            Properties.Settings.Default.GpsListHeight = this.Height;
+            Properties.Settings.Default.GpsListTop = Top;
+            Properties.Settings.Default.GpsListLeft = Left;
+            Properties.Settings.Default.GpsListWidth = Width;
+            Properties.Settings.Default.GpsListHeight = Height;
             Properties.Settings.Default.Save();
         }
 

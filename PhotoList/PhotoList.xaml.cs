@@ -449,7 +449,9 @@ namespace MapApp
             dlg.mEditText = comment;
             if (dlg.ShowDialog() == true) {
                 if (exifInfo.setUserComment(dlg.mEditText))
-                    exifInfo.save();
+                    if (!exifInfo.save()) {
+                        MessageBox.Show(exifInfo.mErrorMsg);
+                    }
             }
         }
 

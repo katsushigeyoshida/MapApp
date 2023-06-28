@@ -157,8 +157,8 @@ namespace MapApp
             CbResolution.SelectedIndex = Array.IndexOf(mResolutionTitle, mResolution.ToString());
             CbColorPallete.ItemsSource = mColorPallet.Keys.ToList();
             CbColorPallete.SelectedIndex = 0;
-            CbBackColor.ItemsSource = m3Dlib.mColor4Title;
-            CbBackColor.SelectedIndex = Array.IndexOf(m3Dlib.mColor4, mBackColor);
+            CbBackColor.ItemsSource = GL3DLib.mColor4Title;
+            CbBackColor.SelectedIndex = Array.IndexOf(GL3DLib.mColor4, mBackColor);
             CbFrame.IsChecked = mFrameDisp;
         }
 
@@ -625,7 +625,7 @@ namespace MapApp
         private void CbBackColor_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
         {
             if (0 <= CbBackColor.SelectedIndex) {
-                mBackColor = m3Dlib.mColor4[CbBackColor.SelectedIndex];
+                mBackColor = GL3DLib.mColor4[CbBackColor.SelectedIndex];
             }
             if (mMapData != null) {
                 m3Dlib.setBackColor(mBackColor);

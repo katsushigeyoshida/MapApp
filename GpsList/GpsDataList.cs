@@ -149,7 +149,7 @@ namespace MapApp
     {
         private List<Point> mLocData = new List<Point>();   //  座標リスト
         private Rect mLocArea;                  //  トレースエリア(BaseMap)
-        private double mGpsDispRate = 10.0;     //  GPSトレースの間引き割合
+        private double mGpsDispRate = 5.0;     //  GPSトレースの間引き割合
         //public List<GpsData> mGpsDataList;
         public string mTitle = "";              //  タイトル
         public string mGroup = "";              //  グループ

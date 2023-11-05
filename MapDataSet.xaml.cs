@@ -10,7 +10,7 @@ namespace MapApp
     public partial class MapDataSet : Window
     {
         public string[] mDatas = new string[] {  //  地図データ初期値
-            "", "", "", "", "", "", "", "", "" , "", "", "", "", ""
+            "", "", "", "", "", "", "", "", "" , "", "", "", "", "", ""
         };
 
         public MapDataSet()
@@ -41,6 +41,7 @@ namespace MapApp
             TbBaseID.Text = mDatas[11];
             TbTransportColor.Text = mDatas[12];
             CbBaseOrder.IsChecked = mDatas[13].ToLower().CompareTo("true") == 0;
+            TbMapLegendUrl.Text = mDatas[14];
         }
 
         /// <summary>
@@ -74,6 +75,7 @@ namespace MapApp
             mDatas[11] = TbBaseID.Text;
             mDatas[12] = TbTransportColor.Text;
             mDatas[13] = CbBaseOrder.IsChecked.ToString();
+            mDatas[14] = TbMapLegendUrl.Text;
             DialogResult = true;
             Close();
         }

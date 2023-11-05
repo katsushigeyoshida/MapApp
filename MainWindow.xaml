@@ -32,6 +32,7 @@
                       ToolTip="地図のロード状態の設定と表示" />
             <Button x:Name="BtMapsGSI" Content="国土地理院" Click="BtMapsGSI_Click"
                     ToolTip="表示している地図の関連ホームページを開く"/>
+            <Button x:Name="BtMapLegend" Content="凡例" Click="BtMapLegend_Click" />
             <Button x:Name="BtPrevTime" Click="BtPrevTime_Click" ToolTip="予想時間を戻す&#13;範囲外では非表示になる" >
                 <Path Fill="DarkGreen" Margin="3" Width="15" Height="15" Data="M 4,0 L 2,2 L 4,4 Z M 2,0 L 0,2 L2,4 Z" Stretch="Fill" StrokeLineJoin="Round"/>
             </Button>

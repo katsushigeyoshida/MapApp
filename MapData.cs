@@ -53,6 +53,7 @@ namespace MapApp
         public string mExt = "png";                     //  タイル画像の拡張子
         public string mTileOrder = "";                  //  タイルデータの座標順(していない時は{z}/{x}/{y})
         public string mWebHelpUrl = MapInfoData.mHelpUrl;   //  地図データ提供先URL
+        public string mMapLegend = "";                  //  地図の凡例表示
 
         public int mDataId = 0;                         //  地図データの種別
         public int mZoom = 5;                           //  ズームレベル
@@ -127,7 +128,7 @@ namespace MapApp
             mCellSize = mapData.mCellSize;
             mView = new Size(mapData.mView.Width, mapData.mView.Height);
 
-            loadLegendData();
+            loadColorLegendData();
         }
 
 
@@ -300,8 +301,9 @@ namespace MapApp
                 mBaseMap = new MapData(mBaseDataIDName);
             mTransportColors = MapInfoData.getMapOverlapTransparent(mDataId);   //  透過色の設定
             mBaseMapOver = MapInfoData.getMapMergeOverlap(mDataId);
-
-            loadLegendData();                                       //  凡例データ読込
+            mMapLegend = MapInfoData.mMapData[mDataId][14];         //  地図の凡例URL
+            loadColorLegendData();                                  //  凡例データ読込
+            loadMapLegendFile();
         }
 
         /// <summary>
@@ -337,6 +339,7 @@ namespace MapApp
             mapData.mBaseDataIDName = mBaseDataIDName;
             mapData.mTransportColors = mTransportColors;
             mapData.mBaseMapOver = mBaseMapOver;
+            mapData.mMapLegend = mMapLegend;
             return mapData;
         }
 
@@ -1212,10 +1215,11 @@ namespace MapApp
         }
 
         /// <summary>
-        /// 凡例データ読込
+        /// 色凡例データ読込
         /// ファイル名は "legend_" + データID + ".csv"
+        /// 地質図データ: https://gbank.gsj.jp/seamless/v2/api/1.2/legend.csv
         /// </summary>
-        private void loadLegendData()
+        private void loadColorLegendData()
         {
             mColorLegend = null;
             string path = "legend_" + mDataIdName + ".csv";
@@ -1231,6 +1235,35 @@ namespace MapApp
                     }
                 }
             }
+        }
+
+        /// <summary>
+        /// 地図の凡例データのダウンロード
+        /// </summary>
+        /// <returns></returns>
+        private bool loadMapLegendFile()
+        {
+            string downLoadPath = getMapLegenFIleAddress();
+            if (0 < downLoadPath.Length) {
+                if (!File.Exists(downLoadPath)) {
+                    return ylib.webFileDownload(mMapLegend, downLoadPath);
+                }
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// 地図の凡例データのダウロードパス
+        /// </summary>
+        /// <returns></returns>
+        public string getMapLegenFIleAddress()
+        {
+            string downLoadPath = "";
+            if (0 < mMapLegend.Length) {
+                downLoadPath = Path.Combine(mBaseFolder, mDataIdName);
+                downLoadPath = Path.Combine(downLoadPath, Path.GetFileName(mMapLegend));
+            }
+            return downLoadPath;
         }
     }
 }

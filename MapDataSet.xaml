@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:MapApp"
         mc:Ignorable="d"
-        Title="MapDataSet" Height="450" Width="600" Loaded="Window_Loaded">
+        Title="MapDataSet" Height="500" Width="600" Loaded="Window_Loaded">
     <Grid>
         <Label Content="タイトル" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top"/>
         <TextBox x:Name="TbTitle" Height="23" Margin="110,10,20,0" TextWrapping="Wrap"  VerticalAlignment="Top"
@@ -40,14 +40,17 @@
         <TextBox x:Name="TbMapArea" Height="23" Margin="110,190,20,0" TextWrapping="Wrap" VerticalAlignment="Top"
                  ToolTip="表示できる領域または地域"/>
         <Label Content="概要" Margin="10,220,0,0" HorizontalAlignment="Left"  VerticalAlignment="Top"/>
-        <TextBox x:Name="TbDiscription" Margin="110,220,20,125" TextWrapping="Wrap"
+        <TextBox x:Name="TbDiscription" Margin="110,220,20,175" TextWrapping="Wrap"
                  ToolTip="地図についての簡単な説明"/>
-        <Label Content="参照先名" Margin="10,0,0,93" Height="26" HorizontalAlignment="Left" VerticalAlignment="Bottom"/>
-        <TextBox x:Name="TbRefTitle" Margin="110,0,20,96" TextWrapping="Wrap" Height="23" VerticalAlignment="Bottom"
+        <Label Content="参照先名" Margin="10,0,0,143" Height="26" HorizontalAlignment="Left" VerticalAlignment="Bottom"/>
+        <TextBox x:Name="TbRefTitle" Margin="110,0,20,146" TextWrapping="Wrap" Height="23" VerticalAlignment="Bottom"
                  ToolTip="参照先ボタンのタイトル名(省略時は国土地理院となる)" />
-        <Label Content="参照先Webアドレス" Margin="5,0,0,63" Height="26" HorizontalAlignment="Left" VerticalAlignment="Bottom" />
-        <TextBox x:Name="TbWebAddress" Margin="110,0,20,66" TextWrapping="Wrap"
+        <Label Content="参照先Webアドレス" Margin="5,0,0,113" Height="26" HorizontalAlignment="Left" VerticalAlignment="Bottom" />
+        <TextBox x:Name="TbWebAddress" Margin="110,0,20,116" TextWrapping="Wrap"
                  ToolTip="地図データの参照URL(省略時は国土地理院地図のURL)" Height="23" VerticalAlignment="Bottom" />
+        <Label Content="凡例URL/File" Margin="5,0,0,83" Height="26" HorizontalAlignment="Left" VerticalAlignment="Bottom" />
+        <TextBox x:Name="TbMapLegendUrl" Margin="110,0,20,86" TextWrapping="Wrap"
+                 ToolTip="地図の凡例URLまたはFileアドレス" Height="23" VerticalAlignment="Bottom" />
         <Button x:Name="BtOK" Content="OK" Margin="0,0,120,20" HorizontalAlignment="Right" Width="75" Height="20" VerticalAlignment="Bottom" Click="BtOK_Click"/>
         <Button x:Name="BtCancel" Content="Cancel" Margin="0,0,30,20" HorizontalAlignment="Right" Width="75" Height="20" VerticalAlignment="Bottom" Click="BtCancel_Click"/>
     </Grid>

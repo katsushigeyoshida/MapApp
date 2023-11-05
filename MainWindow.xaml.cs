@@ -586,6 +586,24 @@ namespace MapApp
         }
 
         /// <summary>
+        /// [凡例]ボタン
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void BtMapLegend_Click(object sender, RoutedEventArgs e)
+        {
+            Button bt = (Button)e.Source;
+            if (0 < MapInfoData.mMapData[mMapData.mDataId][14].Length) {
+                if (File.Exists(mMapData.getMapLegenFIleAddress())) {
+                    ylib.openUrl(mMapData.getMapLegenFIleAddress());
+                } else {
+                    System.Diagnostics.Process p =
+                        System.Diagnostics.Process.Start(mMapData.mMapLegend);
+                }
+            }
+        }
+
+        /// <summary>
         /// [■]ボタン 気象庁の天気図予報を現在時間設定
         /// </summary>
         /// <param name="sender"></param>
@@ -1133,6 +1151,7 @@ namespace MapApp
                 drawMap(mMapData);
             mapDiscription();
             timeButtonSet();
+            mapLegendButtonSet();
         }
 
         /// <summary>
@@ -1151,6 +1170,17 @@ namespace MapApp
                 BtNextTime.Visibility = Visibility.Hidden;
                 CbAddTime.Visibility = Visibility.Hidden;
             }
+        }
+
+        /// <summary>
+        /// 地図の凡例ボタンの表示/非表示設定
+        /// </summary>
+        private void mapLegendButtonSet()
+        {
+            if (0 < mMapData.mMapLegend.Length)
+                BtMapLegend.Visibility = Visibility.Visible;
+            else
+                BtMapLegend.Visibility = Visibility.Collapsed;
         }
 
         /// <summary>

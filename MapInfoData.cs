@@ -1,5 +1,4 @@
-﻿using OpenTK.Audio.OpenAL;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using WpfLib;
@@ -25,7 +24,7 @@ namespace MapApp
         public static string[] mMapDataFormat = {
             "タイトル", "データＩＤ", "ファイル拡張子", "タイル名", "有効ズームレベル",
             "整備範囲", "概要", "地図データURL", "地図データ提供先名", "地図データ提供先URL",
-            "標高データID","BaseMapID", "透過色", "BaseMap上位"
+            "標高データID","BaseMapID", "透過色", "BaseMap上位", "地図の凡例"
         };
 
         //  標高データ(https://maps.gsi.go.jp/development/ichiran.html#dem)
@@ -113,6 +112,7 @@ namespace MapApp
                 "",                             //  [11]BaseMapID(重ね合わせ時のBASE地図ID)
                 "",                             //  [12]重ねるデータの透過色
                 "",                             //  [13]BaseMapが上の場合 (true)
+                "https://cyberjapandata.gsi.go.jp/legend/std_25000_legend.pdf", //  [14]凡例((18:std_2500_legend,17-15:std_25000_legend,14-12:std_200000_legend,11-9:std1000000_legend,8-5:5000000-legend)
             },
             new string[] {
                 "淡色地図",
@@ -129,6 +129,7 @@ namespace MapApp
                 "",                             //  [11]BaseMapID(重ね合わせ時のBASE地図ID)
                 "",                             //  [12]重ねるデータの透過色
                 "",                             //  [13]BaseMapが上の場合 (true)
+                "https://cyberjapandata.gsi.go.jp/legend/pale_25000_legend.pdf",    //  [14]凡例(18:pale_2500_legend,17-15:pale_25000_legend,14-12:pale_200000_legend,11-9:pale_1000000_legend,8-5:pale_5000000_legend)
             },
             new string[] {
                 "数値地図25000",
@@ -147,6 +148,7 @@ namespace MapApp
                 "",                             //  [11]BaseMapID(重ね合わせ時のBASE地図ID)
                 "",                             //  [12]重ねるデータの透過色
                 "",                             //  [13]BaseMapが上の場合 (true)
+                "https://cyberjapandata.gsi.go.jp/legend/lcm25k_2012/lc_legend.pdf",    //  [14]凡例
             },
             new string[] {
                 "沿岸海域土地条件図",
@@ -163,6 +165,7 @@ namespace MapApp
                 "",                             //  [11]BaseMapID(重ね合わせ時のBASE地図ID)
                 "",                             //  [12]重ねるデータの透過色
                 "",                             //  [13]BaseMapが上の場合 (true)
+                "https://cyberjapandata.gsi.go.jp/legend/CCM2_hanrei.pdf", //  [14]凡例
             },
             new string[] {
                 "火山基本図",
@@ -182,6 +185,7 @@ namespace MapApp
                 "",                             //  [11]BaseMapID(重ね合わせ時のBASE地図ID)
                 "",                             //  [12]重ねるデータの透過色
                 "",                             //  [13]BaseMapが上の場合 (true)
+                "", //  [14]凡例
             },
             new string[] {
                 "火山土地条件図",
@@ -204,6 +208,7 @@ namespace MapApp
                 "",                             //  [11]BaseMapID(重ね合わせ時のBASE地図ID)
                 "",                             //  [12]重ねるデータの透過色
                 "",                             //  [13]BaseMapが上の場合 (true)
+                "", //  [14]凡例
             },
             new string[] {
                 "白地図",
@@ -220,6 +225,7 @@ namespace MapApp
                 "",                             //  [11]BaseMapID(重ね合わせ時のBASE地図ID)
                 "",                             //  [12]重ねるデータの透過色
                 "",                             //  [13]BaseMapが上の場合 (true)
+                "", //  [14]凡例
             },
             new string[] {
                 "湖沼図",
@@ -236,6 +242,7 @@ namespace MapApp
                 "",                             //  [11]BaseMapID(重ね合わせ時のBASE地図ID)
                 "",                             //  [12]重ねるデータの透過色
                 "",                             //  [13]BaseMapが上の場合 (true)
+                "https://cyberjapandata.gsi.go.jp/legend/LAKE_beforeH2.png", //  [14]凡例
             },
             new string[] {
                 "湖沼図データ",
@@ -252,6 +259,7 @@ namespace MapApp
                 "",                             //  [11]BaseMapID(重ね合わせ時のBASE地図ID)
                 "",                             //  [12]重ねるデータの透過色
                 "",                             //  [13]BaseMapが上の場合 (true)
+                "https://cyberjapandata.gsi.go.jp/legend/lakedata.pdf", //  [14]凡例
             },
             new string[] {
                 "航空写真(全国最新撮影)",
@@ -286,6 +294,7 @@ namespace MapApp
                 "",                             //  [11]BaseMapID(重ね合わせ時のBASE地図ID)
                 "",                             //  [12]重ねるデータの透過色
                 "",                             //  [13]BaseMapが上の場合 (true)
+                "", //  [14]凡例
             },
             new string[] {
                 "活断層図(都市圏活断層図)",
@@ -302,6 +311,7 @@ namespace MapApp
                 "",                             //  [11]BaseMapID(重ね合わせ時のBASE地図ID)
                 "",                             //  [12]重ねるデータの透過色
                 "",                             //  [13]BaseMapが上の場合 (true)
+                "https://www.gsi.go.jp/common/000084060.pdf", //  [14]凡例
             },
             new string[] {
                "宅地利用動向調査成果",
@@ -321,6 +331,7 @@ namespace MapApp
                 "",                             //  [11]BaseMapID(重ね合わせ時のBASE地図ID)
                 "",                             //  [12]重ねるデータの透過色
                 "",                             //  [13]BaseMapが上の場合 (true)
+                "https://cyberjapandata.gsi.go.jp/legend/takuchi_hanrei.png", //  [14]凡例
             },
             new string[] {
                 "全国植生指標データ",
@@ -338,6 +349,7 @@ namespace MapApp
                 "",                             //  [11]BaseMapID(重ね合わせ時のBASE地図ID)
                 "",                             //  [12]重ねるデータの透過色
                 "",                             //  [13]BaseMapが上の場合 (true)
+                "", //  [14]凡例
             },
             new string[] {
                 "磁気図(2020.0年値)",           //  [0]タイトル
@@ -354,6 +366,7 @@ namespace MapApp
                 "",                             //  [11]BaseMapID(重ね合わせ時のBASE地図ID)
                 "",                             //  [12]重ねるデータの透過色
                 "",                             //  [13]BaseMapが上の場合 (true)
+                "", //  [14]凡例
             },
             new string[] {
                 //  OSM Wiki Tiles https://wiki.openstreetmap.org/wiki/Tiles
@@ -372,6 +385,7 @@ namespace MapApp
                 "",                             //  [11]BaseMapID(重ね合わせ時のBASE地図ID)
                 "",                             //  [12]重ねるデータの透過色
                 "",                             //  [13]BaseMapが上の場合 (true)
+                "", //  [14]凡例
             },
             new string[] {
                 //  Web API  https://gbank.gsj.jp/seamless/v2/api/1.2.1/
@@ -390,6 +404,7 @@ namespace MapApp
                 "std",                          //  [11]BaseMapID(重ね合わせ時のBASE地図ID)
                 "FFFFFF",                       //  [12]重ねるデータの透過色
                 "",                             //  [13]BaseMapが上の場合 (true)
+                "", //  [14]凡例
             },
         };
 

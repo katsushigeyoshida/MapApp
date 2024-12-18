@@ -293,9 +293,7 @@ namespace MapApp
             mDataIdName = MapInfoData.mMapData[mDataId][1];         //  データID
             mExt = MapInfoData.mMapData[mDataId][2];                //  データファイルの拡張子
             mTileOrder = MapInfoData.mMapData[mDataId][8];          //  {z}/{x}/{y}以外のタイル座標順 → ヘルプ参照先URL
-            //mElevatorDataNo = getElevatorDataNo(MapInfoData.mMapData[mDataId][10]); //
-            mElevatorDataNo = MapInfoData.getElevatorDataNo(MapInfoData.getMapDataId(mDataId));
-                                                                                    //  
+            mElevatorDataNo = MapInfoData.getElevatorDataNo(MapInfoData.getMapElevatorDataId(mDataId)); //  標高データNo
             mBaseDataIDName = MapInfoData.mMapData[mDataId][11];    //  重ね合わせのベースマップID
             if (0 <= mBaseDataIDName.Length && mDataIdName.CompareTo(mBaseDataIDName) != 0)
                 mBaseMap = new MapData(mBaseDataIDName);

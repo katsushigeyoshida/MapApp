@@ -461,6 +461,17 @@ namespace MapApp
         }
 
         /// <summary>
+        /// 地図データの標高データIDを求める
+        /// </summary>
+        /// <param name="dataId">標高ID</param>
+        /// <returns></returns>
+        public static string getMapElevatorDataId(int dataId = -1)
+        {
+            dataId = (dataId < 0) ? mDataId : dataId;
+            return mMapData[dataId][10];
+        }
+
+        /// <summary>
         /// 地図データの重ね合わせ地図データのデータIDを求める
         /// </summary>
         /// <returns>データID</returns>

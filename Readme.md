@@ -8,6 +8,7 @@
 
 使い方などは[説明書](Document/MapAppManual.pdf)を参照。  
 実行方法は[MapApp.zip](MapApp.zip)をダウンロードし適当なフォルダーに展開してMapApp.exeを実行する。  
+<img src="Image/download.png" width="100%">
 
 #### ■おもな機能
 

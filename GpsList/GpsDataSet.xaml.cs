@@ -34,6 +34,7 @@ namespace MapApp
             CbColorType.SelectedIndex = 7;
             CbThickness.ItemsSource = mLineThicknes;
             CbThickness.SelectedIndex = 0;
+            BtGpxConv.Visibility = Visibility.Hidden;
         }
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
@@ -51,6 +52,9 @@ namespace MapApp
                 TbFilePath.Text = mGpsFileData.mFilePath;
                 TbComment.Text = mGpsFileData.mComment;
                 LbDiscription.Content = getGpsDataDiscription();
+                if (Path.GetExtension(mGpsFileData.mFilePath).ToLower() == ".fit") {
+                    BtGpxConv.Visibility = Visibility.Visible;
+                }
             }
         }
 
@@ -107,7 +111,11 @@ namespace MapApp
                     setGpsFileData(filePath);
                     LbDiscription.Content = getGpsDataDiscription();
                 }
-
+                if (Path.GetExtension(filePath).ToLower() == ".fit") {
+                    BtGpxConv.Visibility = Visibility.Visible;
+                } else {
+                    BtGpxConv.Visibility = Visibility.Hidden;
+                }
             }
         }
 
@@ -139,6 +147,44 @@ namespace MapApp
         {
             DialogResult = false;
             Close();
+        }
+
+        /// <summary>
+        /// FIT→GPX変換ボタン
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void BtGpxConv_Click(object sender, RoutedEventArgs e)
+        {
+            string fitPath = TbFilePath.Text;
+            if (Path.GetExtension(fitPath).ToLower() == ".fit") {
+                string ext = Path.GetExtension(fitPath);
+                string gpxPath = fitPath.Replace(ext, ".gpx");
+                if (File.Exists(gpxPath)) {
+                    if (MessageBox.Show(gpxPath + "\n上書きしてもいいですか", "確認", 
+                        MessageBoxButton.OKCancel) == MessageBoxResult.Cancel)
+                        return;
+                }
+                convGpx(fitPath, gpxPath);
+                MessageBox.Show("GPX変換終了\n" + gpxPath);
+            }
+        }
+
+        /// <summary>
+        /// FitのGPSデータをGPXファイルに変換
+        /// </summary>
+        /// <param name="fitPath">Fitファイルパス</param>
+        /// <param name="gpxPath">GPXファイルパス</param>
+        /// <returns>可否</returns>
+        private bool convGpx(string fitPath, string gpxPath)
+        {
+            FitReader fitReader = new FitReader(fitPath);
+            int count = fitReader.getDataRecordAll(FitReader.DATATYPE.gpxData);
+            if (count == 0)
+                return false;
+            fitReader.dataChk();    //  エラーデータチェック
+            GpxWriter gpxWriter = new GpxWriter(fitReader.mListGpsData, gpxPath);
+            return gpxWriter.writeDataAll();
         }
     }
 }

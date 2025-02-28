@@ -20,6 +20,7 @@
         <Button x:Name="BtOpen" Content="開く" Margin="0,151,20,0" VerticalAlignment="Top" HorizontalAlignment="Right" Width="50" Click="BtOpen_Click" />
         <Label Content="コメント" Margin="10,200,0,0"  HorizontalAlignment="Left" VerticalAlignment="Top"/>
         <TextBox x:Name="TbComment" Height="50" Margin="80,200,20,0" TextWrapping="Wrap"  VerticalAlignment="Top" />
+        <Button x:Name="BtGpxConv" Content="GPX変換" Margin="0,0,180,15" Width="60" Height="20" HorizontalAlignment="Right" VerticalAlignment="Bottom" Click="BtGpxConv_Click" />
         <Button x:Name="BtOk" Content="OK" Margin="0,0,100,15" Width="60" Height="20" HorizontalAlignment="Right" VerticalAlignment="Bottom" Click="BtOk_Click"/>
         <Button x:Name="BtCancel" Content="Cancel" Margin="0,0,20,15" Width="60" Height="20" HorizontalAlignment="Right" VerticalAlignment="Bottom" Click="BtCancel_Click"/>
         <Label Name="LbDiscription" Content="詳細" Margin="10,260,20,45"/>

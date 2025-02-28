@@ -273,9 +273,10 @@ namespace MapApp
                     editCoordinate(Photos[index].path);
                 } else if (menuItem.Name.CompareTo("LvCoordLocMenu") == 0) {
                     //  座標位置指定
-                    mMainWindow.mSetPhotLocFile = Photos[index].path;
-                    mMainWindow.mPhotoLoacMode = true;
-                    MessageBox.Show("位置をマウスで指定してください", "座標登録");
+                    if (MessageBox.Show("位置をマウスで指定してください", "座標登録", MessageBoxButton.OKCancel) == MessageBoxResult.OK) {
+                        mMainWindow.mSetPhotLocFile = Photos[index].path;
+                        mMainWindow.mPhotoLoacMode = true;
+                    }
                 } else if (menuItem.Name.CompareTo("LvGpsCoordMenu") == 0) {
                     //  GPS座標追加
                     addGpsCoordinate(fileList);

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Windows;
 using System.Windows.Controls;
 using WpfLib;
@@ -220,10 +221,14 @@ namespace MapApp
                 //  標高などのグラフ表示
                 CheckBoxListItem item = (CheckBoxListItem)LbGpsList.Items[index];
                 GpsFileData gpsFileData = mGpsDataList.findDataTitle(item.Text, group);
-                mGpsGraph = new GpsGraph();
-                mGpsGraph.mGraphFilePath = gpsFileData.mFilePath;
-                mGpsGraph.Show();
-                return;
+                if (File.Exists(gpsFileData.mFilePath)) {
+                    mGpsGraph = new GpsGraph();
+                    mGpsGraph.mGraphFilePath = gpsFileData.mFilePath;
+                    mGpsGraph.Show();
+                    return;
+                } else {
+                    MessageBox.Show("GPSファイルが゜存在しません");
+                }
             } else if (0 <= index && menuItem.Name.CompareTo("LbGpsListMenuAllCheck") == 0) {
                 //  すべてにチェックを入れる
                 visibleDataAllSet(true);

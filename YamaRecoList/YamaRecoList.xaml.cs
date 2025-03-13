@@ -30,11 +30,15 @@ namespace MapApp
         private bool mGenreChangeEnabled = true;                    //  山の分類コンボボックス有効フラグ
         private enum DOWNLOADMODE { normal, select };               //  通常,詳細(周辺情報)
         private DOWNLOADMODE mDownloadMode = DOWNLOADMODE.normal;   //  ダウンロード方法
-        private enum GENREMODE { yamadata, route, guide };          //  データの種別(山データ/登山ルート/おすすめルート)
+        private enum GENREMODE { yamadata, route, guide, yamalist };//  データの種別(山データ/登山ルート/おすすめルート)
         private GENREMODE mGenreMode = GENREMODE.yamadata;          //  データの種別
-        private string[] mGenreTitle = { "山データ", "登山ルート", "おすすめルート" };//  データ種別のタイトル
+        private string mSplitWord = " : ";                          //  分類データの分轄ワード
+        private string[] mGenreTitle = {                            //  データ種別のタイトル
+            "山データ", "登山ルート", "おすすめルート", "山リスト"
+        };
         private string[] mGenreUrlWord = {                          //  ジャンルに対応するURL_ID
-            "ptinfo.php?ptid=", "rtinfo.php?rtid=", "guide_detail.php?route_id="
+            "ptinfo.php?ptid=", "rtinfo.php?rtid=",
+            "guide_detail.php?route_id=", "ptlist.php?groupid=",
         };
         private string mYamaBaseUrl = "https://www.yamareco.com/modules/yamainfo/";
 
@@ -51,6 +55,7 @@ namespace MapApp
         private YamaRecoData mYamaData = new YamaRecoData();
         private YamaRouteData mRouteData = new YamaRouteData();
         private GuideRouteData mGuideRouteData = new GuideRouteData();
+        private YamaListData mYamaListData = new YamaListData();
 
         private YLib ylib = new YLib();
 
@@ -69,6 +74,7 @@ namespace MapApp
             mYamaData.loadData();
             mRouteData.loadData();
             mGuideRouteData.loadData();
+            mYamaListData.loadData();
             setDataList();
         }
 
@@ -85,6 +91,8 @@ namespace MapApp
                 mRouteData.saveData();
             if (mGuideRouteData != null)
                 mGuideRouteData.saveData();
+            if (mYamaListData != null)
+                mYamaListData.saveData();
 
             WindowFormSave();       //  ウィンドの位置と大きさを保存
         }
@@ -173,7 +181,7 @@ namespace MapApp
             Button bt = (Button)e.Source;
             if (bt.Content.ToString().CompareTo(mGetDataButtonLabel[0]) == 0) {
                 //  データ取得
-                int sp = ylib.intParse(TbDataStart.Text);
+                int sp = Math.Max(1, ylib.intParse(TbDataStart.Text));
                 int ep = ylib.intParse(TbDataEnd.Text);
                 if (0 < sp && sp <= ep) {
                     mDownloadMode = DOWNLOADMODE.normal;
@@ -227,12 +235,24 @@ namespace MapApp
         /// <param name="e"></param>
         private void BtSearch_Click(object sender, RoutedEventArgs e)
         {
-            string category = CbCategory.SelectedIndex <= 0 ? "" : CbCategory.Items[CbCategory.SelectedIndex].ToString();
-            List<string[]> listData = mGenreMode == GENREMODE.yamadata ?
-                                mYamaData.getFilterongDataLsit(category, TbSearchWord.Text) :
-                            (mGenreMode == GENREMODE.route ?
-                                mRouteData.getFilterongDataList(category, TbSearchWord.Text) :
-                                mGuideRouteData.getFilterongDataList(category, TbSearchWord.Text));
+            string category = CbCategory.SelectedIndex <= 0 ? "山の分類" : CbCategory.Items[CbCategory.SelectedIndex].ToString();
+            string detail = CbDetail.SelectedIndex <= 0 ? "山の種別" : CbDetail.Items[CbDetail.SelectedIndex].ToString();
+            List<string[]> listData;
+            switch (mGenreMode) {
+                case GENREMODE.yamadata:
+                    listData = mYamaData.getFilterongDataLsit(category, detail, TbSearchWord.Text);
+                    break;
+                case GENREMODE.route:
+                    listData = mRouteData.getFilterongDataList(category, TbSearchWord.Text);
+                    break;
+                case GENREMODE.guide:
+                    listData = mGuideRouteData.getFilterongDataList(category, TbSearchWord.Text);
+                    break;
+                case GENREMODE.yamalist:
+                    listData = mYamaListData.getFilterongDataList(category, TbSearchWord.Text);
+                    break;
+                default: return;
+            }
             setData(listData, mDispCol, mDetailCol);
         }
 
@@ -264,6 +284,9 @@ namespace MapApp
                 } else if (CbGenre.SelectedIndex == 2) {
                     mGenreMode = GENREMODE.guide;
                     setDataList();
+                } else if (CbGenre.SelectedIndex == 3) {
+                    mGenreMode = GENREMODE.yamalist;
+                    setDataList();
                 }
             }
             mGenreChangeEnabled = true;
@@ -278,7 +301,23 @@ namespace MapApp
         {
             if (0 <= CbCategory.SelectedIndex && mGenreMode == GENREMODE.yamadata) {
                 List<string[]> listData = mYamaData.getFilterongDataLsit(
-                    CbCategory.SelectedIndex <= 0 ? "" : CbCategory.Items[CbCategory.SelectedIndex].ToString());
+                    CbCategory.SelectedIndex <= 0 ? "山の分類" : CbCategory.Items[CbCategory.SelectedIndex].ToString(),
+                    CbDetail.SelectedIndex <= 0 ? "山の種別" : CbDetail.Items[CbDetail.SelectedIndex].ToString());
+                setData(listData, mDispCol, mDetailCol);
+            }
+        }
+
+        /// <summary>
+        /// [山の種別]コンボボックス選択
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void CbDetail_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (0 <= CbDetail.SelectedIndex && mGenreMode == GENREMODE.yamadata) {
+                List<string[]> listData = mYamaData.getFilterongDataLsit(
+                    CbCategory.SelectedIndex <= 0 ? "山の分類" : CbCategory.Items[CbCategory.SelectedIndex].ToString(),
+                    CbDetail.SelectedIndex <= 0 ? "山の種別" : CbDetail.Items[CbDetail.SelectedIndex].ToString());
                 setData(listData, mDispCol, mDetailCol);
             }
         }
@@ -291,9 +330,15 @@ namespace MapApp
         private void DgDataList_MouseDoubleClick(object sender, System.Windows.Input.MouseButtonEventArgs e)
         {
             //  地図を座標値に移動
-            if (0 <= DgDataList.SelectedIndex && mGenreMode == GENREMODE.yamadata) {
-                string coordinate = ((string[])DgDataList.Items[DgDataList.SelectedIndex])[titleNo("座標")];
-                mMainWindow.setMoveCtrCoordinate(ylib.cnvCoordinate(coordinate));
+            if (0 <= DgDataList.SelectedIndex) {
+                if (mGenreMode == GENREMODE.yamadata) {
+                    string coordinate = ((string[])DgDataList.Items[DgDataList.SelectedIndex])[titleNo("座標")];
+                    mMainWindow.setMoveCtrCoordinate(ylib.cnvCoordinate(coordinate));
+                } else if (mGenreMode == GENREMODE.yamalist) {
+                    int col = findListHeaderCol("URL");
+                    string url = ((string[])DgDataList.Items[DgDataList.SelectedIndex])[col];
+                    setDetailData(url);
+                }
             }
         }
 
@@ -317,10 +362,8 @@ namespace MapApp
                 mMainWindow.setMoveCtrCoordinate(ylib.cnvCoordinate(coordinate));
             } else if (menuItem.Name.CompareTo("DgDispMenu") == 0) {
                 //  詳細表示
-                (string buf, string title) = mGenreMode == GENREMODE.yamadata ? mYamaData.detailDisp(url) : 
-                    (mGenreMode == GENREMODE.route ? mRouteData.detaiilDisp(url) : mGuideRouteData.detaiilDisp(url));
+                (string buf, string title) = detailDisp(url);
                 messageBox(buf, title);
-
             } else if (menuItem.Name.CompareTo("DgOpenMenu") == 0) {
                 //  開く
                 ylib.openUrl(url);
@@ -336,6 +379,9 @@ namespace MapApp
             } else if (menuItem.Name.CompareTo("DgGuideMenu") == 0) {
                 //  おすすめルート
                 setGuideData(url);
+            } else if (menuItem.Name.CompareTo("DgYamaListMenu") == 0) {
+                //  山リスト抽出
+                setYamaListData(url);
             } else if (menuItem.Name.CompareTo("DgRemoveMenu") == 0) {
                 //  削除
                 int urlNo = titleNo("URL");
@@ -347,6 +393,22 @@ namespace MapApp
                     }
                     setYamaRecoData();
                 }
+            }
+        }
+
+        /// <summary>
+        /// 詳細データの取得
+        /// </summary>
+        /// <param name="url"></param>
+        /// <returns></returns>
+        public (string, string) detailDisp(string url)
+        {
+            switch (mGenreMode) {
+                case GENREMODE.yamadata: return mYamaData.detailDisp(url);
+                case GENREMODE.route: return mRouteData.detaiilDisp(url);
+                case GENREMODE.guide: return mGuideRouteData.detaiilDisp(url);
+                case GENREMODE.yamalist: return mYamaListData.detaiilDisp(url);
+                default: return ("", "");
             }
         }
 
@@ -424,7 +486,8 @@ namespace MapApp
             if (mGenreMode == GENREMODE.yamadata) {
                 //  山の分類フィルタ
                 listData = mYamaData.getFilterongDataLsit(
-                    CbCategory.SelectedIndex <= 0 ? "" : CbCategory.Items[CbCategory.SelectedIndex].ToString(),
+                    CbCategory.SelectedIndex <= 0 ? "山の分類" : CbCategory.Items[CbCategory.SelectedIndex].ToString(),
+                    CbDetail.SelectedIndex <= 0 ? "山の種別" : CbDetail.Items[CbDetail.SelectedIndex].ToString(),
                     TbSearchWord.Text);
             } else {
                 listData = mDataList;
@@ -464,42 +527,67 @@ namespace MapApp
             if (mGenreMode == GENREMODE.yamadata) {
                 mDataTitle = mYamaData.mDataTitle;
                 mDataList = mYamaData.mDataList;
+                mSplitWord = mYamaData.mSplitWord;
                 mDispCol = mYamaData.mDispCol;
                 mColWidth = mYamaData.mColWidth;
                 mNumVal = mYamaData.mNumVal;
                 mDetailCol = mYamaData.mDetailCol; 
                 mDetailUrlList = mYamaData.mDetailUrlList;
                 CbCategory.IsEnabled = true;
+                CbDetail.IsEnabled = true;
                 DgMoveMenu.IsEnabled = true;
                 DgMarkMenu.IsEnabled = true;
                 DgRouteMenu.IsEnabled = true;
                 DgGuideMenu.IsEnabled = true;
+                DgYamaListMenu.IsEnabled = true;
             } else if (mGenreMode == GENREMODE.route) {
                 mDataTitle = mRouteData.mDataTitle;
                 mDataList = mRouteData.mDataList;
+                mSplitWord = mRouteData.mSplitWord;
                 mDispCol = mRouteData.mDispCol;
                 mColWidth = mRouteData.mColWidth;
                 mNumVal = mRouteData.mNumVal;
                 mDetailCol = mRouteData.mDetailCol;
                 mDetailUrlList = mRouteData.mDetailUrlList;
                 CbCategory.IsEnabled = false;
+                CbDetail.IsEnabled = false;
                 DgMoveMenu.IsEnabled = false;
                 DgMarkMenu.IsEnabled = false;
                 DgRouteMenu.IsEnabled = false;
                 DgGuideMenu.IsEnabled = false;
+                DgYamaListMenu.IsEnabled = false;
             } else if (mGenreMode == GENREMODE.guide) {
                 mDataTitle = mGuideRouteData.mDataTitle;
                 mDataList = mGuideRouteData.mDataList;
+                mSplitWord = mGuideRouteData.mSplitWord;
                 mDispCol = mGuideRouteData.mDispCol;
                 mColWidth = mGuideRouteData.mColWidth;
                 mNumVal = mGuideRouteData.mNumVal;
                 mDetailCol = mGuideRouteData.mDetailCol;
                 mDetailUrlList = mGuideRouteData.mDetailUrlList;
                 CbCategory.IsEnabled = false;
+                CbDetail.IsEnabled = false;
                 DgMoveMenu.IsEnabled = false;
                 DgMarkMenu.IsEnabled = false;
                 DgRouteMenu.IsEnabled = false;
                 DgGuideMenu.IsEnabled = false;
+                DgYamaListMenu.IsEnabled = false;
+            } else if (mGenreMode == GENREMODE.yamalist) {
+                mDataTitle = mYamaListData.mDataTitle;
+                mDataList = mYamaListData.mDataList;
+                mSplitWord = mYamaListData.mSplitWord;
+                mDispCol = mYamaListData.mDispCol;
+                mColWidth = mYamaListData.mColWidth;
+                mNumVal = mYamaListData.mNumVal;
+                mDetailCol = mYamaListData.mDetailCol;
+                mDetailUrlList = mYamaListData.mDetailUrlList;
+                CbCategory.IsEnabled = false;
+                CbDetail.IsEnabled = false;
+                DgMoveMenu.IsEnabled = false;
+                DgMarkMenu.IsEnabled = false;
+                DgRouteMenu.IsEnabled = false;
+                DgGuideMenu.IsEnabled = false;
+                DgYamaListMenu.IsEnabled = false;
             }
 
             setTitle(mDataTitle, mDispCol, mColWidth);
@@ -509,6 +597,8 @@ namespace MapApp
                     setData(mDataList, mDispCol, mDetailCol);
                     mYamaData.setCategoryList();
                     setCategoryList(mYamaData.mCategoryList);
+                    mYamaData.setDetailList();
+                    setDetailList(mYamaData.mDetailList);
                 } else {
                     mDataList = new List<string[]>();
                     DgDataList.Items.Clear();
@@ -518,21 +608,25 @@ namespace MapApp
         }
 
         /// <summary>
-        /// 山データから周辺情報(登山口、山小屋)のURLを抽出して山データリストに表示する
+        /// 周辺情報(登山口、山小屋)や山リストのURLを山データを抽出して表示する
         /// </summary>
         /// <param name="url">山データのURL</param>
         private void setDetailData(string url)
         {
-            if (mGenreMode == GENREMODE.yamadata)
+            if (mGenreMode == GENREMODE.yamadata) {
                 mSelectListData = mYamaData.getSelectUrlList(url);          //  山データの周辺データのURLリスト
-            else if (mGenreMode == GENREMODE.route)
+            } else if (mGenreMode == GENREMODE.route) {
                 mSelectListData = mRouteData.getSelectUrlList(url);         //  登山ルートデータの周辺データのURLリスト
-            else if (mGenreMode == GENREMODE.guide)
+            } else if (mGenreMode == GENREMODE.guide) {
                 mSelectListData = mGuideRouteData.getSelectUrlList(url);    //  おすすめルートデータの周辺データのURLリスト
-            else
+            } else if (mGenreMode == GENREMODE.yamalist) {
+                mSelectListData = mYamaListData.getSelectUrlList(url);      //  山リストのURLリスト
+            } else {
                 return;
+            }
             mDownloadMode = DOWNLOADMODE.select;            //  ダウンロードモードのの設定(非同期処理のため)
             getMapListDownloadData(mSelectListData);        //  非同期処理による山データのダウンロード
+            mGenreMode = GENREMODE.yamadata;
         }
 
         /// <summary>
@@ -563,6 +657,19 @@ namespace MapApp
             getMapListDownloadData(mSelectListData);        //  非同期処理による山データのダウンロード
         }
 
+        /// <summary>
+        /// 山データの山リストの抽出と表示
+        /// </summary>
+        /// <param name="url"></param>
+        private void setYamaListData(string url)
+        {
+            if (mGenreMode == GENREMODE.yamadata)
+                mSelectListData = mYamaData.getYamaListSelectUrlList(url);    //  山リストデータのURLリスト
+            else
+                return;
+            mDownloadMode = DOWNLOADMODE.select;             //  ダウンロードモードのの設定(非同期処理のため)
+            getMapListDownloadData(mSelectListData);        //  非同期処理による山データのダウンロード
+        }
 
         /// <summary>
         /// YamaRecoデータからマークを登録追加
@@ -645,10 +752,6 @@ namespace MapApp
             PbGetInfoData.Maximum = urlList.Count;
             PbGetInfoData.Minimum = 0;
             PbGetInfoData.Value = 0;
-            if (mYamaData.mDataList == null)
-                mYamaData.mDataList = new List<string[]>();
-            if (mRouteData.mDataList == null)
-                mRouteData.mDataList = new List<string[]>();
             //  非同期処理
             Task.Run(() => {
                 for (int i = 0; i < urlList.Count; i++) {
@@ -664,6 +767,9 @@ namespace MapApp
                             break;
                         case GENREMODE.guide:
                             mGuideRouteData.getYamaRecoData(urlList[i]);
+                            break;
+                        case GENREMODE.yamalist:
+                            mYamaListData.getYamaRecoData(urlList[i]);
                             break;
                     }
 
@@ -684,8 +790,10 @@ namespace MapApp
         /// </summary>
         private void progressTerminate()
         {
+            PbGetInfoData.Value = 0;
             BtDataRequest.Content = mGetDataButtonLabel[0];
             setYamaRecoData();
+            mGenreChangeEnabled = true;
         }
 
         /// <summary>
@@ -700,6 +808,8 @@ namespace MapApp
                 setRouteData();
             } else if (mGenreMode == GENREMODE.guide) {
                 setGuideData();
+            } else if (mGenreMode == GENREMODE.yamalist) {
+                setYamaListData();
             }
         }
 
@@ -714,6 +824,8 @@ namespace MapApp
                     setData(mYamaData.mDataList, mDispCol, mDetailCol);
                     mYamaData.setCategoryList();
                     setCategoryList(mYamaData.mCategoryList);
+                    mYamaData.setDetailList();
+                    setDetailList(mYamaData.mDetailList);
                 }
             } else if (mDownloadMode == DOWNLOADMODE.select) {
                 setSelectData(mSelectListData);
@@ -746,6 +858,22 @@ namespace MapApp
                 setTitle(mGuideRouteData.mDataTitle, mDispCol, mColWidth);
                 if (mGuideRouteData.mDataList != null) {
                     setData(mGuideRouteData.mDataList, mDispCol, mDetailCol);
+                }
+            } else if (mDownloadMode == DOWNLOADMODE.select) {
+                setSelectData(mSelectListData);
+            }
+        }
+
+        /// <summary>
+        /// 山リストデータの表示処理
+        /// </summary>
+        private void setYamaListData()
+        {
+            if (mDownloadMode == DOWNLOADMODE.normal) {
+                //  通常時
+                setTitle(mYamaListData.mDataTitle, mDispCol, mColWidth);
+                if (mYamaListData.mDataList != null) {
+                    setData(mYamaListData.mDataList, mDispCol, mDetailCol);
                 }
             } else if (mDownloadMode == DOWNLOADMODE.select) {
                 setSelectData(mSelectListData);
@@ -797,6 +925,17 @@ namespace MapApp
                             CbGenre.SelectedIndex = 2;
                         }
                         break;
+                    case GENREMODE.yamalist:
+                        //  山リスト
+                        mGenreMode = GENREMODE.yamalist;
+                        setDataList(false);
+                        List<string[]> yamalistDataList = mYamaListData.extractListdata(selectdata);
+                        if (0 < yamalistDataList.Count) {
+                            setData(yamalistDataList, mDispCol, mDetailCol);
+                        }
+                        mGenreChangeEnabled = false;
+                        CbGenre.SelectedIndex = 3;
+                        break;
                 }
             }
         }
@@ -820,6 +959,20 @@ namespace MapApp
             foreach (var itemName in categoryList)
                 CbCategory.Items.Add(itemName[0]);
             CbCategory.SelectedIndex = 0;
+        }
+
+        /// <summary>
+        /// 山の種別データをコンボボックスに設定
+        /// </summary>
+        /// <param name="detailList">種別リスト</param>
+        private void setDetailList(List<string> detailList)
+        {
+            CbDetail.Items.Clear();
+            CbDetail.Items.Add("山の種別");
+            foreach (var itemName in detailList)
+                CbDetail.Items.Add(itemName);
+            CbDetail.Items.Add("");
+            CbDetail.SelectedIndex = 0;
         }
 
         /// <summary>
@@ -889,7 +1042,6 @@ namespace MapApp
         /// <param name="detailCol">詳細表示列リスト</param>
         private void setData(List<string[]> dataList, bool[] dispCol, bool[] detailCol)
         {
-            string splitWord = mYamaData.mSplitWord;
             int dispSize = dispCol.Count(item => item == true);
             DgDataList.Items.Clear();
             for (int i = 0; i < dataList.Count; i++) {
@@ -905,7 +1057,8 @@ namespace MapApp
                                 //  [詳細データ]のタイトルのみ抽出
                                 foreach (string data in details) {
                                     if (0 < data.Length) {
-                                        int n = data.IndexOf(splitWord) < 0 ? data.Length : data.IndexOf(splitWord);
+                                        int n = 0 < data.IndexOf(mSplitWord) ? data.IndexOf(mSplitWord) :
+                                             0 < data.IndexOf(" ") ? data.IndexOf(" ") : data.Length;
                                         detail += (detail.Length > 0 ? "," : "") + data.Substring(0, n);
                                     }
                                 }
@@ -934,6 +1087,8 @@ namespace MapApp
                 return GENREMODE.route;
             } else if (0 <= url.IndexOf(mGenreUrlWord[2])) {
                 return GENREMODE.guide;
+            } else if (0 <= url.IndexOf(mGenreUrlWord[3])) {
+                return GENREMODE.yamalist;
             }
             return GENREMODE.yamadata;
         }
@@ -966,6 +1121,8 @@ namespace MapApp
                 return mRouteData.titleNo(title);
             else if (mGenreMode == GENREMODE.guide)
                 return mGuideRouteData.titleNo(title);
+            else if (mGenreMode == GENREMODE.yamalist)
+                return mYamaListData.titleNo(title);
             return mYamaData.titleNo(title);
         }
 
@@ -986,6 +1143,5 @@ namespace MapApp
             dlg.mEditText = buf;
             dlg.ShowDialog();
         }
-
     }
 }

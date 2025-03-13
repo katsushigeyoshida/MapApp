@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:MapApp"
         mc:Ignorable="d"
-        Title="PhotoList" Height="450" Width="300" Closing="Window_Closing" Loaded="Window_Loaded">
+        Title="PhotoList" Height="450" Width="400" Closing="Window_Closing" Loaded="Window_Loaded">
     <Grid>
         <TextBlock Text="フォルダ" Width="40" Height="20" Margin="0,0,0,0" VerticalAlignment="Top" HorizontalAlignment="Left" />
         <ComboBox Name="CbPhotoFolder" Height="20" Margin="40,0,0,0" VerticalAlignment="Top" SelectionChanged="CbPhotoFolder_SelectionChanged" MouseDoubleClick="CbPhotoFolder_MouseDoubleClick" >
@@ -45,7 +45,10 @@
                 </ContextMenu>
             </ListView.ContextMenu>
         </ListView>
-        <ProgressBar x:Name="PbLoadPhoto" Width="60" Height="10" Margin="10,0,0,5" VerticalAlignment="Bottom" HorizontalAlignment="Left" />
-        <TextBlock x:Name="TbFolderInfo" Height="15" Margin="75,0,0,5" VerticalAlignment="Bottom" />
+        <Button x:Name="BtSort" Width="15" Height="15" Margin="5,0,0,2" VerticalAlignment="Bottom" HorizontalAlignment="Left" Click="BtSort_Click" >
+            <Image Source="/Image/SortByColumn.png" />
+        </Button>
+        <ProgressBar x:Name="PbLoadPhoto" Width="60" Height="10" Margin="30,0,0,5" VerticalAlignment="Bottom" HorizontalAlignment="Left" />
+        <TextBlock x:Name="TbFolderInfo" Height="15" Margin="95,0,0,5" VerticalAlignment="Bottom" />
     </Grid>
 </Window>

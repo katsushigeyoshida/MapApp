@@ -81,6 +81,7 @@
       <DependentUpon>WikiList.xaml</DependentUpon>
     </Compile>
     <Compile Include="WikiList\WikiUrlList.cs" />
+    <Compile Include="YamaRecoList\YamaListData.cs" />
     <Compile Include="YamaRecoList\GuideRouteData.cs" />
     <Compile Include="YamaRecoList\YamaRecoData.cs" />
     <Compile Include="YamaRecoList\YamaRecoList.xaml.cs">
@@ -185,6 +186,7 @@
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
     <None Include="Document\MapAppManual.odt" />
+    <None Include="Document\MapAppManual.pdf" />
     <None Include="OpenTK.dll.config" />
     <None Include="packages.config" />
     <None Include="Properties\Settings.settings">
@@ -215,6 +217,8 @@
     <Resource Include="Image\Map3DImage.png" />
     <Resource Include="Image\WikiListImage.png" />
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <Resource Include="Image\SortByColumn.png" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

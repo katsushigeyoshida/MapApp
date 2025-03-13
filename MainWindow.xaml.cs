@@ -564,6 +564,7 @@ namespace MapApp
                 mPhotoList = new PhotoList();
                 mPhotoList.mMarkList = mMapMarkList;
                 mPhotoList.mMainWindow = this;
+                mPhotoList.mDoubleClikDefualt = PhotoList.DOUBLECLICK.coonrdinate;
                 mPhotoList.Show();
             }
         }

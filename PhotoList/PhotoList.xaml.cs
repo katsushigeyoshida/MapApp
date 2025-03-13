@@ -38,10 +38,21 @@ namespace MapApp
 
         public List<Photo> Photos;
 
-        private int mThumbnailWidth = 80;       //  サムネイル表示のための画像縮小サイズ
-        private int mThumbnailHeight = 50;
-        private int mDataFolderMax = 100;       //  登録フォルダの最大数
-        private List<string> mDataFolders = new List<string>();
+        public int mThumbnailWidth = 80;        //  サムネイル表示のための画像縮小サイズ
+        public int mThumbnailHeight = 50;
+        public int mDataFolderMax = 100;        //  登録フォルダの最大数
+        public bool mRecursiveFolder = true;    //  フォルダのデータを再帰検索
+        public string[] mSortMenu = {           //  ソートメニュー
+            "パス", "ファイル名", "日付", "サイズ"
+        };
+        public enum SORTTYPE {                      //  ソートタイプ
+            path, filename, date, size
+        }
+        public SORTTYPE mSortType = SORTTYPE.path;  //  ソート
+        public bool mSortReverse = false;           //  逆順
+        public enum DOUBLECLICK { disp, coonrdinate, non }          //  ダブルクリック時の処理タイプ
+        public DOUBLECLICK mDoubleClikDefualt = DOUBLECLICK.disp;   //  ダブルクリック時の処理方法
+        private List<string> mDataFolders = new List<string>();     //  検索フォルダリスト
         private string mDataFolderListPath = "PhotoListFolders.csv";
         private string mGpxFolder = "";
         private GpxReader mGpxReader;
@@ -216,13 +227,19 @@ namespace MapApp
             if (0 <= LvPhotoList.SelectedIndex) {
                 //  ファイル選択
                 int index = LvPhotoList.SelectedIndex;
-                //  GPS座標移動
-                ExifInfo exifInfo = new ExifInfo(Photos[index].path);
-                Point coodinate = exifInfo.getExifGpsCoordinate();
-                if (!coodinate.isEmpty()) {
-                    mMainWindow.setMoveCtrCoordinate(coodinate);
+                if (mDoubleClikDefualt == DOUBLECLICK.coonrdinate) {
+                    //  GPS座標移動
+                    ExifInfo exifInfo = new ExifInfo(Photos[index].path);
+                    Point coodinate = exifInfo.getExifGpsCoordinate();
+                    if (!coodinate.isEmpty()) {
+                        mMainWindow.setMoveCtrCoordinate(coodinate);
+                    } else {
+                        MessageBox.Show("位置座標が設定されていません");
+                    }
+                } else if (mDoubleClikDefualt == DOUBLECLICK.disp) {
+                    dispPhotoData(Photos[index].path);
                 } else {
-                    MessageBox.Show("位置座標が設定されていません");
+                    ylib.fileExecute(Photos[index].path);
                 }
             }
         }
@@ -293,6 +310,31 @@ namespace MapApp
                     buf += "\n" + exifInfo.getExifInfoAll();
                     messageBox(buf, "属性表示[" + Path.GetFileName(Photos[index].path) + "]");
                 }
+            }
+        }
+
+        /// <summary>
+        /// [ソート]ボタン 写真リストのソートメニュー
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void BtSort_Click(object sender, RoutedEventArgs e)
+        {
+            MenuDialog sortMenu = new MenuDialog();
+            sortMenu.mMenuList = mSortMenu.ToList();
+            sortMenu.mMainWindow = this;
+            sortMenu.Title = "ソート";
+            sortMenu.mOneClick = true;
+            sortMenu.ShowDialog();
+            int index = mSortMenu.FindIndex(sortMenu.mResultMenu);
+            if (index < 0) return;
+            if ((int)mSortType == index)
+                mSortReverse = !mSortReverse;
+            else
+                mSortType = (SORTTYPE)Enum.ToObject(typeof(SORTTYPE), index);
+            if (0 <= CbPhotoFolder.SelectedIndex) {
+                var folder = mDataFolders[CbPhotoFolder.SelectedIndex];
+                setPhotoData(folder);
             }
         }
 
@@ -469,7 +511,9 @@ namespace MapApp
             BitmapImage bmpImage = ylib.getBitmapImage(path);
             ExifInfo exifInfo = new ExifInfo(path);
             Point coodinate = exifInfo.getExifGpsCoordinate();
-            TbFolderInfo.Text = exifInfo.getDateTime();
+            string[] datetime = exifInfo.getDateTime().Split(':');
+            TbFolderInfo.Text = datetime.Length == 5 ?
+                $"{datetime[0]}/{datetime[1]}/{datetime[2]}:{datetime[3]}:{datetime[4]}" : exifInfo.getDateTime();
             if (coodinate.isEmpty())
                 TbFolderInfo.Text += " (座標なし)";
             TbFolderInfo.Text += " " + ylib.getIPTC(path)[4] + exifInfo.getUserComment();
@@ -490,14 +534,16 @@ namespace MapApp
             folder = folder.Replace("\n", "");
             folder = folder.Replace("\r", "");
             Photos.Clear();
-            string[] files = ylib.getFiles(Path.Combine(folder, "*.jpg"));
+            string[] files = ylib.getFiles(Path.Combine(folder, "*.jpg"), mRecursiveFolder);
             TbFolderInfo.Text = "ファイル数: " + files.Length;
             if (files == null || files.Length == 0)
                 return false;
+            List<string> fileList = sortFiles(files, mSortType, mSortReverse);
+
             PbLoadPhoto.Minimum = 0;
             PbLoadPhoto.Maximum = files.Length;
             PbLoadPhoto.Value = 0;
-            foreach (string file in files) {
+            foreach (string file in fileList) {
                 Photo photo = new Photo();
                 //photo.image = ylib.getBitmapImage(file, mThumbnailWidth);
                 photo.image = ylib.getThumbnailImage(file, mThumbnailWidth, mThumbnailHeight);
@@ -510,6 +556,47 @@ namespace MapApp
             LvPhotoList.ItemsSource = new ReadOnlyCollection<Photo>(Photos);
             PbLoadPhoto.Value = 0;
             return true;
+        }
+
+        /// <summary>
+        /// 写真リストのソート
+        /// </summary>
+        /// <param name="files">ファイルリスト</param>
+        /// <param name="sortType">ソートタイプ</param>
+        /// <param name="sortReverse">逆順</param>
+        /// <returns>ソートしたファイルリスト</returns>
+        private List<string> sortFiles(string[] files, SORTTYPE sortType, bool sortReverse)
+        {
+            List<FileInfo> fileList = new List<FileInfo>();
+            foreach (string path in files)
+                fileList.Add(new FileInfo(path));
+            switch (sortType) {
+                case SORTTYPE.path:     //  フルパスで比較
+                    if (sortReverse)
+                        fileList.Sort((b, a) => a.FullName.CompareTo(b.FullName));
+                    else
+                        fileList.Sort((a, b) => a.FullName.CompareTo(b.FullName));
+                    break;
+                case SORTTYPE.filename: //  拡張子を除くファイル名で比較
+                    if (sortReverse)
+                        fileList.Sort((b, a) => Path.GetFileNameWithoutExtension(a.Name).CompareTo(Path.GetFileNameWithoutExtension(b.Name)));
+                    else
+                        fileList.Sort((a, b) => Path.GetFileNameWithoutExtension(a.Name).CompareTo(Path.GetFileNameWithoutExtension(b.Name)));
+                    break;
+                case SORTTYPE.date:     //  ファイル日付で比較
+                    if (sortReverse)
+                        fileList.Sort((b, a) => a.LastWriteTime.CompareTo(b.LastWriteTime));
+                    else
+                        fileList.Sort((a, b) => a.LastWriteTime.CompareTo(b.LastWriteTime));
+                    break;
+                case SORTTYPE.size:     //  ファイルサイズで比較
+                    if (sortReverse)
+                        fileList.Sort((b, a) => a.Length.CompareTo(b.Length));
+                    else
+                        fileList.Sort((a, b) => a.Length.CompareTo(b.Length));
+                    break;
+            }
+            return fileList.ConvertAll(p => p.FullName);
         }
 
         /// <summary>
@@ -536,12 +623,13 @@ namespace MapApp
                 List<string> dataFolders = ylib.loadListData(mDataFolderListPath);
                 mDataFolders.Clear();
                 foreach (string folder in dataFolders) {
-                    string[] files = ylib.getFiles(Path.Combine(folder, "*.jpg"));
+                    string[] files = ylib.getFiles(Path.Combine(folder, "*.jpg"), mRecursiveFolder);
                     if (files != null && 0 < files.Length)
                         mDataFolders.Add(folder);
                     if (mDataFolderMax < mDataFolders.Count)
                         break;
                 }
+                mDataFolders.Sort();
                 CbPhotoFolder.ItemsSource = new ReadOnlyCollection<string>(mDataFolders);
             }
         }

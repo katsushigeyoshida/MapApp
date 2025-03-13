@@ -21,7 +21,7 @@ namespace MapApp
         private string mYamaRecoUrl = "https://www.yamareco.com/modules/yamainfo/ptinfo.php?ptid=";
         public string mSplitWord = " : ";                               //  分類データの分轄ワード
         public char mSeparatorChar = '\t';                              //  項目分轄char
-        public string mYamaListFilter = "";
+        public string mYamaListFilter = "";                             //  山リストの選択コンボボックスのフィルタ
         public string[] mDataTitle = {                                  //  データのタイトル
             "山名", "標高", "座標", "種別", "概要", "分類", "登山口", "山小屋", "付近の山",
             "登山ルート", "おすすめルート", "URL"
@@ -45,8 +45,9 @@ namespace MapApp
         public List<string[]> mDataList = new List<string[]>();         //  山データリスト
         public List<string[]> mDetailUrlList = new List<string[]>();    //  詳細データの(URL,項目)リスト
 
-        public List<string[]> mCategoryList = new List<string[]>();     //  分類データリスト(分類名, URL))
+        public List<string[]> mCategoryList = new List<string[]>();     //  分類データリスト(山リスト名, URL))
         public List<string[]> mCategoryMapList = new List<string[]>();  //  分類ごとの(URL,山名)リスト
+        public List<string> mDetailList = new List<string>();           //  種別データ
 
         private YLib ylib = new YLib();
 
@@ -138,6 +139,17 @@ namespace MapApp
         }
 
         /// <summary>
+        /// 山データから山リスト(分類)データをリスト表示
+        /// </summary>
+        /// <param name="url"></param>
+        /// <returns></returns>
+        public List<string[]> getYamaListSelectUrlList(string url)
+        {
+            int n = mDataList.FindIndex(p => p[titleNo("URL")].CompareTo(url) == 0);
+            return getYamaListUrlList(mDataList[n]);
+        }
+
+        /// <summary>
         /// 詳細表示用データの取得
         /// </summary>
         /// <param name="url">URL</param>
@@ -165,18 +177,21 @@ namespace MapApp
         /// <summary>
         /// [分類]と検索ワードでフィルタリングしたデータリストを作成
         /// </summary>
-        /// <param name="category">分類</param>
+        /// <param name="category">分類フィルタ</param>
+        /// <param name="detail">種別フィルタ</param>
         /// <param name="searchWord">検索ワード</param>
         /// <returns>データリスト</returns>
-        public List<string[]> getFilterongDataLsit(string category = "", string searchWord = "")
+        public List<string[]> getFilterongDataLsit(string category = "", string detail = "", string searchWord = "")
         {
             List<string[]> dataList = new List<string[]>();
             (Point searchCoordinate, double searchDistance) = getSearchCoordinate(searchWord);
             int catgoryNo = mDataTitle.FindIndex(p => p.CompareTo("分類") == 0);
+            int detailNo = mDataTitle.FindIndex(p => p.CompareTo("種別") == 0);
             int dispSize = mDispCol.Count(item => item == true);
 
             for (int i = 0; i < mDataList.Count; i++) {
                 if ((category.Length == 0 || getCategoryChk(mDataList[i][catgoryNo], category)) &&
+                    (detail.Length == 0 || getDetaikChk(mDataList[i][detailNo], detail)) &&
                     (searchWord.Length == 0 || searchDataChk(mDataList[i], searchWord, searchCoordinate, searchDistance))) {
                     string[] buf = new string[dispSize];
                     for (int j = 0; j < buf.Length; j++) {
@@ -222,6 +237,30 @@ namespace MapApp
                             if (0 < itemData.Length && (mYamaListFilter.Length == 0 || 0 <= itemData[0].IndexOf(mYamaListFilter)) &&
                                 0 > mCategoryList.FindIndex(p => p[0].CompareTo(itemData[0]) == 0)) {
                                 mCategoryList.Add(itemData);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// 種別データをデータリストから抽出
+        /// </summary>
+        public void setDetailList()
+        {
+            mDetailList.Clear();
+            if (mDataList != null && 0 < mDataList.Count) {
+                foreach (var data in mDataList) {
+                    string[] detail = data[titleNo("種別")].Split(mSeparatorChar);     //  分類
+                    foreach (var item in detail) {
+                        string itemData = "";
+                        int n = item.IndexOf(mSplitWord);
+                        if (0 < n) {
+                            itemData = item.Substring(0, n).Trim();                      //  タイトル
+                            if (0 < itemData.Length &&
+                                0 > mDetailList.FindIndex(p => p.CompareTo(itemData) == 0)) {
+                                mDetailList.Add(itemData);
                             }
                         }
                     }
@@ -387,6 +426,29 @@ namespace MapApp
         }
 
         /// <summary>
+        /// 山データから山リスト(分類)のURLリストを抽出
+        /// </summary>
+        /// <param name="yamaData">山データ</param>
+        /// <returns>山リストURLリスト</returns>
+        private List<string[]> getYamaListUrlList(string[] yamaData)
+        {
+            List<string[]> listData = new List<string[]>();
+            string[] buf = new string[2];
+            string[] text = yamaData[titleNo("分類")].ToString().Split(mSeparatorChar);
+            for (int j = 0; j < text.Length; j++) {
+                buf = new string[2];
+                int n = text[j].IndexOf(mSplitWord);
+                if (0 < n) {
+                    buf[1] = text[j].Substring(0, n).Trim();                    //  おすすめルート名
+                    buf[0] = text[j].Substring(n + mSplitWord.Length).Trim();   //  URL
+                    listData.Add(buf);
+                }
+            }
+
+            return listData;
+        }
+
+        /// <summary>
         /// HTMLソースからデータを抽出し配列に入れる
         /// </summary>
         /// <param name="html"></param>
@@ -425,6 +487,7 @@ namespace MapApp
             (tagPara, bodyData, nextSrc) = ylib.getHtmlTagData(nextSrc, "body");
             //  headタイトル
             (tagPara, title, nextSrc) = ylib.getHtmlTagData(headData, "title");
+            string description = getDescription(headData);
 
             //  基本情報エリア
             string basicInfo = ylib.getHtmlTagSrc(bodyData, "div", "class", "basic_info_area mb20");
@@ -448,8 +511,14 @@ namespace MapApp
             listData.Add(buf);
             //  概要(Wikpedia)
             string basicInfoText = string.Join("", ylib.getHtmlTagDataList(basicInfo, "div", "class", "basic_info_explain mytips"));
-            basicInfoText += (basicInfoText.Length > 0 ? " " : "") + string.Join("", ylib.getHtmlTagDataList(basicInfo, "div", "class", "mb10"));
-            buf = new string[2] { "概要", basicInfoText };
+            if (0 < basicInfoText.Length && basicInfoText.IndexOf("■火山防災情報") < 0)
+                basicInfoText += (basicInfoText.Length > 0 ? " " : "") + string.Join("", ylib.getHtmlTagDataList(basicInfo, "div", "class", "mb10"));
+            else
+                basicInfoText = string.Join("", ylib.getHtmlTagDataList(basicInfo, "div", "class", "mb10"));
+            if (0 < basicInfoText.Length)
+                buf = new string[2] { "概要", basicInfoText };
+            else if (0 < description.Length)
+                buf = new string[2] { "概要", description };
             listData.Add(buf);
             //  山のカテゴリ
             List<string[]> category = getCategory(bodyData);
@@ -504,6 +573,32 @@ namespace MapApp
         }
 
         /// <summary>
+        /// header内の概要データの取得
+        /// </summary>
+        /// <param name="header">headerデータ</param>
+        /// <returns>概要データ</returns>
+        private string getDescription(string header)
+        {
+            int pos = 0;
+            string tagName = "meta";
+            string tagParaName = "name";
+            string description = "";
+            while (pos < header.Length) {
+                string tagData = ylib.getHtmlTag(header, pos);
+                if (tagData.Length == 0) break;
+                if (tagData.IndexOf("<" + tagName) == 0) {
+                    string b = ylib.getTagParaData(tagData, tagParaName);
+                    if (b == "description") {
+                        description = ylib.getTagParaData(tagData, "content");
+                        break;
+                    }
+                }
+                pos += tagData.Length;
+            }
+            return description;
+        }
+
+        /// <summary>
         /// [種別](詳細情報)の抽出
         /// </summary>
         /// <param name="html">HTML</param>
@@ -554,7 +649,7 @@ namespace MapApp
                     string data = ylib.getHtmlTagData(tagData);
                     if (data.CompareTo(title) != 0)
                         continue;
-                    //  a 参照データの取得
+                    //  tagData 参照データの取得
                     do {
                         (tagPara, tagData, trData) = ylib.getHtmlTagData(trData, "a");
                         if (0 < tagData.Length) {
@@ -714,12 +809,36 @@ namespace MapApp
         /// <returns>有無</returns>
         private bool getCategoryChk(string categoryData, string category)
         {
+            if (category == "山の分類") return true;
             string[] categorys = categoryData.Split(mSeparatorChar);
             foreach (var item in categorys) {
                 int n = item.IndexOf(mSplitWord);
                 if (0 <= n) {
                     string itemName = item.Substring(0, n);
                     if (itemName.CompareTo(category) == 0)
+                        return true;
+                }
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// 指定の種別に該当するか
+        /// </summary>
+        /// <param name="detailData">種別データ</param>
+        /// <param name="detail">種別</param>
+        /// <returns>可否</returns>
+        private bool getDetaikChk(string detailData, string detail)
+        {
+            detail = detail.Trim();
+            if (detail == "山の種別") return true;
+            string[] details = detailData.Split(mSeparatorChar);
+            if (details.Length == 0 && detail.Length == 0) return true;
+            foreach (var item in details) {
+                int n = item.IndexOf(mSplitWord);
+                if (0 <= n) {
+                    string itemName = item.Substring(0, n).Trim();
+                    if (itemName.CompareTo(detail) == 0)
                         return true;
                 }
             }

@@ -8,11 +8,11 @@
         Title="YamaReco 山データ" Height="380" Width="800" Loaded="Window_Loaded" Closing="Window_Closing" LayoutUpdated="Window_LayoutUpdated">
     <Grid>
         <Label Content="ジャンル" Width="50" Height="25" VerticalAlignment="Top" HorizontalAlignment="Left" />
-        <ComboBox Name="CbGenre" Width="150" Height="25" Margin="60,0,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" SelectionChanged="CbGenre_SelectionChanged"
-                  ToolTip="リストに表示するデータの切替" />
-        <Label Content="山リスト" Width="50" Height="25" Margin="220,0,0,0" VerticalAlignment="Top" HorizontalAlignment="Left" />
-        <ComboBox Name="CbCategory" Height="25" Margin="270,0,240,0" VerticalAlignment="Top" SelectionChanged="CbCategory_SelectionChanged"
-                  ToolTip="山の分類名で表示を絞り込む、マウスの右ボタンで分類に対するメニューが表示される。">
+        <ComboBox Name="CbGenre" Width="100" Height="25" Margin="50,0,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" SelectionChanged="CbGenre_SelectionChanged"
+                  ToolTip="リストに表示するデータの種類の切替" />
+        <Label Content="フィルタ" Width="50" Height="25" Margin="150,0,0,0" VerticalAlignment="Top" HorizontalAlignment="Left" />
+        <ComboBox Name="CbCategory" Width="200" Height="25" Margin="200,0,0,0" VerticalAlignment="Top" SelectionChanged="CbCategory_SelectionChanged"
+                  ToolTip="山の分類名(百名山などの山リスト)で仕分ける、マウスの右ボタンで分類に対するメニューが表示される。" HorizontalAlignment="Left">
             <ComboBox.ContextMenu>
                 <ContextMenu>
                     <MenuItem Name="CbCategoryOpenMenu" Header="Webデータを開く" Click="CbCategoryContextMenu_Click" />
@@ -21,6 +21,9 @@
                 </ContextMenu>
             </ComboBox.ContextMenu>
         </ComboBox>
+        <!--<Label Content="種別" Width="40" Height="25" Margin="380,0,0,0" VerticalAlignment="Top" HorizontalAlignment="Left" />-->
+        <ComboBox Name="CbDetail" Margin="400,0,240,0" Height="25" VerticalAlignment="Top" SelectionChanged="CbDetail_SelectionChanged"
+                  ToolTip="データの内容(山頂、山小屋など)で仕分ける"/>
         <Label Content="取得No" Margin="0,0,190,0" Width="50" Height="25" VerticalAlignment="Top" HorizontalAlignment="Right" />
         <TextBox x:Name="TbDataStart" Width="45" Height="25" Margin="0,0,140,0" TextAlignment="Right" HorizontalAlignment="Right" VerticalAlignment="Top" 
                  ToolTip="データ取得の開始Noを指定する"/>
@@ -30,7 +33,7 @@
         <Button x:Name="BtDataRequest" Content="データ取得" Width="80" Height="25" Margin="0,0,0,0" HorizontalAlignment="Right" VerticalAlignment="Top" Click="BtDataRequest_Click"
                 ToolTip="取得Noの山データをWebからダウンロードしてリストに追加する"/>
         <Label Content="検索" Width="40" Height="25" Margin="0,25,0,0" VerticalAlignment="Top" HorizontalAlignment="Left" />
-        <TextBox x:Name="TbSearchWord" Height="25" Margin="60,25,240,0" VerticalAlignment="Top" 
+        <TextBox x:Name="TbSearchWord" Height="25" Margin="50,25,240,0" VerticalAlignment="Top" 
                  ToolTip="リスト内の文字列を検索するための検索文字列"/>
         <Button x:Name="BtNextSearch" Content="次検索" Width="80" Height="25" Margin="0,25,160,0" HorizontalAlignment="Right" VerticalAlignment="Top" Click="BtNextSearch_Click"
                 ToolTip="検索文字列を全項目から下方向に検索する" />
@@ -45,9 +48,10 @@
                     <MenuItem Name="DgDispMenu" Header="詳細表示" Click="DgMenu_Click" />
                     <MenuItem Name="DgOpenMenu" Header="Webデータを開く" Click="DgMenu_Click" />
                     <MenuItem Name="DgMarkMenu" Header="マーク追加" Click="DgMenu_Click" />
-                    <MenuItem Name="DgDetailMenu" Header="周辺情報抽出" Click="DgMenu_Click" />
+                    <MenuItem Name="DgDetailMenu" Header="山/周辺情報抽出" Click="DgMenu_Click" />
                     <MenuItem Name="DgRouteMenu" Header="登山ルート情報抽出" Click="DgMenu_Click" />
                     <MenuItem Name="DgGuideMenu" Header="おすすめルート情報抽出" Click="DgMenu_Click" />
+                    <MenuItem Name="DgYamaListMenu" Header="山リスト情報抽出" Click="DgMenu_Click" />
                     <MenuItem Name="DgRemoveMenu" Header="削除" Click="DgMenu_Click" />
                 </ContextMenu>
             </DataGrid.ContextMenu>
